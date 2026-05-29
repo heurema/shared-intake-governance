@@ -650,6 +650,135 @@ class CliPipelineTests(unittest.TestCase):
             self.assertEqual(summary["degraded_reasons"], [])
             self.assertIsNone(summary["last_error"])
 
+    def test_list_runs_summarizes_manifests_without_writes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            first_health_path = _write_source_health(
+                paths,
+                run_id="20260529T100000Z-first",
+                source_id="github-signum",
+                source_type="github_repo",
+                status="healthy",
+            )
+            second_health_path = _write_source_health(
+                paths,
+                run_id="20260529T110000Z-second",
+                source_id="arxiv-code-agents",
+                source_type="arxiv_rss_keywords",
+                status="failed",
+                degraded_reasons=["http_error"],
+                last_error={
+                    "kind": "http_error",
+                    "message": "HTTP 503",
+                    "retryable": True,
+                },
+            )
+            first_manifest_path = _write_run_manifest(
+                paths,
+                first_health_path,
+                run_id="20260529T100000Z-first",
+                source_id="github-signum",
+                clean_records_written=1,
+                status="completed",
+            )
+            second_manifest_path = _write_run_manifest(
+                paths,
+                second_health_path,
+                run_id="20260529T110000Z-second",
+                source_id="arxiv-code-agents",
+                raw_payloads_written=0,
+                clean_records_written=0,
+                projected_profiles=0,
+                failed_sources=1,
+                status="failed",
+            )
+            before_paths = _all_files(paths.root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "list-runs",
+                    "--runtime-root",
+                    str(paths.root),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(paths.root), before_paths)
+            self.assertEqual(summary["runtime_root"], str(paths.root))
+            self.assertEqual(summary["run_count"], 2)
+            self.assertEqual(
+                summary["runs"],
+                [
+                    {
+                        "run_id": "20260529T110000Z-second",
+                        "run_manifest_path": str(second_manifest_path),
+                        "mode": "daily_collection",
+                        "status": "failed",
+                        "started_at": "2026-05-29T12:30:45Z",
+                        "finished_at": "2026-05-29T12:30:46Z",
+                        "sources": ["arxiv-code-agents"],
+                        "counts": {
+                            "raw_payloads_written": 0,
+                            "raw_metadata_written": 1,
+                            "clean_records_written": 0,
+                            "projected_profiles": 0,
+                            "quarantined_records": 0,
+                            "failed_sources": 1,
+                        },
+                        "source_health_count": 1,
+                    },
+                    {
+                        "run_id": "20260529T100000Z-first",
+                        "run_manifest_path": str(first_manifest_path),
+                        "mode": "daily_collection",
+                        "status": "completed",
+                        "started_at": "2026-05-29T12:30:45Z",
+                        "finished_at": "2026-05-29T12:30:46Z",
+                        "sources": ["github-signum"],
+                        "counts": {
+                            "raw_payloads_written": 1,
+                            "raw_metadata_written": 1,
+                            "clean_records_written": 1,
+                            "projected_profiles": 1,
+                            "quarantined_records": 0,
+                            "failed_sources": 0,
+                        },
+                        "source_health_count": 1,
+                    },
+                ],
+            )
+
+    def test_list_runs_handles_missing_runtime_without_creating_it(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            runtime_root = Path(tmp_dir) / "runtime"
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "list-runs",
+                    "--runtime-root",
+                    str(runtime_root),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertFalse(runtime_root.exists())
+            self.assertEqual(
+                summary,
+                {
+                    "runtime_root": str(runtime_root),
+                    "run_count": 0,
+                    "runs": [],
+                },
+            )
+
 
 class SuccessfulCollector:
     def __init__(self, paths, **kwargs):
@@ -880,48 +1009,68 @@ def _write_source_config(root, payload):
     return source_config_path
 
 
-def _write_run_manifest(paths, source_health_path):
+def _write_run_manifest(
+    paths,
+    source_health_path,
+    *,
+    run_id=RUN_ID,
+    source_id="github-signum",
+    raw_payloads_written=1,
+    clean_records_written=1,
+    projected_profiles=1,
+    failed_sources=0,
+    status="completed",
+):
     return RunWriter(paths).write_manifest(
         {
             "schema_version": "run-manifest.v1",
-            "run_id": RUN_ID,
+            "run_id": run_id,
             "mode": "daily_collection",
-            "status": "completed",
+            "status": status,
             "started_at": "2026-05-29T12:30:45Z",
             "finished_at": "2026-05-29T12:30:46Z",
             "runtime_root": str(paths.root),
             "raw_root": str(paths.raw_root),
             "clean_root": str(paths.clean_root),
             "profiles_root": str(paths.profiles_root),
-            "sources": ["github-signum"],
+            "sources": [source_id],
             "counts": {
-                "raw_payloads_written": 1,
+                "raw_payloads_written": raw_payloads_written,
                 "raw_metadata_written": 1,
-                "clean_records_written": 1,
-                "projected_profiles": 1,
+                "clean_records_written": clean_records_written,
+                "projected_profiles": projected_profiles,
                 "quarantined_records": 0,
-                "failed_sources": 0,
+                "failed_sources": failed_sources,
             },
             "source_health": [str(source_health_path)],
         }
     )
 
 
-def _write_source_health(paths):
+def _write_source_health(
+    paths,
+    *,
+    run_id=RUN_ID,
+    source_id="github-signum",
+    source_type="github_repo",
+    status="healthy",
+    degraded_reasons=None,
+    last_error=None,
+):
     return SourceHealthWriter(paths).write_source_health(
         {
             "schema_version": "source-health.v1",
-            "run_id": RUN_ID,
-            "source_id": "github-signum",
-            "source_type": "github_repo",
-            "status": "healthy",
+            "run_id": run_id,
+            "source_id": source_id,
+            "source_type": source_type,
+            "status": status,
             "checked_at": "2026-05-29T12:30:46Z",
             "attempted_fetches": 1,
-            "successful_fetches": 1,
-            "failed_fetches": 0,
+            "successful_fetches": 1 if status == "healthy" else 0,
+            "failed_fetches": 0 if status == "healthy" else 1,
             "raw_records_written": 1,
-            "degraded_reasons": [],
-            "last_error": None,
+            "degraded_reasons": degraded_reasons or [],
+            "last_error": last_error,
             "next_retry_after": None,
         }
     )
