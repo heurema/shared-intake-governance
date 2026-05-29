@@ -167,6 +167,28 @@ This writes one `governance-audit-event.v1` JSONL line under
 `audit/<run-id>.jsonl`. Audit events intentionally omit tool intent
 `arguments`.
 
+## Record a dry run
+
+Use this to record dry-run evidence from a separate sidecar or manual
+simulation. It does not execute the requested tool.
+
+```sh
+PYTHONPATH=src python3 -m shared_intake_governance.cli record-dry-run \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --run-id "$SIG_RUN_ID" \
+  --dry-run-id dry-run-1 \
+  --intent path/to/tool-intent.json \
+  --dry-run-kind read_only_simulation \
+  --result-status passed \
+  --recorded-by local-operator \
+  --summary "Read-only simulation reviewed." \
+  --artifact-ref dry-runs/dry-run-1.json
+```
+
+Expected output is one summary containing `dry_run_result_path` and the written
+`dry-run-result.v1` object. Dry-run records intentionally omit tool intent
+`arguments`.
+
 ## Record an approval
 
 Use this only to record a local approval or rejection decision. It does not

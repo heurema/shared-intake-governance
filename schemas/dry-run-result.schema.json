@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shared-intake-governance.local/schemas/dry-run-result.schema.json",
+  "title": "DryRunResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "dry_run_id",
+    "intent_id",
+    "profile_id",
+    "action_class",
+    "tool_name",
+    "dry_run_kind",
+    "result_status",
+    "recorded_by",
+    "recorded_at",
+    "summary",
+    "artifact_refs",
+    "evidence_refs",
+    "tool_intent_path"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "dry-run-result.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dry_run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "intent_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profile_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "action_class": {
+      "type": "string",
+      "enum": [
+        "read_only",
+        "edit_local",
+        "destructive_local",
+        "external_side_effect",
+        "credentialed_remote"
+      ]
+    },
+    "tool_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dry_run_kind": {
+      "type": "string",
+      "enum": [
+        "disposable_worktree",
+        "sandboxed_container",
+        "read_only_simulation",
+        "test_only_execution",
+        "custom"
+      ]
+    },
+    "result_status": {
+      "type": "string",
+      "enum": [
+        "passed",
+        "failed",
+        "blocked"
+      ]
+    },
+    "recorded_by": {
+      "type": "string",
+      "minLength": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifact_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tool_intent_path": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

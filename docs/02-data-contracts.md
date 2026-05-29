@@ -14,7 +14,8 @@ The first stable contracts should cover:
 8. tool intents passed into governance;
 9. governance decisions returned by policy evaluation;
 10. governance audit events;
-11. approval records.
+11. approval records;
+12. dry-run results.
 
 ## Raw payload metadata
 
@@ -307,6 +308,44 @@ tool_intent_path
 Approval records should not include full tool arguments, credentials, or
 private payloads. A later executor must still enforce policy, check approval
 scope, and require dry-run evidence where applicable.
+
+## Dry-run result
+
+See [../schemas/dry-run-result.schema.json](../schemas/dry-run-result.schema.json).
+
+Dry-run results are recorded evidence from a dry-run sidecar. The first runtime
+slice records the result and artifact references, but does not execute the tool
+itself and does not mediate side effects.
+
+Dry-run results are written under:
+
+```text
+dry-runs/<run-id>/<dry-run-id>.json
+```
+
+Minimum properties:
+
+```text
+schema_version
+run_id
+dry_run_id
+intent_id
+profile_id
+action_class
+tool_name
+dry_run_kind
+result_status
+recorded_by
+recorded_at
+summary
+artifact_refs
+evidence_refs
+tool_intent_path
+```
+
+Dry-run results should not include full tool arguments, credentials, or private
+payloads. They should point at external artifacts or summaries that can be
+reviewed before an approval record is created.
 
 ## Capability classes
 

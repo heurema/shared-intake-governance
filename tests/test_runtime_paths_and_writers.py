@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from shared_intake_governance.runtime import (  # noqa: E402
     AuditWriter,
     ApprovalWriter,
+    DryRunWriter,
     RawWriter,
     RunWriter,
     RuntimePaths,
@@ -36,6 +37,7 @@ class RuntimePathTests(unittest.TestCase):
             self.assertEqual(paths.source_health_root, root / "source-health")
             self.assertEqual(paths.audit_root, root / "audit")
             self.assertEqual(paths.approvals_root, root / "approvals")
+            self.assertEqual(paths.dry_runs_root, root / "dry-runs")
             self.assertEqual(paths.profiles_root, root / "profiles")
 
             self.assertEqual(
@@ -76,6 +78,15 @@ class RuntimePathTests(unittest.TestCase):
                 / "approvals"
                 / "20260529T123045Z-deadbeef"
                 / "approval-1.json",
+            )
+            self.assertEqual(
+                paths.dry_run_result_path(
+                    "20260529T123045Z-deadbeef", "dry-run-1"
+                ),
+                root
+                / "dry-runs"
+                / "20260529T123045Z-deadbeef"
+                / "dry-run-1.json",
             )
             self.assertEqual(
                 paths.source_health_path("20260529T123045Z-deadbeef", "github-main"),
@@ -119,6 +130,8 @@ class RuntimePathTests(unittest.TestCase):
                 paths.audit_log_path("../run")
             with self.assertRaises(ValueError):
                 paths.approval_record_path("20260529T123045Z-deadbeef", "../approval")
+            with self.assertRaises(ValueError):
+                paths.dry_run_result_path("20260529T123045Z-deadbeef", "../dry-run")
             with self.assertRaises(ValueError):
                 paths.profile_state_path("pulse", "../state")
             with self.assertRaises(ValueError):
@@ -276,6 +289,27 @@ class RuntimeWriterTests(unittest.TestCase):
             writer.write_record(record)
             self.assertEqual(approval_path.read_text(encoding="utf-8"), first_write)
 
+    def test_dry_run_writer_writes_result_deterministically(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            writer = DryRunWriter(paths)
+            result = _dry_run_result()
+
+            dry_run_path = writer.write_result(result)
+            first_write = dry_run_path.read_text(encoding="utf-8")
+
+            self.assertEqual(
+                dry_run_path,
+                paths.dry_run_result_path(
+                    "20260529T123045Z-deadbeef", "dry-run-1"
+                ),
+            )
+            self.assertEqual(json.loads(first_write), result)
+            self.assertTrue(first_write.endswith("\n"))
+
+            writer.write_result(result)
+            self.assertEqual(dry_run_path.read_text(encoding="utf-8"), first_write)
+
 
 def _raw_metadata(raw_body):
     return {
@@ -330,6 +364,26 @@ def _approval_record():
         "approved_at": "2026-05-29T12:30:45Z",
         "justification": "Dry run reviewed.",
         "dry_run_ref": "dry-runs/approval-1.json",
+        "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
+        "tool_intent_path": "intent.json",
+    }
+
+
+def _dry_run_result():
+    return {
+        "schema_version": "dry-run-result.v1",
+        "run_id": "20260529T123045Z-deadbeef",
+        "dry_run_id": "dry-run-1",
+        "intent_id": "intent-1",
+        "profile_id": "code-intel-kernel",
+        "action_class": "edit_local",
+        "tool_name": "write-report",
+        "dry_run_kind": "read_only_simulation",
+        "result_status": "passed",
+        "recorded_by": "local-operator",
+        "recorded_at": "2026-05-29T12:30:45Z",
+        "summary": "Simulated local write.",
+        "artifact_refs": ["dry-runs/dry-run-1.json"],
         "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
         "tool_intent_path": "intent.json",
     }

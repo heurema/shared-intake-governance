@@ -51,6 +51,10 @@ class RuntimePaths:
         return self.root / "approvals"
 
     @property
+    def dry_runs_root(self) -> Path:
+        return self.root / "dry-runs"
+
+    @property
     def profiles_root(self) -> Path:
         return self.root / "profiles"
 
@@ -84,6 +88,13 @@ class RuntimePaths:
             self.approvals_root
             / _safe_segment(run_id, "run_id")
             / f"{_safe_segment(approval_id, 'approval_id')}.json"
+        )
+
+    def dry_run_result_path(self, run_id: str, dry_run_id: str) -> Path:
+        return (
+            self.dry_runs_root
+            / _safe_segment(run_id, "run_id")
+            / f"{_safe_segment(dry_run_id, 'dry_run_id')}.json"
         )
 
     def source_health_path(self, run_id: str, source_id: str) -> Path:
