@@ -180,6 +180,11 @@ The sanitizer should:
 - set `quarantined` when required;
 - write clean records.
 
+Current implementation:
+
+- `src/shared_intake_governance/sanitizer/clean_records.py`
+- `tests/test_clean_records_and_projection.py`
+
 ### Step 6: implement one projector
 
 The first projector should:
@@ -190,6 +195,11 @@ The first projector should:
 - write a deterministic per-profile output.
 
 Keep the first output simple, even JSON-only if needed.
+
+Current implementation:
+
+- `src/shared_intake_governance/projector/profile.py`
+- `tests/test_clean_records_and_projection.py`
 
 ### Step 7: add tests before more features
 
