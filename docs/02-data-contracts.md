@@ -313,6 +313,8 @@ evidence_refs
 Runtime code validates governance decisions before returning them from the
 default evaluator, including optional audit references when audit logging is
 requested.
+Embedded audit events must follow the same validation rules as standalone
+`governance-audit-event.v1` records.
 
 ## Governance audit event
 
