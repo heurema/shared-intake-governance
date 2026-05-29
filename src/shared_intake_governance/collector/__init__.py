@@ -1,5 +1,10 @@
 """Read-only source collectors."""
 
+from .arxiv_rss_keywords import (
+    ArxivRssKeywordsCollectionResult,
+    ArxivRssKeywordsCollector,
+    ArxivRssKeywordsSource,
+)
 from .github_repo import (
     GitHubRepoCollectionResult,
     GitHubRepoCollector,
@@ -9,6 +14,9 @@ from .github_repo import (
 )
 
 __all__ = [
+    "ArxivRssKeywordsCollectionResult",
+    "ArxivRssKeywordsCollector",
+    "ArxivRssKeywordsSource",
     "GitHubRepoCollectionResult",
     "GitHubRepoCollector",
     "GitHubRepoSource",

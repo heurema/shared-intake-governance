@@ -180,7 +180,9 @@ It should not sanitize or score inline.
 Current implementation:
 
 - `src/shared_intake_governance/collector/github_repo.py`
+- `src/shared_intake_governance/collector/arxiv_rss_keywords.py`
 - `tests/test_github_repo_collector.py`
+- `tests/test_arxiv_rss_keywords_collector.py`
 
 ### Step 5: implement sanitizer and clean-record emission
 
