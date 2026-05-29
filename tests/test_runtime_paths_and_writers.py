@@ -21,6 +21,7 @@ from shared_intake_governance.runtime import (  # noqa: E402
     RuntimePaths,
     SourceHealthWriter,
     ToolExecutionWriter,
+    validate_raw_metadata,
     validate_run_manifest,
     validate_source_health,
     generate_run_id,
@@ -247,6 +248,7 @@ class RuntimeWriterTests(unittest.TestCase):
             self.assertEqual(raw_body.path.read_bytes(), body)
 
             metadata = _raw_metadata(raw_body)
+            validate_raw_metadata(metadata)
             metadata_path = writer.write_metadata(metadata)
             first_write = metadata_path.read_text(encoding="utf-8")
 
@@ -292,6 +294,34 @@ class RuntimeWriterTests(unittest.TestCase):
                 ),
             )
             self.assertEqual(json.loads(metadata_path.read_text()), metadata)
+
+    def test_raw_metadata_validation_rejects_contract_drift(self):
+        valid_metadata = _raw_metadata(None)
+
+        missing_required = dict(valid_metadata)
+        missing_required.pop("fetch_status")
+        with self.assertRaises(ValueError):
+            validate_raw_metadata(missing_required)
+
+        unknown_field = dict(valid_metadata)
+        unknown_field["score"] = 1
+        with self.assertRaises(ValueError):
+            validate_raw_metadata(unknown_field)
+
+        bad_status = dict(valid_metadata)
+        bad_status["fetch_status"] = "ok"
+        with self.assertRaises(ValueError):
+            validate_raw_metadata(bad_status)
+
+        bad_hash = dict(valid_metadata)
+        bad_hash["body_hash"] = "abc"
+        with self.assertRaises(ValueError):
+            validate_raw_metadata(bad_hash)
+
+        bad_error = dict(valid_metadata)
+        bad_error["error"] = {"kind": "timeout"}
+        with self.assertRaises(ValueError):
+            validate_raw_metadata(bad_error)
 
     def test_run_writer_writes_manifest_deterministically(self):
         with tempfile.TemporaryDirectory() as tmp_dir:

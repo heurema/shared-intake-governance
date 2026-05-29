@@ -21,8 +21,8 @@ Read in this order before making structural or runtime decisions:
 ## Current repository state
 
 This repository currently defines docs, schemas, example profiles, and minimal
-file-based runtime helpers for paths, raw payload writes, raw metadata writes,
-run manifest writes, read-only `github_repo`, `github_search`,
+file-based runtime helpers for paths, raw payload writes, validated raw metadata
+writes, validated run manifest writes, read-only `github_repo`, `github_search`,
 `arxiv_rss_keywords`, `arxiv_query`, and `rss` collectors, clean-record emitters
 for `github_repo`, `github_search`, `arxiv_rss_keywords`, `arxiv_query`, and
 `rss`,
