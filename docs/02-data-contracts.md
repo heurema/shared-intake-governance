@@ -134,6 +134,7 @@ next_retry_after
 
 If a source is degraded or failed, downstream consumers should see that state
 explicitly. Do not silently widen to weaker fallback sources.
+Runtime code validates source health artifacts before writing them.
 
 ## Source config
 

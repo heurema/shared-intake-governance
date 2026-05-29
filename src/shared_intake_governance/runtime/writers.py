@@ -12,6 +12,33 @@ from typing import Any
 from .paths import RuntimePaths
 
 
+_SOURCE_TYPES = {
+    "github_repo",
+    "github_search",
+    "arxiv_query",
+    "arxiv_rss_keywords",
+    "rss",
+    "news",
+    "custom",
+}
+_SOURCE_HEALTH_STATUS = {"healthy", "degraded", "failed", "skipped"}
+_SOURCE_HEALTH_REQUIRED = {
+    "schema_version",
+    "run_id",
+    "source_id",
+    "source_type",
+    "status",
+    "checked_at",
+    "attempted_fetches",
+    "successful_fetches",
+    "failed_fetches",
+    "raw_records_written",
+    "degraded_reasons",
+    "last_error",
+    "next_retry_after",
+}
+
+
 @dataclass(frozen=True)
 class RawBodyWrite:
     body_hash: str
@@ -72,6 +99,7 @@ class SourceHealthWriter:
         self.paths = paths
 
     def write_source_health(self, source_health: dict[str, Any]) -> Path:
+        validate_source_health(source_health)
         path = self.paths.source_health_path(
             str(source_health["run_id"]), str(source_health["source_id"])
         )
@@ -170,6 +198,72 @@ class ProviderResultWriter:
             str(result["run_id"]), str(result["result_id"])
         )
         return _write_json(path, result)
+
+
+def validate_source_health(source_health: dict[str, Any]) -> None:
+    missing = sorted(_SOURCE_HEALTH_REQUIRED - set(source_health))
+    if missing:
+        raise ValueError(f"source health missing required fields: {', '.join(missing)}")
+    extra = sorted(set(source_health) - _SOURCE_HEALTH_REQUIRED)
+    if extra:
+        raise ValueError(f"source health has unknown fields: {', '.join(extra)}")
+
+    if source_health["schema_version"] != "source-health.v1":
+        raise ValueError("source health must use source-health.v1")
+    _require_text(source_health, "run_id")
+    _require_text(source_health, "source_id")
+    _require_text(source_health, "checked_at")
+    if source_health["source_type"] not in _SOURCE_TYPES:
+        raise ValueError("source health has unsupported source_type")
+    if source_health["status"] not in _SOURCE_HEALTH_STATUS:
+        raise ValueError("source health has unsupported status")
+
+    for field in [
+        "attempted_fetches",
+        "successful_fetches",
+        "failed_fetches",
+        "raw_records_written",
+    ]:
+        if not isinstance(source_health[field], int) or source_health[field] < 0:
+            raise ValueError(f"source health {field} must be non-negative")
+
+    degraded_reasons = source_health["degraded_reasons"]
+    if not isinstance(degraded_reasons, list) or not all(
+        isinstance(reason, str) and reason for reason in degraded_reasons
+    ):
+        raise ValueError("source health degraded_reasons must be strings")
+
+    last_error = source_health["last_error"]
+    if last_error is not None:
+        _validate_source_health_error(last_error)
+    if source_health["next_retry_after"] is not None:
+        _require_text(source_health, "next_retry_after")
+
+
+def _validate_source_health_error(error: Any) -> None:
+    if not isinstance(error, dict):
+        raise ValueError("source health last_error must be an object or null")
+    required = {"kind", "message"}
+    allowed = required | {"retryable"}
+    missing = sorted(required - set(error))
+    if missing:
+        raise ValueError(
+            f"source health last_error missing required fields: {', '.join(missing)}"
+        )
+    extra = sorted(set(error) - allowed)
+    if extra:
+        raise ValueError(
+            f"source health last_error has unknown fields: {', '.join(extra)}"
+        )
+    _require_text(error, "kind")
+    _require_text(error, "message")
+    if "retryable" in error and not isinstance(error["retryable"], bool):
+        raise ValueError("source health last_error retryable must be boolean")
+
+
+def _require_text(payload: dict[str, Any], field: str) -> None:
+    if not isinstance(payload[field], str) or not payload[field]:
+        raise ValueError(f"{field} must be a non-empty string")
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> Path:

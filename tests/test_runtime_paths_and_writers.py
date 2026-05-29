@@ -19,7 +19,9 @@ from shared_intake_governance.runtime import (  # noqa: E402
     RawWriter,
     RunWriter,
     RuntimePaths,
+    SourceHealthWriter,
     ToolExecutionWriter,
+    validate_source_health,
     generate_run_id,
 )
 
@@ -330,6 +332,46 @@ class RuntimeWriterTests(unittest.TestCase):
             writer.write_manifest(manifest)
             self.assertEqual(manifest_path.read_text(encoding="utf-8"), first_write)
 
+    def test_source_health_writer_validates_and_writes_health(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            writer = SourceHealthWriter(paths)
+            source_health = _source_health()
+            validate_source_health(source_health)
+
+            source_health_path = writer.write_source_health(source_health)
+
+            self.assertEqual(
+                source_health_path,
+                paths.source_health_path(
+                    "20260529T123045Z-deadbeef", "github-main"
+                ),
+            )
+            self.assertEqual(json.loads(source_health_path.read_text()), source_health)
+
+    def test_source_health_validation_rejects_contract_drift(self):
+        valid_health = _source_health()
+
+        missing_required = dict(valid_health)
+        missing_required.pop("status")
+        with self.assertRaises(ValueError):
+            validate_source_health(missing_required)
+
+        unknown_field = dict(valid_health)
+        unknown_field["score"] = 1
+        with self.assertRaises(ValueError):
+            validate_source_health(unknown_field)
+
+        bad_status = dict(valid_health)
+        bad_status["status"] = "ok"
+        with self.assertRaises(ValueError):
+            validate_source_health(bad_status)
+
+        bad_error = dict(valid_health)
+        bad_error["last_error"] = {"kind": "timeout"}
+        with self.assertRaises(ValueError):
+            validate_source_health(bad_error)
+
     def test_audit_writer_appends_jsonl_events(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             paths = RuntimePaths(Path(tmp_dir) / "runtime")
@@ -513,6 +555,24 @@ def _audit_event(intent_id, decision):
         "dry_run_supported": False,
         "evidence_refs": ["clean/github_repo-good.json"],
         "tool_intent_path": "intent.json",
+    }
+
+
+def _source_health():
+    return {
+        "schema_version": "source-health.v1",
+        "run_id": "20260529T123045Z-deadbeef",
+        "source_id": "github-main",
+        "source_type": "github_repo",
+        "status": "healthy",
+        "checked_at": "2026-05-29T12:30:45Z",
+        "attempted_fetches": 1,
+        "successful_fetches": 1,
+        "failed_fetches": 0,
+        "raw_records_written": 1,
+        "degraded_reasons": [],
+        "last_error": None,
+        "next_retry_after": None,
     }
 
 
