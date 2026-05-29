@@ -8,6 +8,8 @@ import json
 import re
 import xml.etree.ElementTree as ElementTree
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any
 
@@ -159,7 +161,7 @@ def validate_clean_record(record: dict[str, Any]) -> None:
     if not isinstance(record["quarantined"], bool):
         raise ValueError("quarantined must be a boolean")
     if "published_at" in record and record["published_at"] is not None:
-        _require_text(record, "published_at")
+        _require_datetime_text(record, "published_at")
     if "license_or_terms_note" in record and record["license_or_terms_note"] is not None:
         _require_text(record, "license_or_terms_note")
 
@@ -222,7 +224,9 @@ def _github_repository_clean_record(
         "canonical_url": canonical_url,
         "title": title,
         "sanitized_summary": summary,
-        "published_at": _optional_text(payload.get("created_at")),
+        "published_at": _normalize_optional_source_date_time(
+            payload.get("created_at")
+        ),
         "license_or_terms_note": _license_note(payload.get("license")),
         "source_trust": "platform",
         "risk_flags": risk_flags,
@@ -270,7 +274,7 @@ def _arxiv_entry_clean_record(
 
     title = _clean_text(_atom_text(entry, "title") or canonical_url)
     summary = _cap_length(_clean_text(_atom_text(entry, "summary")))
-    published_at = _optional_text(
+    published_at = _normalize_optional_source_date_time(
         _atom_text(entry, "published") or _atom_text(entry, "updated")
     )
     risk_flags = _risk_flags(" ".join([title, summary]))
@@ -316,7 +320,7 @@ def _rss_item_clean_record(
     summary = _cap_length(
         _clean_text(_rss_text(item, "description") or _rss_text(item, "summary"))
     )
-    published_at = _optional_text(_rss_text(item, "pubDate"))
+    published_at = _normalize_optional_source_date_time(_rss_text(item, "pubDate"))
     risk_flags = _risk_flags(" ".join([title, summary]))
 
     return {
@@ -405,9 +409,53 @@ def _optional_text(value: Any) -> str | None:
     return cleaned or None
 
 
+def _normalize_optional_source_date_time(value: Any) -> str | None:
+    cleaned = _optional_text(value)
+    if cleaned is None:
+        return None
+
+    parsed = _parse_schema_date_time(cleaned)
+    if parsed is None:
+        try:
+            parsed = parsedate_to_datetime(cleaned)
+        except (TypeError, ValueError, IndexError, OverflowError):
+            return None
+        if parsed.tzinfo is None:
+            return None
+
+    return _format_utc(parsed)
+
+
+def _parse_schema_date_time(value: str) -> datetime | None:
+    parsed_value = value[:-1] + "+00:00" if value.endswith("Z") else value
+    try:
+        parsed = datetime.fromisoformat(parsed_value)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return parsed
+
+
+def _format_utc(value: datetime) -> str:
+    return (
+        value.astimezone(timezone.utc)
+        .isoformat(timespec="seconds")
+        .replace("+00:00", "Z")
+    )
+
+
 def _require_text(record: dict[str, Any], field: str) -> None:
     if not isinstance(record[field], str) or not record[field]:
         raise ValueError(f"{field} must be a non-empty string")
+
+
+def _require_datetime_text(record: dict[str, Any], field: str) -> None:
+    if (
+        not isinstance(record[field], str)
+        or _parse_schema_date_time(record[field]) is None
+    ):
+        raise ValueError(f"{field} must be a date-time string")
 
 
 def _raw_body_path(paths: RuntimePaths, storage_path: str) -> Path:

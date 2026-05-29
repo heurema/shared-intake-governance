@@ -146,6 +146,8 @@ At minimum, define:
 - when `quarantined` becomes `true`.
 
 If one upstream page contains many logical items, split them before projection.
+If a source exposes publish dates outside the clean-record date-time format,
+normalize parseable values and omit unparseable values.
 
 ### Step 4: define sanitization and risk handling
 
