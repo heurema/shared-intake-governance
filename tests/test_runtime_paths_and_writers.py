@@ -818,10 +818,34 @@ class RuntimeWriterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_dry_run_result(bad_status)
 
+        bad_run_id = dict(valid_result)
+        bad_run_id["run_id"] = "../20260529T123045Z-deadbeef"
+        with self.assertRaisesRegex(ValueError, "run_id must be a safe path segment"):
+            validate_dry_run_result(bad_run_id)
+
+        bad_dry_run_id = dict(valid_result)
+        bad_dry_run_id["dry_run_id"] = "../dry-run-1"
+        with self.assertRaisesRegex(
+            ValueError, "dry_run_id must be a safe path segment"
+        ):
+            validate_dry_run_result(bad_dry_run_id)
+
         bad_artifacts = dict(valid_result)
         bad_artifacts["artifact_refs"] = ["dry-runs/result.json", 1]
         with self.assertRaises(ValueError):
             validate_dry_run_result(bad_artifacts)
+
+    def test_dry_run_result_schema_tracks_runtime_id_constraints(self):
+        schema = _read_schema("dry-run-result.schema.json")
+
+        self.assertEqual(
+            schema["properties"]["run_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["dry_run_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
 
     def test_mediation_writer_writes_record_deterministically(self):
         with tempfile.TemporaryDirectory() as tmp_dir:

@@ -521,6 +521,8 @@ def validate_dry_run_result(result: dict[str, Any]) -> None:
         "tool_intent_path",
     ]:
         _require_text(result, field)
+    _require_safe_segment(result, "run_id")
+    _require_safe_segment(result, "dry_run_id")
     require_date_time(result["recorded_at"], "recorded_at")
     if result["action_class"] not in _ACTION_CLASSES:
         raise ValueError("dry-run result has unsupported action_class")
