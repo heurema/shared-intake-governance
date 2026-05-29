@@ -739,6 +739,7 @@ def _smoke_source_config(
 def _project_profiles(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     output_id = args.output_id or generate_run_id()
+    generated_at = datetime.now(timezone.utc)
     profile_paths = [Path(path) for path in args.profiles]
     for profile_path in profile_paths:
         load_profile(profile_path)
@@ -746,18 +747,38 @@ def _project_profiles(args: argparse.Namespace, stdout: TextIO) -> int:
     projections = []
     projector = ProfileProjector(paths)
     for profile_path in profile_paths:
-        projection = projector.project(profile_path, output_id=output_id)
-        projections.append(
-            {
-                "profile_id": projection.report["profile_id"],
-                "output_mode": projection.report["output_mode"],
-                "projection_path": str(projection.path),
-                "clean_records_seen": projection.report["counts"][
-                    "clean_records_seen"
-                ],
-                "items_written": projection.report["counts"]["items_written"],
-            }
+        projection = projector.project(
+            profile_path,
+            output_id=output_id,
+            generated_at=generated_at,
         )
+        projection_summary = {
+            "profile_id": projection.report["profile_id"],
+            "output_mode": projection.report["output_mode"],
+            "projection_path": str(projection.path),
+            "clean_records_seen": projection.report["counts"][
+                "clean_records_seen"
+            ],
+            "items_written": projection.report["counts"]["items_written"],
+        }
+        if args.update_seen_state:
+            profile_state = update_seen_records_state(
+                paths=paths,
+                profile_id=projection.report["profile_id"],
+                profile_report=projection.report,
+                state_id=args.state_id,
+                updated_at=projection.report["generated_at"],
+            )
+            projection_summary.update(
+                {
+                    "profile_state_id": args.state_id,
+                    "profile_state_path": str(profile_state.path),
+                    "profile_state_record_count": len(
+                        profile_state.state["record_ids"]
+                    ),
+                }
+            )
+        projections.append(projection_summary)
 
     _print_json(
         stdout,
@@ -1761,6 +1782,16 @@ def _parser() -> argparse.ArgumentParser:
         "--profile", dest="profiles", action="append", required=True
     )
     project_profiles.add_argument("--output-id")
+    project_profiles.add_argument(
+        "--update-seen-state",
+        action="store_true",
+        help="Explicitly merge projected item IDs into profile-local seen state.",
+    )
+    project_profiles.add_argument(
+        "--state-id",
+        default="seen-records",
+        help="Profile state id to update when --update-seen-state is set.",
+    )
 
     list_runs = subparsers.add_parser(
         "list-runs",

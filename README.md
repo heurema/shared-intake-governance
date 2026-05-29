@@ -83,6 +83,8 @@ What exists now:
   project paths;
 - multi-profile CLI command that projects existing clean cache into multiple
   explicit profile reports;
+- explicit `project-profiles --update-seen-state` flag that merges each
+  generated report into that profile's `seen_records` state artifact;
 - config-driven one-source CLI command for source definitions stored in JSON;
 - isolated smoke CLI command for live one-source checks with runtime data
   outside git;
@@ -117,7 +119,7 @@ What does not exist yet:
 - sanitizer source mappings beyond `github_repo`, `github_search`,
   `arxiv_rss_keywords`, `arxiv_query`, and `rss`;
 - multi-profile report shaping beyond deterministic per-profile JSON;
-- automatic profile-state updates from `project-profiles` or consumer-specific
+- implicit profile-state updates from `project-profiles` or consumer-specific
   dedupe behavior;
 - automatic command discovery, credential mapping, or default provider/tool
   presets;
