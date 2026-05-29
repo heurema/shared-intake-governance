@@ -139,9 +139,9 @@ Current CLI implementation:
 These commands intentionally cover only the implemented `github_repo`,
 `github_search`, `arxiv_rss_keywords`, `arxiv_query`, and `rss` paths. They
 require explicit runtime root, profile path, source-specific inputs or one
-`source-config.v1` file, and run/output identifiers. The smoke command may
-allocate an isolated temporary runtime root when none is provided. These
-commands also write:
+validated `source-config.v1` file, and run/output identifiers. The smoke
+command may allocate an isolated temporary runtime root when none is provided.
+These commands also write:
 
 - `runs/<run-id>.manifest.json`
 - `source-health/<run-id>/<source-id>.json`
@@ -258,10 +258,14 @@ Current implementation:
 
 - `src/shared_intake_governance/runtime/paths.py`
 - `src/shared_intake_governance/runtime/writers.py`
+- `src/shared_intake_governance/source_config.py`
 - `tests/test_runtime_paths_and_writers.py`
+- `tests/test_source_config_examples.py`
 - raw metadata artifacts are validated before writer output.
 - run manifests are validated before writer output.
 - source health artifacts are validated before writer output.
+- source config files are validated before `run-source-config` and
+  `smoke-source-config` dispatch to collectors.
 
 ### Step 4: implement one source collector family
 

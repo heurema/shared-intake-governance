@@ -161,6 +161,7 @@ Supported Phase 1 source configs:
 
 Source configs must not contain credentials, runtime state, scoring rules,
 profile logic, or publication semantics.
+Runtime code validates source configs before dispatching a source run.
 
 ## Profile config
 

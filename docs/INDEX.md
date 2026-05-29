@@ -95,6 +95,7 @@ Use this file as the main navigation layer.
 
 - [../src/shared_intake_governance/runtime/paths.py](../src/shared_intake_governance/runtime/paths.py)
 - [../src/shared_intake_governance/runtime/writers.py](../src/shared_intake_governance/runtime/writers.py)
+- [../src/shared_intake_governance/source_config.py](../src/shared_intake_governance/source_config.py)
 - [../src/shared_intake_governance/collector/github_repo.py](../src/shared_intake_governance/collector/github_repo.py)
 - [../src/shared_intake_governance/collector/github_search.py](../src/shared_intake_governance/collector/github_search.py)
 - [../src/shared_intake_governance/collector/arxiv_rss_keywords.py](../src/shared_intake_governance/collector/arxiv_rss_keywords.py)
@@ -109,6 +110,7 @@ Use this file as the main navigation layer.
 - [../src/shared_intake_governance/adapters/provider_result.py](../src/shared_intake_governance/adapters/provider_result.py)
 - [../src/shared_intake_governance/cli/pipeline.py](../src/shared_intake_governance/cli/pipeline.py)
 - [../tests/test_runtime_paths_and_writers.py](../tests/test_runtime_paths_and_writers.py)
+- [../tests/test_source_config_examples.py](../tests/test_source_config_examples.py)
 - [../tests/test_profile_state.py](../tests/test_profile_state.py)
 - [../tests/test_governance_mediation.py](../tests/test_governance_mediation.py)
 - [../tests/test_tool_execution.py](../tests/test_tool_execution.py)

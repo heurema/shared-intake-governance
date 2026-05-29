@@ -7,7 +7,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from shared_intake_governance.cli.pipeline import _load_source_config  # noqa: E402
+from shared_intake_governance.source_config import (  # noqa: E402
+    load_source_config,
+    validate_source_config,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,7 +31,7 @@ class SourceConfigExampleTests(unittest.TestCase):
             ],
         )
 
-        configs = [_load_source_config(path) for path in example_paths]
+        configs = [load_source_config(path) for path in example_paths]
 
         self.assertEqual(
             [config["schema_version"] for config in configs],
@@ -77,7 +80,7 @@ class SourceConfigExampleTests(unittest.TestCase):
             )
 
             with self.assertRaises(ValueError):
-                _load_source_config(config_path)
+                load_source_config(config_path)
 
     def test_arxiv_query_source_config_requires_query(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -95,7 +98,7 @@ class SourceConfigExampleTests(unittest.TestCase):
             )
 
             with self.assertRaises(ValueError):
-                _load_source_config(config_path)
+                load_source_config(config_path)
 
     def test_rss_source_config_requires_feed_url(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -112,7 +115,56 @@ class SourceConfigExampleTests(unittest.TestCase):
             )
 
             with self.assertRaises(ValueError):
-                _load_source_config(config_path)
+                load_source_config(config_path)
+
+    def test_source_config_validation_rejects_contract_drift(self):
+        valid = {
+            "schema_version": "source-config.v1",
+            "source_type": "github_search",
+            "source_id": "github-search-code-agents",
+            "query": "topic:coding-agent",
+            "max_results": 5,
+        }
+        validate_source_config(valid)
+
+        missing_required = dict(valid)
+        del missing_required["query"]
+        with self.assertRaisesRegex(ValueError, "missing required fields"):
+            validate_source_config(missing_required)
+
+        unknown_field = dict(valid)
+        unknown_field["credentials"] = {"token": "do-not-load"}
+        with self.assertRaisesRegex(ValueError, "unknown fields"):
+            validate_source_config(unknown_field)
+
+        bad_schema = dict(valid)
+        bad_schema["schema_version"] = "source-config.v0"
+        with self.assertRaisesRegex(ValueError, "source-config.v1"):
+            validate_source_config(bad_schema)
+
+        bad_max_results = dict(valid)
+        bad_max_results["max_results"] = 0
+        with self.assertRaisesRegex(ValueError, "between 1 and 100"):
+            validate_source_config(bad_max_results)
+
+    def test_rss_source_config_rejects_unsupported_source_trust(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            config_path = Path(tmp_dir) / "source-config.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": "source-config.v1",
+                        "source_type": "rss",
+                        "source_id": "rss-example",
+                        "feed_url": "https://example.test/feed.xml",
+                        "source_trust": "private",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "unsupported source_trust"):
+                load_source_config(config_path)
 
 
 if __name__ == "__main__":
