@@ -3581,15 +3581,16 @@ def _write_profile_report(paths, *, profile_id, output_id, output_mode, items):
         }
         for record_id in items
     ]
+    excluded_by_source = max(0, 2 - len(report_items))
     report = {
         "schema_version": "profile-projection.v1",
         "profile_id": profile_id,
         "output_mode": output_mode,
         "generated_at": "2026-05-29T12:30:45Z",
         "counts": {
-            "clean_records_seen": 2,
+            "clean_records_seen": len(report_items) + excluded_by_source,
             "items_written": len(report_items),
-            "excluded_by_source": 0,
+            "excluded_by_source": excluded_by_source,
             "excluded_by_keyword": 0,
             "excluded_by_risk": 0,
             "excluded_quarantined": 0,

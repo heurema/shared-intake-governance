@@ -619,6 +619,23 @@ class ProfileProjectorTests(unittest.TestCase):
         ):
             validate_profile_projection(invalid_generated_at)
 
+        mismatched_items_written = dict(valid_report)
+        mismatched_items_written["counts"] = dict(valid_report["counts"])
+        mismatched_items_written["counts"]["items_written"] = 0
+        with self.assertRaisesRegex(
+            ValueError, "profile projection items_written must match item count"
+        ):
+            validate_profile_projection(mismatched_items_written)
+
+        mismatched_seen_total = dict(valid_report)
+        mismatched_seen_total["counts"] = dict(valid_report["counts"])
+        mismatched_seen_total["counts"]["clean_records_seen"] = 2
+        with self.assertRaisesRegex(
+            ValueError,
+            "profile projection clean_records_seen must equal items_written plus exclusions",
+        ):
+            validate_profile_projection(mismatched_seen_total)
+
     def test_profile_loader_defaults_required_risk_flags_absent(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             profile_path = Path(tmp_dir) / "profile.json"
