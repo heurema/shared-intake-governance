@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -12,6 +13,7 @@ from shared_intake_governance.runtime import RuntimePaths
 from shared_intake_governance.validation import require_date_time
 
 
+_SAFE_SEGMENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _PROFILE_STATE_REQUIRED = {
     "schema_version",
     "profile_id",
@@ -83,6 +85,8 @@ def validate_profile_state(state: dict[str, Any]) -> None:
         raise ValueError("profile state must use profile-state.v1")
     for field in ["profile_id", "state_id", "updated_at"]:
         _require_text(state, field)
+    _safe_segment(state["profile_id"], "profile_id")
+    _safe_segment(state["state_id"], "state_id")
     require_date_time(state["updated_at"], "updated_at")
     if state["state_kind"] not in _PROFILE_STATE_KINDS:
         raise ValueError("profile state has unsupported state_kind")
@@ -106,6 +110,12 @@ def _record_ids(state: dict[str, Any]) -> list[str]:
 def _require_text(payload: dict[str, Any], field: str) -> None:
     if not isinstance(payload[field], str) or not payload[field]:
         raise ValueError(f"{field} must be a non-empty string")
+
+
+def _safe_segment(value: str, label: str) -> str:
+    if not _SAFE_SEGMENT.fullmatch(value):
+        raise ValueError(f"{label} must be a safe path segment")
+    return value
 
 
 def _read_json(path: Path) -> dict[str, Any]:
