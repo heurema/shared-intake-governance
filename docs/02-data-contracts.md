@@ -27,6 +27,10 @@ inspection surfaces also validate runtime artifacts before summarizing or
 returning them, because runtime roots may contain hand-edited or corrupted
 JSON outside the repository.
 
+Fields marked as `format: date-time` in JSON schemas must be valid date-time
+strings with timezone information. Runtime validators reject invalid timestamp
+strings before writer output.
+
 ## Raw payload metadata
 
 See [../schemas/raw-metadata.schema.json](../schemas/raw-metadata.schema.json).

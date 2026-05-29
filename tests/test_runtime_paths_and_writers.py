@@ -883,6 +883,43 @@ class RuntimeWriterTests(unittest.TestCase):
         ):
             validate_provider_result(blocked_without_error)
 
+    def test_runtime_validators_reject_invalid_date_time_fields(self):
+        invalid_value = "not-a-date-time"
+        cases = [
+            (validate_raw_metadata, _raw_metadata(None), ["fetched_at"]),
+            (
+                validate_run_manifest,
+                _run_manifest(RuntimePaths(Path("/tmp/runtime"))),
+                ["started_at", "finished_at"],
+            ),
+            (
+                validate_source_health,
+                _source_health(),
+                ["checked_at", "next_retry_after"],
+            ),
+            (
+                validate_governance_audit_event,
+                _audit_event("intent-1", "allowed"),
+                ["recorded_at"],
+            ),
+            (validate_approval_record, _approval_record(), ["approved_at"]),
+            (validate_dry_run_result, _dry_run_result(), ["recorded_at"]),
+            (validate_execution_mediation, _mediation_record(), ["mediated_at"]),
+            (validate_provider_request, _provider_request(), ["prepared_at"]),
+            (validate_tool_execution_result, _tool_execution_result(), ["executed_at"]),
+            (validate_provider_result, _provider_result(), ["recorded_at"]),
+        ]
+
+        for validator, payload, fields in cases:
+            for field in fields:
+                with self.subTest(validator=validator.__name__, field=field):
+                    candidate = dict(payload)
+                    candidate[field] = invalid_value
+                    with self.assertRaisesRegex(
+                        ValueError, f"{field} must be a date-time string"
+                    ):
+                        validator(candidate)
+
     def test_result_schemas_encode_error_status_consistency(self):
         expected = [
             (
