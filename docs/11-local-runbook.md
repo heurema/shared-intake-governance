@@ -82,6 +82,12 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli list-runs \
 PYTHONPATH=src python3 -m shared_intake_governance.cli list-clean-records \
   --runtime-root "$SIG_RUNTIME_ROOT"
 
+export SIG_RECORD_ID="github_repo-0c06645da408f813"
+
+PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-record \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --record-id "$SIG_RECORD_ID"
+
 PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-run \
   --runtime-root "$SIG_RUNTIME_ROOT" \
   --run-id "$SIG_RUN_ID"

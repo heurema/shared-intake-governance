@@ -897,6 +897,51 @@ class CliPipelineTests(unittest.TestCase):
                 },
             )
 
+    def test_inspect_record_reads_one_clean_record_without_writes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            clean_record = {
+                "record_id": "github_repo-good",
+                "source_id": "github-signum",
+                "source_type": "github_repo",
+                "canonical_url": "https://github.com/heurema/signum",
+                "title": "heurema/signum",
+                "sanitized_summary": "Coding agent benchmark toolkit.",
+                "published_at": "2025-01-02T03:04:05Z",
+                "license_or_terms_note": "license: Apache-2.0",
+                "source_trust": "platform",
+                "risk_flags": [],
+                "quarantined": False,
+                "raw_hash": "raw-github",
+                "sanitizer_version": "clean-record.v1",
+            }
+            clean_record_path = _write_clean_record(paths, clean_record)
+            before_paths = _all_files(paths.root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "inspect-record",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--record-id",
+                    "github_repo-good",
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(paths.root), before_paths)
+            self.assertEqual(
+                summary,
+                {
+                    **clean_record,
+                    "clean_record_path": str(clean_record_path),
+                },
+            )
+
 
 class SuccessfulCollector:
     def __init__(self, paths, **kwargs):

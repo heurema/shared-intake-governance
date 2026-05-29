@@ -68,6 +68,8 @@ def main(
         return _list_runs(args, stdout)
     if args.command == "list-clean-records":
         return _list_clean_records(args, stdout)
+    if args.command == "inspect-record":
+        return _inspect_record(args, stdout)
     if args.command == "inspect-run":
         return _inspect_run(args, stdout)
     if args.command == "show-source-health":
@@ -364,6 +366,16 @@ def _list_clean_records(args: argparse.Namespace, stdout: TextIO) -> int:
             "clean_records": clean_records,
         },
     )
+    return 0
+
+
+def _inspect_record(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    clean_record_path = paths.clean_record_path(args.record_id)
+    record = _read_json(clean_record_path)
+    record = dict(record)
+    record["clean_record_path"] = str(clean_record_path)
+    _print_json(stdout, record)
     return 0
 
 
@@ -702,6 +714,13 @@ def _parser() -> argparse.ArgumentParser:
         help="List clean records under one runtime root.",
     )
     list_clean_records.add_argument("--runtime-root", required=True)
+
+    inspect_record = subparsers.add_parser(
+        "inspect-record",
+        help="Read one clean record.",
+    )
+    inspect_record.add_argument("--runtime-root", required=True)
+    inspect_record.add_argument("--record-id", required=True)
 
     inspect_run = subparsers.add_parser(
         "inspect-run",

@@ -132,6 +132,8 @@ Current CLI behavior:
   inventory without writing runtime data;
 - `list-clean-records` reads existing clean records and returns a deterministic
   inventory without writing runtime data;
+- `inspect-record` reads one clean record by record id without writing runtime
+  data;
 - `inspect-run` reads one run manifest and summarizes linked source health
   artifacts without writing runtime data;
 - `show-source-health` reads one source health artifact without writing
