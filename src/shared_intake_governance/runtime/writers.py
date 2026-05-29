@@ -99,6 +99,23 @@ _GOVERNANCE_AUDIT_REQUIRED = {
     "evidence_refs",
     "tool_intent_path",
 }
+_APPROVAL_DECISIONS = {"approved", "rejected"}
+_APPROVAL_RECORD_REQUIRED = {
+    "schema_version",
+    "run_id",
+    "approval_id",
+    "intent_id",
+    "profile_id",
+    "action_class",
+    "tool_name",
+    "approval_decision",
+    "approved_by",
+    "approved_at",
+    "justification",
+    "dry_run_ref",
+    "evidence_refs",
+    "tool_intent_path",
+}
 _SOURCE_HEALTH_REQUIRED = {
     "schema_version",
     "run_id",
@@ -209,6 +226,7 @@ class ApprovalWriter:
         self.paths = paths
 
     def write_record(self, record: dict[str, Any]) -> Path:
+        validate_approval_record(record)
         path = self.paths.approval_record_path(
             str(record["run_id"]), str(record["approval_id"])
         )
@@ -317,6 +335,42 @@ def validate_governance_audit_event(event: dict[str, Any]) -> None:
         event,
         "evidence_refs",
         "governance audit event evidence_refs",
+    )
+
+
+def validate_approval_record(record: dict[str, Any]) -> None:
+    missing = sorted(_APPROVAL_RECORD_REQUIRED - set(record))
+    if missing:
+        raise ValueError(
+            "approval record missing required fields: " + ", ".join(missing)
+        )
+    extra = sorted(set(record) - _APPROVAL_RECORD_REQUIRED)
+    if extra:
+        raise ValueError("approval record has unknown fields: " + ", ".join(extra))
+
+    if record["schema_version"] != "approval-record.v1":
+        raise ValueError("approval record must use approval-record.v1")
+    for field in [
+        "run_id",
+        "approval_id",
+        "intent_id",
+        "profile_id",
+        "tool_name",
+        "approved_by",
+        "approved_at",
+        "justification",
+        "tool_intent_path",
+    ]:
+        _require_text(record, field)
+    if record["action_class"] not in _ACTION_CLASSES:
+        raise ValueError("approval record has unsupported action_class")
+    if record["approval_decision"] not in _APPROVAL_DECISIONS:
+        raise ValueError("approval record has unsupported approval_decision")
+    _require_optional_string(record, "dry_run_ref", "approval record dry_run_ref")
+    _require_string_array(
+        record,
+        "evidence_refs",
+        "approval record evidence_refs",
     )
 
 
@@ -488,6 +542,11 @@ def _require_string_array(payload: dict[str, Any], field: str, label: str) -> No
         isinstance(item, str) for item in payload[field]
     ):
         raise ValueError(f"{label} must be strings")
+
+
+def _require_optional_string(payload: dict[str, Any], field: str, label: str) -> None:
+    if payload[field] is not None and not isinstance(payload[field], str):
+        raise ValueError(f"{label} must be a string or null")
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> Path:

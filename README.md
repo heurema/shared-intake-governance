@@ -100,8 +100,8 @@ What exists now:
   governance evaluator CLI.
 - governance audit event contract and optional validated append-only audit
   logging for evaluated tool intents.
-- approval-record contract and local `record-approval` CLI for explicit
-  approval or rejection records without tool execution.
+- approval-record contract and local `record-approval` CLI for validated
+  explicit approval or rejection records without tool execution.
 - dry-run-result contract and local `record-dry-run` CLI for recorded dry-run
   evidence without tool execution.
 - execution-mediation contract and local `mediate-tool-intent` CLI for
