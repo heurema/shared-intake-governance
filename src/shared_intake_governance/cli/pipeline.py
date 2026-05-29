@@ -24,6 +24,7 @@ from shared_intake_governance.collector.github_repo import (
 from shared_intake_governance.governance import evaluate_tool_intent
 from shared_intake_governance.projector import ProfileProjector, load_profile
 from shared_intake_governance.runtime import (
+    AuditWriter,
     RunWriter,
     RuntimePaths,
     SourceHealthWriter,
@@ -497,8 +498,43 @@ def _evaluate_tool_intent(args: argparse.Namespace, stdout: TextIO) -> int:
     decision = evaluate_tool_intent(intent)
     decision = dict(decision)
     decision["tool_intent_path"] = str(intent_path)
+    if bool(args.runtime_root) != bool(args.run_id):
+        raise ValueError("runtime-root and run-id must be provided together")
+    if args.runtime_root:
+        paths = RuntimePaths(Path(args.runtime_root))
+        event = _governance_audit_event(
+            run_id=args.run_id,
+            decision=decision,
+            tool_intent_path=str(intent_path),
+        )
+        audit_log_path = AuditWriter(paths).write_event(event)
+        decision["audit_log_path"] = str(audit_log_path)
+        decision["audit_event"] = event
     _print_json(stdout, decision)
     return 0
+
+
+def _governance_audit_event(
+    *,
+    run_id: str,
+    decision: dict[str, Any],
+    tool_intent_path: str,
+) -> dict[str, Any]:
+    return {
+        "schema_version": "governance-audit-event.v1",
+        "run_id": run_id,
+        "event_type": "tool_intent_evaluated",
+        "recorded_at": _format_utc(datetime.now(timezone.utc)),
+        "intent_id": decision["intent_id"],
+        "profile_id": decision["profile_id"],
+        "action_class": decision["action_class"],
+        "tool_name": decision["tool_name"],
+        "decision": decision["decision"],
+        "reason": decision["reason"],
+        "dry_run_supported": decision["dry_run_supported"],
+        "evidence_refs": decision["evidence_refs"],
+        "tool_intent_path": tool_intent_path,
+    }
 
 
 def _inspect_run(args: argparse.Namespace, stdout: TextIO) -> int:
@@ -917,6 +953,8 @@ def _parser() -> argparse.ArgumentParser:
         help="Evaluate one tool-intent.v1 file without executing tools.",
     )
     evaluate_intent.add_argument("--intent", required=True)
+    evaluate_intent.add_argument("--runtime-root")
+    evaluate_intent.add_argument("--run-id")
 
     inspect_run = subparsers.add_parser(
         "inspect-run",

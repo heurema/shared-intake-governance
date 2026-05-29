@@ -135,8 +135,9 @@ deterministic report per explicit profile path.
 The profile-state inspection commands read existing `profile-state.v1`
 artifacts only; they do not update seen state or change projection behavior.
 The governance evaluator reads one `tool-intent.v1` file and prints one
-`governance-decision.v1` decision; it does not execute tools, write audit logs,
-or create approvals.
+`governance-decision.v1` decision; when `--runtime-root` and `--run-id` are
+provided together, it appends one `governance-audit-event.v1` JSONL record.
+It does not execute tools or create approvals.
 
 For current manual invocation examples, see [11-local-runbook.md](11-local-runbook.md).
 
@@ -164,6 +165,7 @@ Current Phase 1 contract anchors:
 - source health output shape: `schemas/source-health.schema.json`
 - run manifest shape: `schemas/run-manifest.schema.json`
 - governance decision shape: `schemas/governance-decision.schema.json`
+- governance audit event shape: `schemas/governance-audit-event.schema.json`
 
 If these anchors drift, update the docs or schemas before adding runtime code.
 
@@ -296,10 +298,11 @@ Current governance runtime:
 - `src/shared_intake_governance/governance/policy.py`
 - `tests/test_governance_policy.py`
 - `evaluate-tool-intent` implements only the default policy evaluator.
+- `evaluate-tool-intent --runtime-root ... --run-id ...` appends audit
+  evidence for evaluated intents.
 
 Still missing:
 
-- audit log writes;
 - approval records;
 - dry-run sidecar;
 - tool execution mediation.

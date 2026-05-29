@@ -1,11 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://shared-intake-governance.local/schemas/governance-decision.schema.json",
-  "title": "GovernanceDecision",
+  "$id": "https://shared-intake-governance.local/schemas/governance-audit-event.schema.json",
+  "title": "GovernanceAuditEvent",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "schema_version",
+    "run_id",
+    "event_type",
+    "recorded_at",
     "intent_id",
     "profile_id",
     "action_class",
@@ -13,12 +16,25 @@
     "decision",
     "reason",
     "dry_run_supported",
-    "evidence_refs"
+    "evidence_refs",
+    "tool_intent_path"
   ],
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "governance-decision.v1"
+      "const": "governance-audit-event.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "event_type": {
+      "type": "string",
+      "const": "tool_intent_evaluated"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
     },
     "intent_id": {
       "type": "string",
@@ -66,13 +82,6 @@
     "tool_intent_path": {
       "type": "string",
       "minLength": 1
-    },
-    "audit_log_path": {
-      "type": "string",
-      "minLength": 1
-    },
-    "audit_event": {
-      "$ref": "governance-audit-event.schema.json"
     }
   }
 }
