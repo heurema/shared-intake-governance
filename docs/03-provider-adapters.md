@@ -92,6 +92,10 @@ The first runtime boundary for this interface is the local
 contains provider, capability, context, and evidence references only. It does
 not invoke the provider.
 
+The paired `provider-result.v1` artifact records response references, summary,
+usage metadata, and compact errors after a provider attempt is externally
+performed or simulated. It should not embed full provider responses.
+
 ## Hard rules
 
 Adapters must not:

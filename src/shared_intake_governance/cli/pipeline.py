@@ -21,7 +21,10 @@ from shared_intake_governance.collector.github_repo import (
     GitHubRepoCollector,
     GitHubRepoSource,
 )
-from shared_intake_governance.adapters import prepare_provider_request
+from shared_intake_governance.adapters import (
+    prepare_provider_request,
+    record_provider_result,
+)
 from shared_intake_governance.governance import (
     evaluate_tool_intent,
     mediate_tool_intent,
@@ -33,6 +36,7 @@ from shared_intake_governance.runtime import (
     DryRunWriter,
     MediationWriter,
     ProviderRequestWriter,
+    ProviderResultWriter,
     RunWriter,
     RuntimePaths,
     SourceHealthWriter,
@@ -104,6 +108,8 @@ def main(
         return _inspect_mediation_record(args, stdout)
     if args.command == "prepare-provider-request":
         return _prepare_provider_request(args, stdout)
+    if args.command == "record-provider-result":
+        return _record_provider_result(args, stdout)
     if args.command == "inspect-run":
         return _inspect_run(args, stdout)
     if args.command == "show-source-health":
@@ -734,6 +740,35 @@ def _prepare_provider_request(args: argparse.Namespace, stdout: TextIO) -> int:
     return 0
 
 
+def _record_provider_result(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    provider_request_path = Path(args.provider_request)
+    provider_request = _read_json(provider_request_path)
+    error = _provider_error(args.error_kind, args.error_message)
+    result = record_provider_result(
+        run_id=args.run_id,
+        result_id=args.result_id,
+        provider_request=provider_request,
+        provider_request_path=str(provider_request_path),
+        result_status=args.result_status,
+        recorded_by=args.recorded_by,
+        summary=args.summary,
+        response_refs=args.response_refs or [],
+        usage_metadata=_usage_metadata(args.usage_keys or []),
+        error=error,
+        recorded_at=_format_utc(datetime.now(timezone.utc)),
+    )
+    provider_result_path = ProviderResultWriter(paths).write_result(result)
+    _print_json(
+        stdout,
+        {
+            "provider_result_path": str(provider_result_path),
+            "provider_result": result,
+        },
+    )
+    return 0
+
+
 def _dry_run_result(
     *,
     run_id: str,
@@ -1002,6 +1037,24 @@ def _require_string_list(config: dict[str, Any], field: str) -> None:
         isinstance(item, str) and item for item in config[field]
     ):
         raise ValueError(f"{field} must be a list of non-empty strings")
+
+
+def _usage_metadata(items: list[str]) -> dict[str, str]:
+    metadata: dict[str, str] = {}
+    for item in items:
+        key, separator, value = item.partition("=")
+        if not separator or not key or not value:
+            raise ValueError("usage-key must use key=value")
+        metadata[key] = value
+    return metadata
+
+
+def _provider_error(kind: str | None, message: str | None) -> dict[str, str] | None:
+    if kind is None and message is None:
+        return None
+    if not kind or not message:
+        raise ValueError("provider error requires both kind and message")
+    return {"kind": kind, "message": message}
 
 
 def _write_run_evidence(
@@ -1285,6 +1338,24 @@ def _parser() -> argparse.ArgumentParser:
     provider_request.add_argument(
         "--context-ref", dest="context_refs", action="append"
     )
+
+    provider_result = subparsers.add_parser(
+        "record-provider-result",
+        help="Record one provider-result.v1 artifact without invoking providers.",
+    )
+    provider_result.add_argument("--runtime-root", required=True)
+    provider_result.add_argument("--run-id", required=True)
+    provider_result.add_argument("--result-id", required=True)
+    provider_result.add_argument("--provider-request", required=True)
+    provider_result.add_argument(
+        "--result-status", choices=["succeeded", "failed", "blocked"], required=True
+    )
+    provider_result.add_argument("--recorded-by", required=True)
+    provider_result.add_argument("--summary", required=True)
+    provider_result.add_argument("--response-ref", dest="response_refs", action="append")
+    provider_result.add_argument("--usage-key", dest="usage_keys", action="append")
+    provider_result.add_argument("--error-kind")
+    provider_result.add_argument("--error-message")
 
     inspect_run = subparsers.add_parser(
         "inspect-run",

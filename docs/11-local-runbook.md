@@ -266,6 +266,30 @@ written `provider-request.v1` object. Provider request records intentionally
 omit full tool arguments, credentials, raw source text, and provider-specific
 policy truth.
 
+## Record a provider result
+
+Use this to record response references and usage metadata from a provider
+attempt performed outside this core. It does not invoke the provider or store
+full provider responses.
+
+```sh
+PYTHONPATH=src python3 -m shared_intake_governance.cli record-provider-result \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --run-id "$SIG_RUN_ID" \
+  --result-id provider-result-1 \
+  --provider-request "$SIG_RUNTIME_ROOT/provider-requests/$SIG_RUN_ID/provider-request-1.json" \
+  --result-status succeeded \
+  --recorded-by local-operator \
+  --summary "Provider completed the request." \
+  --response-ref provider-results/provider-result-1.summary.json \
+  --usage-key input_tokens=120 \
+  --usage-key output_tokens=30
+```
+
+For failed or blocked results, provide `--error-kind` and `--error-message`.
+Expected output is one summary containing `provider_result_path` and the
+written `provider-result.v1` object.
+
 ## Reset local runtime data
 
 Only remove runtime data outside the repository:

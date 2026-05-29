@@ -15,6 +15,7 @@ from shared_intake_governance.runtime import (  # noqa: E402
     DryRunWriter,
     MediationWriter,
     ProviderRequestWriter,
+    ProviderResultWriter,
     RawWriter,
     RunWriter,
     RuntimePaths,
@@ -42,6 +43,7 @@ class RuntimePathTests(unittest.TestCase):
             self.assertEqual(paths.dry_runs_root, root / "dry-runs")
             self.assertEqual(paths.mediation_root, root / "mediation")
             self.assertEqual(paths.provider_requests_root, root / "provider-requests")
+            self.assertEqual(paths.provider_results_root, root / "provider-results")
             self.assertEqual(paths.profiles_root, root / "profiles")
 
             self.assertEqual(
@@ -111,6 +113,15 @@ class RuntimePathTests(unittest.TestCase):
                 / "provider-request-1.json",
             )
             self.assertEqual(
+                paths.provider_result_path(
+                    "20260529T123045Z-deadbeef", "provider-result-1"
+                ),
+                root
+                / "provider-results"
+                / "20260529T123045Z-deadbeef"
+                / "provider-result-1.json",
+            )
+            self.assertEqual(
                 paths.source_health_path("20260529T123045Z-deadbeef", "github-main"),
                 root / "source-health" / "20260529T123045Z-deadbeef" / "github-main.json",
             )
@@ -158,6 +169,8 @@ class RuntimePathTests(unittest.TestCase):
                 paths.mediation_record_path("20260529T123045Z-deadbeef", "../record")
             with self.assertRaises(ValueError):
                 paths.provider_request_path("20260529T123045Z-deadbeef", "../request")
+            with self.assertRaises(ValueError):
+                paths.provider_result_path("20260529T123045Z-deadbeef", "../result")
             with self.assertRaises(ValueError):
                 paths.profile_state_path("pulse", "../state")
             with self.assertRaises(ValueError):
@@ -378,6 +391,27 @@ class RuntimeWriterTests(unittest.TestCase):
             writer.write_request(request)
             self.assertEqual(request_path.read_text(encoding="utf-8"), first_write)
 
+    def test_provider_result_writer_writes_result_deterministically(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            writer = ProviderResultWriter(paths)
+            result = _provider_result()
+
+            result_path = writer.write_result(result)
+            first_write = result_path.read_text(encoding="utf-8")
+
+            self.assertEqual(
+                result_path,
+                paths.provider_result_path(
+                    "20260529T123045Z-deadbeef", "provider-result-1"
+                ),
+            )
+            self.assertEqual(json.loads(first_write), result)
+            self.assertTrue(first_write.endswith("\n"))
+
+            writer.write_result(result)
+            self.assertEqual(result_path.read_text(encoding="utf-8"), first_write)
+
 
 def _raw_metadata(raw_body):
     return {
@@ -494,6 +528,30 @@ def _provider_request():
         "mediation_decision": "ready",
         "capabilities": ["edit_local"],
         "context_refs": ["profiles/code-intel-kernel/reports/report.json"],
+        "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
+    }
+
+
+def _provider_result():
+    return {
+        "schema_version": "provider-result.v1",
+        "run_id": "20260529T123045Z-deadbeef",
+        "result_id": "provider-result-1",
+        "request_id": "provider-request-1",
+        "provider": "claude",
+        "recorded_by": "local-operator",
+        "recorded_at": "2026-05-29T12:30:45Z",
+        "result_status": "succeeded",
+        "summary": "Provider completed the request.",
+        "provider_request_path": "provider-requests/20260529T123045Z-deadbeef/provider-request-1.json",
+        "mediation_id": "mediation-1",
+        "intent_id": "intent-1",
+        "profile_id": "code-intel-kernel",
+        "action_class": "edit_local",
+        "tool_name": "write-report",
+        "response_refs": ["provider-results/provider-result-1.summary.json"],
+        "usage_metadata": {"input_tokens": "120", "output_tokens": "30"},
+        "error": None,
         "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
     }
 

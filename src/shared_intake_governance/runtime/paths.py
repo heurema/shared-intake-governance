@@ -63,6 +63,10 @@ class RuntimePaths:
         return self.root / "provider-requests"
 
     @property
+    def provider_results_root(self) -> Path:
+        return self.root / "provider-results"
+
+    @property
     def profiles_root(self) -> Path:
         return self.root / "profiles"
 
@@ -117,6 +121,13 @@ class RuntimePaths:
             self.provider_requests_root
             / _safe_segment(run_id, "run_id")
             / f"{_safe_segment(request_id, 'request_id')}.json"
+        )
+
+    def provider_result_path(self, run_id: str, result_id: str) -> Path:
+        return (
+            self.provider_results_root
+            / _safe_segment(run_id, "run_id")
+            / f"{_safe_segment(result_id, 'result_id')}.json"
         )
 
     def source_health_path(self, run_id: str, source_id: str) -> Path:

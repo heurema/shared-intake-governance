@@ -119,6 +119,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli list-mediation-records`
 - `python -m shared_intake_governance.cli inspect-mediation-record`
 - `python -m shared_intake_governance.cli prepare-provider-request`
+- `python -m shared_intake_governance.cli record-provider-result`
 - `python -m shared_intake_governance.cli inspect-run`
 - `python -m shared_intake_governance.cli show-source-health`
 - `sources/examples/github-signum.json`
@@ -158,6 +159,9 @@ artifacts only and do not write runtime data.
 The provider request command reads one ready `execution-mediation.v1` artifact
 and writes one provider-neutral `provider-request.v1` artifact. It does not
 invoke providers, discover credentials, or execute tools.
+The provider result command reads one `provider-request.v1` artifact and writes
+one `provider-result.v1` artifact with response refs and usage metadata. It
+does not invoke providers or store full provider responses.
 
 For current manual invocation examples, see [11-local-runbook.md](11-local-runbook.md).
 
@@ -190,6 +194,7 @@ Current Phase 1 contract anchors:
 - dry-run result shape: `schemas/dry-run-result.schema.json`
 - execution mediation shape: `schemas/execution-mediation.schema.json`
 - provider request shape: `schemas/provider-request.schema.json`
+- provider result shape: `schemas/provider-result.schema.json`
 
 If these anchors drift, update the docs or schemas before adding runtime code.
 
@@ -336,14 +341,18 @@ Current governance runtime:
 Current provider adapter boundary:
 
 - `src/shared_intake_governance/adapters/provider_request.py`
+- `src/shared_intake_governance/adapters/provider_result.py`
 - `tests/test_provider_request.py`
+- `tests/test_provider_result.py`
 - `prepare-provider-request` writes a provider-neutral request record from one
   ready mediation record without invoking providers.
+- `record-provider-result` writes provider response refs and usage metadata
+  from one provider request without invoking providers.
 
 Still missing:
 
 - actual tool execution;
-- provider invocation and result capture runtime.
+- provider invocation runtime.
 
 ## Handoff rule for the next session
 

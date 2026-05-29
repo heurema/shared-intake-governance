@@ -433,6 +433,49 @@ raw source text, private payloads, or provider-specific policy truth.
 Adapters must still enforce their own narrow translation boundary and must not
 expand capabilities beyond the governance-derived request.
 
+## Provider result
+
+See [../schemas/provider-result.schema.json](../schemas/provider-result.schema.json).
+
+Provider results are adapter boundary records for response refs and usage
+metadata. They are recorded from a provider request but do not invoke providers
+or store full provider responses.
+
+Provider results are written under:
+
+```text
+provider-results/<run-id>/<result-id>.json
+```
+
+Minimum properties:
+
+```text
+schema_version
+run_id
+result_id
+request_id
+provider
+recorded_by
+recorded_at
+result_status
+summary
+provider_request_path
+mediation_id
+intent_id
+profile_id
+action_class
+tool_name
+response_refs
+usage_metadata
+error
+evidence_refs
+```
+
+Provider result records should point at response artifacts or summaries rather
+than embedding full responses. They should not include credentials, tool
+arguments, raw source text, private payloads, or provider-specific policy truth.
+Failed or blocked results should include a compact error object.
+
 ## Capability classes
 
 The governance broker should classify actions into at least:

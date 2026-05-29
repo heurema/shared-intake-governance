@@ -146,6 +146,19 @@ class ProviderRequestWriter:
         return _write_json(path, request)
 
 
+class ProviderResultWriter:
+    """Write one provider result record."""
+
+    def __init__(self, paths: RuntimePaths):
+        self.paths = paths
+
+    def write_result(self, result: dict[str, Any]) -> Path:
+        path = self.paths.provider_result_path(
+            str(result["run_id"]), str(result["result_id"])
+        )
+        return _write_json(path, result)
+
+
 def _write_json(path: Path, payload: dict[str, Any]) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(

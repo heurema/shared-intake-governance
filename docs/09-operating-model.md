@@ -59,6 +59,9 @@ mediation/
 provider-requests/
   <run-id>/
     <request-id>.json
+provider-results/
+  <run-id>/
+    <result-id>.json
 profiles/
   <profile-id>/
     state/
@@ -82,6 +85,7 @@ The canonical contract files for these runtime artifacts are:
 - [../schemas/dry-run-result.schema.json](../schemas/dry-run-result.schema.json)
 - [../schemas/execution-mediation.schema.json](../schemas/execution-mediation.schema.json)
 - [../schemas/provider-request.schema.json](../schemas/provider-request.schema.json)
+- [../schemas/provider-result.schema.json](../schemas/provider-result.schema.json)
 
 ## Modes of operation
 
@@ -185,6 +189,9 @@ Current CLI behavior:
   without writing runtime data;
 - `prepare-provider-request` reads one ready `execution-mediation.v1` artifact
   and writes one `provider-request.v1` artifact without invoking providers;
+- `record-provider-result` reads one `provider-request.v1` artifact and writes
+  one `provider-result.v1` artifact with response refs and usage metadata
+  without invoking providers;
 - all current run commands write one source health artifact under
   `source-health/`.
 
