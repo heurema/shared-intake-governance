@@ -48,7 +48,7 @@ Suggested runtime layout:
   raw/
     <source>/
       <yyyy-mm-dd>/
-        <sha256>.json
+        <sha256>.body
         <sha256>.meta.json
 ```
 

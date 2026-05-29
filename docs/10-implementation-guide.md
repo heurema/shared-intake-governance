@@ -112,6 +112,17 @@ Before code, confirm:
 
 If a runtime concept has no contract, document it first.
 
+Current Phase 1 contract anchors:
+
+- raw metadata shape: `schemas/raw-metadata.schema.json`
+- runtime directory layout: `docs/09-operating-model.md`
+- clean record fields: `schemas/clean-record.schema.json`
+- profile loading rules: `docs/02-data-contracts.md`
+- source health output shape: `schemas/source-health.schema.json`
+- run manifest shape: `schemas/run-manifest.schema.json`
+
+If these anchors drift, update the docs or schemas before adding runtime code.
+
 ### Step 2: implement runtime path helpers
 
 Create small helpers for:

@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shared-intake-governance.local/schemas/raw-metadata.schema.json",
+  "title": "RawMetadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "source_id",
+    "source_type",
+    "fetch_status",
+    "fetched_at",
+    "request_url",
+    "canonical_url",
+    "http_status",
+    "etag",
+    "last_modified",
+    "content_type",
+    "body_hash",
+    "storage_path",
+    "collector_version",
+    "error"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "raw-metadata.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "github_repo",
+        "github_search",
+        "arxiv_query",
+        "arxiv_rss_keywords",
+        "rss",
+        "news",
+        "custom"
+      ]
+    },
+    "fetch_status": {
+      "type": "string",
+      "enum": [
+        "success",
+        "degraded",
+        "failed"
+      ]
+    },
+    "fetched_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "request_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "canonical_url": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uri"
+    },
+    "http_status": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 100,
+      "maximum": 599
+    },
+    "etag": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "last_modified": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "content_type": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "body_hash": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "storage_path": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "collector_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "error": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "message"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retryable": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}
