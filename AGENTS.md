@@ -20,8 +20,12 @@ Read in this order before making structural or runtime decisions:
 
 ## Current repository state
 
-This repository currently defines docs, schemas, and example profiles only.
-No runtime collector, sanitizer, projector, governance broker, or provider adapter implementation exists yet.
+This repository currently defines docs, schemas, example profiles, and minimal
+file-based runtime helpers for paths, raw payload writes, raw metadata writes,
+and run manifest writes.
+
+No runtime collector, sanitizer, projector, governance broker, or provider
+adapter implementation exists yet.
 
 ## Core rules
 
