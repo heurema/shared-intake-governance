@@ -24,7 +24,8 @@
         },
         "source_id": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
         },
         "owner": {
           "type": "string",
@@ -62,7 +63,8 @@
         },
         "source_id": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
         },
         "query": {
           "type": "string",
@@ -101,7 +103,8 @@
         },
         "source_id": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
         },
         "query": {
           "type": "string",
@@ -140,7 +143,8 @@
         },
         "source_id": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
         },
         "keywords": {
           "type": "array",
@@ -182,7 +186,8 @@
         },
         "source_id": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
         },
         "feed_url": {
           "type": "string",
@@ -222,7 +227,8 @@
         },
         "source_id": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
         },
         "feed_url": {
           "type": "string",
