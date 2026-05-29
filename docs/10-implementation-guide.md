@@ -108,6 +108,8 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli list-runs`
 - `python -m shared_intake_governance.cli list-clean-records`
 - `python -m shared_intake_governance.cli inspect-record`
+- `python -m shared_intake_governance.cli list-profile-reports`
+- `python -m shared_intake_governance.cli inspect-profile-report`
 - `python -m shared_intake_governance.cli inspect-run`
 - `python -m shared_intake_governance.cli show-source-health`
 - `sources/examples/github-signum.json`

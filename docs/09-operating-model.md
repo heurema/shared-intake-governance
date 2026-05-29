@@ -136,6 +136,10 @@ Current CLI behavior:
   inventory without writing runtime data;
 - `inspect-record` reads one clean record by record id without writing runtime
   data;
+- `list-profile-reports` reads generated profile reports and returns a
+  deterministic inventory without writing runtime data;
+- `inspect-profile-report` reads one profile report by profile id and output id
+  without writing runtime data;
 - `inspect-run` reads one run manifest and summarizes linked source health
   artifacts without writing runtime data;
 - `show-source-health` reads one source health artifact without writing

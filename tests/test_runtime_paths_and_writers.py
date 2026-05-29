@@ -73,6 +73,14 @@ class RuntimePathTests(unittest.TestCase):
                 paths.profile_reports_dir("pulse"),
                 root / "profiles" / "pulse" / "reports",
             )
+            self.assertEqual(
+                paths.profile_report_path("pulse", "20260529T123045Z-deadbeef"),
+                root
+                / "profiles"
+                / "pulse"
+                / "reports"
+                / "20260529T123045Z-deadbeef.json",
+            )
 
     def test_runtime_paths_reject_unsafe_segments(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -87,6 +95,8 @@ class RuntimePathTests(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 paths.raw_body_path("../source", FETCHED_AT, "a" * 64)
+            with self.assertRaises(ValueError):
+                paths.profile_report_path("pulse", "../report")
 
     def test_generate_run_id_can_be_deterministic(self):
         self.assertEqual(

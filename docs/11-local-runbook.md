@@ -105,6 +105,14 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-record \
   --runtime-root "$SIG_RUNTIME_ROOT" \
   --record-id "$SIG_RECORD_ID"
 
+PYTHONPATH=src python3 -m shared_intake_governance.cli list-profile-reports \
+  --runtime-root "$SIG_RUNTIME_ROOT"
+
+PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-profile-report \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --profile-id code-intel-kernel \
+  --output-id "$SIG_RUN_ID"
+
 PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-run \
   --runtime-root "$SIG_RUNTIME_ROOT" \
   --run-id "$SIG_RUN_ID"
