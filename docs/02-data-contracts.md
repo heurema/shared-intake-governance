@@ -107,6 +107,7 @@ source_health
 
 The manifest is operational evidence. It should not contain credentials,
 private source payload text, or generated reports.
+Runtime code validates run manifests before writing them.
 
 ## Source health
 

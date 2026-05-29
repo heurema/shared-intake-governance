@@ -94,7 +94,7 @@ What exists now:
 - read-only CLI commands for listing and inspecting run manifests, clean
   records, profile state, profile reports, mediation records, and source
   health;
-- run manifest and validated source health artifacts from the CLI pipeline.
+- validated run manifest and source health artifacts from the CLI pipeline.
 - tool-intent and governance-decision contracts with a read-only default
   governance evaluator CLI.
 - governance audit event contract and optional append-only audit logging for

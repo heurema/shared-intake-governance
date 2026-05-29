@@ -13,6 +13,7 @@ from .writers import (
     RunWriter,
     SourceHealthWriter,
     ToolExecutionWriter,
+    validate_run_manifest,
     validate_source_health,
 )
 
@@ -30,5 +31,6 @@ __all__ = [
     "ToolExecutionWriter",
     "RuntimePaths",
     "generate_run_id",
+    "validate_run_manifest",
     "validate_source_health",
 ]
