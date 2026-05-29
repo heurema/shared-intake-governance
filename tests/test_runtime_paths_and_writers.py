@@ -36,6 +36,7 @@ from shared_intake_governance.runtime import (  # noqa: E402
 
 
 FETCHED_AT = datetime(2026, 5, 29, 12, 30, 45, tzinfo=timezone.utc)
+SAFE_SEGMENT_PATTERN = "^[A-Za-z0-9][A-Za-z0-9._-]*$"
 
 
 class RuntimePathTests(unittest.TestCase):
@@ -525,6 +526,16 @@ class RuntimeWriterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_source_health(bad_status)
 
+        bad_run_id = dict(valid_health)
+        bad_run_id["run_id"] = "../20260529T123045Z-deadbeef"
+        with self.assertRaisesRegex(ValueError, "run_id must be a safe path segment"):
+            validate_source_health(bad_run_id)
+
+        bad_source_id = dict(valid_health)
+        bad_source_id["source_id"] = "../github-main"
+        with self.assertRaisesRegex(ValueError, "source_id must be a safe path segment"):
+            validate_source_health(bad_source_id)
+
         bad_error = dict(valid_health)
         bad_error["last_error"] = {"kind": "timeout"}
         with self.assertRaises(ValueError):
@@ -555,6 +566,18 @@ class RuntimeWriterTests(unittest.TestCase):
             ValueError, "healthy source health must not include errors"
         ):
             validate_source_health(healthy_with_error)
+
+    def test_source_health_schema_tracks_runtime_id_constraints(self):
+        schema = _read_schema("source-health.schema.json")
+
+        self.assertEqual(
+            schema["properties"]["run_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["source_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
 
     def test_audit_writer_appends_jsonl_events(self):
         with tempfile.TemporaryDirectory() as tmp_dir:

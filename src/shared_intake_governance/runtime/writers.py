@@ -16,6 +16,7 @@ from .paths import RuntimePaths
 
 
 _BODY_HASH = re.compile(r"^[a-f0-9]{64}$")
+_SAFE_SEGMENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _SOURCE_TYPES = {
     "github_repo",
     "github_search",
@@ -904,6 +905,8 @@ def validate_source_health(source_health: dict[str, Any]) -> None:
     _require_text(source_health, "run_id")
     _require_text(source_health, "source_id")
     _require_text(source_health, "checked_at")
+    _require_safe_segment(source_health, "run_id")
+    _require_safe_segment(source_health, "source_id")
     require_date_time(source_health["checked_at"], "checked_at")
     if source_health["source_type"] not in _SOURCE_TYPES:
         raise ValueError("source health has unsupported source_type")
@@ -976,6 +979,11 @@ def _validate_error_object(
 def _require_text(payload: dict[str, Any], field: str) -> None:
     if not isinstance(payload[field], str) or not payload[field]:
         raise ValueError(f"{field} must be a non-empty string")
+
+
+def _require_safe_segment(payload: dict[str, Any], field: str) -> None:
+    if not _SAFE_SEGMENT.fullmatch(payload[field]):
+        raise ValueError(f"{field} must be a safe path segment")
 
 
 def _require_string_list(payload: dict[str, Any], field: str, label: str) -> None:

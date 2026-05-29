@@ -159,6 +159,7 @@ next_retry_after
 
 If a source is degraded or failed, downstream consumers should see that state
 explicitly. Do not silently widen to weaker fallback sources.
+`run_id` and `source_id` must be safe runtime path segments.
 `attempted_fetches` must equal `successful_fetches + failed_fetches`.
 `healthy` records must not carry failed fetches, degraded reasons, errors, or
 retry hints.
