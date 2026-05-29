@@ -11,6 +11,7 @@ from typing import Any
 
 from shared_intake_governance.runtime import RuntimePaths
 from shared_intake_governance.sanitizer import validate_clean_record
+from shared_intake_governance.validation import require_absolute_uri
 
 
 _SAFE_SEGMENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
@@ -227,6 +228,7 @@ def _validate_projection_item(item: Any) -> None:
     _require_text(item, "record_id")
     _require_text(item, "source_id")
     _require_text(item, "canonical_url")
+    require_absolute_uri(item["canonical_url"], "canonical_url")
     _require_text(item, "title")
     _require_text(item, "raw_hash")
     if item["source_type"] not in _SOURCE_TYPES:

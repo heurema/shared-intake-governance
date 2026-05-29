@@ -30,6 +30,8 @@ JSON outside the repository.
 Fields marked as `format: date-time` in JSON schemas must be valid date-time
 strings with timezone information. Runtime validators reject invalid timestamp
 strings before writer output.
+Fields marked as `format: uri` must be absolute URI strings. Source-config URL
+fields may apply stricter HTTPS rules in their own schema.
 
 ## Raw payload metadata
 
