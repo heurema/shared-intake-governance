@@ -9,6 +9,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, TextIO
 
+from shared_intake_governance.collector.arxiv_rss_keywords import (
+    ArxivRssKeywordsCollectionResult,
+    ArxivRssKeywordsCollector,
+    ArxivRssKeywordsSource,
+)
 from shared_intake_governance.collector.github_repo import (
     GitHubRepoCollectionResult,
     GitHubRepoCollector,
@@ -29,12 +34,17 @@ def main(
     *,
     stdout: TextIO | None = None,
     collector_factory: type[GitHubRepoCollector] = GitHubRepoCollector,
+    arxiv_collector_factory: type[ArxivRssKeywordsCollector] = (
+        ArxivRssKeywordsCollector
+    ),
 ) -> int:
     args = _parser().parse_args(argv)
     stdout = stdout or sys.stdout
 
     if args.command == "run-github-repo":
         return _run_github_repo(args, stdout, collector_factory)
+    if args.command == "run-arxiv-rss-keywords":
+        return _run_arxiv_rss_keywords(args, stdout, arxiv_collector_factory)
 
     raise ValueError(f"unsupported command: {args.command}")
 
@@ -123,8 +133,99 @@ def _run_github_repo(
     return 0
 
 
+def _run_arxiv_rss_keywords(
+    args: argparse.Namespace,
+    stdout: TextIO,
+    collector_factory: type[ArxivRssKeywordsCollector],
+) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    run_id = args.run_id or generate_run_id()
+    output_id = args.output_id or run_id
+    started_at = _format_utc(datetime.now(timezone.utc))
+    source = ArxivRssKeywordsSource(
+        source_id=args.source_id,
+        keywords=args.keywords,
+        max_results=args.max_results,
+        api_base_url=args.api_base_url,
+    )
+    collector = collector_factory(paths)
+    collection = collector.collect(source, run_id=run_id)
+    raw_metadata = _read_json(collection.metadata_path)
+
+    summary = _collection_summary(run_id, collection)
+    if collection.fetch_status != "success":
+        evidence = _write_run_evidence(
+            paths,
+            run_id=run_id,
+            source_id=source.source_id,
+            status="failed",
+            started_at=started_at,
+            counts={
+                "raw_payloads_written": 0,
+                "raw_metadata_written": 1,
+                "clean_records_written": 0,
+                "projected_profiles": 0,
+                "quarantined_records": 0,
+                "failed_sources": 1,
+            },
+            raw_metadata=raw_metadata,
+        )
+        summary.update(
+            {
+                "status": "collection_failed",
+                "clean_record_paths": [],
+                "projection_path": None,
+                "projected_items": 0,
+                "run_manifest_path": str(evidence["run_manifest_path"]),
+                "source_health_path": str(evidence["source_health_path"]),
+            }
+        )
+        _print_json(stdout, summary)
+        return 2
+
+    clean_records = CleanRecordEmitter(paths).emit_all_from_raw_metadata(
+        collection.metadata_path
+    )
+    projection = ProfileProjector(paths).project(args.profile, output_id=output_id)
+    evidence = _write_run_evidence(
+        paths,
+        run_id=run_id,
+        source_id=source.source_id,
+        status="completed",
+        started_at=started_at,
+        counts={
+            "raw_payloads_written": 1 if collection.body_path is not None else 0,
+            "raw_metadata_written": 1,
+            "clean_records_written": len(clean_records),
+            "projected_profiles": 1,
+            "quarantined_records": sum(
+                1
+                for clean_record in clean_records
+                if clean_record.record["quarantined"]
+            ),
+            "failed_sources": 0,
+        },
+        raw_metadata=raw_metadata,
+    )
+    summary.update(
+        {
+            "status": "completed",
+            "clean_record_paths": [
+                str(clean_record.path) for clean_record in clean_records
+            ],
+            "projection_path": str(projection.path),
+            "projected_items": projection.report["counts"]["items_written"],
+            "run_manifest_path": str(evidence["run_manifest_path"]),
+            "source_health_path": str(evidence["source_health_path"]),
+        }
+    )
+    _print_json(stdout, summary)
+    return 0
+
+
 def _collection_summary(
-    run_id: str, collection: GitHubRepoCollectionResult
+    run_id: str,
+    collection: GitHubRepoCollectionResult | ArxivRssKeywordsCollectionResult,
 ) -> dict[str, Any]:
     return {
         "run_id": run_id,
@@ -229,4 +330,22 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--run-id")
     run.add_argument("--output-id")
     run.add_argument("--api-base-url", default="https://api.github.com")
+
+    arxiv = subparsers.add_parser(
+        "run-arxiv-rss-keywords",
+        help=(
+            "Collect one arXiv keyword feed, emit clean records, and project "
+            "one profile."
+        ),
+    )
+    arxiv.add_argument("--runtime-root", required=True)
+    arxiv.add_argument("--profile", required=True)
+    arxiv.add_argument("--source-id", required=True)
+    arxiv.add_argument("--keyword", dest="keywords", action="append", required=True)
+    arxiv.add_argument("--max-results", required=True, type=int)
+    arxiv.add_argument("--run-id")
+    arxiv.add_argument("--output-id")
+    arxiv.add_argument(
+        "--api-base-url", default="https://export.arxiv.org/api/query"
+    )
     return parser
