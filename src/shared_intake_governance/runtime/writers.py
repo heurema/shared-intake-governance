@@ -179,6 +179,25 @@ _TOOL_EXECUTION_RESULT_REQUIRED = {
     "error",
     "evidence_refs",
 }
+_PROVIDERS = {"claude", "gemini", "vibe"}
+_PROVIDER_REQUEST_REQUIRED = {
+    "schema_version",
+    "run_id",
+    "request_id",
+    "prepared_at",
+    "provider",
+    "mediation_record_path",
+    "mediation_id",
+    "intent_id",
+    "profile_id",
+    "action_class",
+    "tool_name",
+    "policy_decision",
+    "mediation_decision",
+    "capabilities",
+    "context_refs",
+    "evidence_refs",
+}
 _SOURCE_HEALTH_REQUIRED = {
     "schema_version",
     "run_id",
@@ -345,6 +364,7 @@ class ProviderRequestWriter:
         self.paths = paths
 
     def write_request(self, request: dict[str, Any]) -> Path:
+        validate_provider_request(request)
         path = self.paths.provider_request_path(
             str(request["run_id"]), str(request["request_id"])
         )
@@ -584,6 +604,55 @@ def validate_tool_execution_result(result: dict[str, Any]) -> None:
     )
 
 
+def validate_provider_request(request: dict[str, Any]) -> None:
+    missing = sorted(_PROVIDER_REQUEST_REQUIRED - set(request))
+    if missing:
+        raise ValueError(
+            "provider request missing required fields: " + ", ".join(missing)
+        )
+    extra = sorted(set(request) - _PROVIDER_REQUEST_REQUIRED)
+    if extra:
+        raise ValueError("provider request has unknown fields: " + ", ".join(extra))
+
+    if request["schema_version"] != "provider-request.v1":
+        raise ValueError("provider request must use provider-request.v1")
+    for field in [
+        "run_id",
+        "request_id",
+        "prepared_at",
+        "mediation_record_path",
+        "mediation_id",
+        "intent_id",
+        "profile_id",
+        "tool_name",
+    ]:
+        _require_text(request, field)
+    if request["provider"] not in _PROVIDERS:
+        raise ValueError("provider request has unsupported provider")
+    if request["action_class"] not in _ACTION_CLASSES:
+        raise ValueError("provider request has unsupported action_class")
+    if request["policy_decision"] not in _GOVERNANCE_DECISIONS:
+        raise ValueError("provider request has unsupported policy_decision")
+    if request["mediation_decision"] != "ready":
+        raise ValueError("provider request must use ready mediation")
+    _require_enum_array(
+        request,
+        "capabilities",
+        _ACTION_CLASSES,
+        "provider request capabilities",
+    )
+    _require_string_array(
+        request,
+        "context_refs",
+        "provider request context_refs",
+    )
+    _require_string_array(
+        request,
+        "evidence_refs",
+        "provider request evidence_refs",
+    )
+
+
 def validate_raw_metadata(metadata: dict[str, Any]) -> None:
     missing = sorted(_RAW_METADATA_REQUIRED - set(metadata))
     if missing:
@@ -757,6 +826,18 @@ def _require_string_array(payload: dict[str, Any], field: str, label: str) -> No
         isinstance(item, str) for item in payload[field]
     ):
         raise ValueError(f"{label} must be strings")
+
+
+def _require_enum_array(
+    payload: dict[str, Any],
+    field: str,
+    allowed_values: set[str],
+    label: str,
+) -> None:
+    if not isinstance(payload[field], list) or not all(
+        isinstance(item, str) and item in allowed_values for item in payload[field]
+    ):
+        raise ValueError(f"{label} must contain supported values")
 
 
 def _require_string_object(payload: dict[str, Any], field: str, label: str) -> None:
