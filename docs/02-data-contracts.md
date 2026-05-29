@@ -452,6 +452,7 @@ tool_intent_path
 Dry-run results should not include full tool arguments, credentials, or private
 payloads. They should point at external artifacts or summaries that can be
 reviewed before an approval record is created.
+`run_id` and `dry_run_id` must be safe runtime path segments.
 Runtime code validates dry-run results before writing them.
 
 ## Execution mediation
