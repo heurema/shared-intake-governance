@@ -67,7 +67,7 @@ What exists now:
 - minimal runtime path helpers and raw payload/metadata/run manifest writers;
 - minimal read-only `github_repo` collector that writes raw evidence only;
 - minimal read-only `arxiv_rss_keywords` collector that writes raw evidence only;
-- minimal clean-record emitter for `github_repo` raw evidence;
+- minimal clean-record emitter for `github_repo` and `arxiv_rss_keywords` raw evidence;
 - minimal one-profile projector that writes deterministic JSON reports;
 - narrow local CLI command for `github_repo` collect, sanitize, and project;
 - run manifest and source health artifacts from the CLI pipeline.
@@ -75,7 +75,7 @@ What exists now:
 What does not exist yet:
 
 - source collector families beyond `github_repo` and `arxiv_rss_keywords`;
-- additional sanitizer source mappings;
+- sanitizer source mappings beyond `github_repo` and `arxiv_rss_keywords`;
 - multi-profile projection/report shaping;
 - governance broker runtime;
 - provider adapter runtime;

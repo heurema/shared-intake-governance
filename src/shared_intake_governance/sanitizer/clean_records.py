@@ -6,6 +6,7 @@ import hashlib
 import html
 import json
 import re
+import xml.etree.ElementTree as ElementTree
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -65,6 +66,7 @@ _QUARANTINE_FLAGS = {
     "tool_escalation_language",
     "credential_bait",
 }
+_ATOM_NAMESPACE = {"atom": "http://www.w3.org/2005/Atom"}
 
 
 @dataclass(frozen=True)
@@ -80,6 +82,21 @@ class CleanRecordEmitter:
         self.paths = paths
 
     def emit_from_raw_metadata(self, metadata_path: str | Path) -> CleanRecordWrite:
+        records = self._records_from_raw_metadata(metadata_path)
+        if len(records) != 1:
+            raise ValueError(
+                "raw metadata emits multiple clean records; use "
+                "emit_all_from_raw_metadata"
+            )
+        return self._write_clean_record(records[0])
+
+    def emit_all_from_raw_metadata(
+        self, metadata_path: str | Path
+    ) -> list[CleanRecordWrite]:
+        records = self._records_from_raw_metadata(metadata_path)
+        return [self._write_clean_record(record) for record in records]
+
+    def _records_from_raw_metadata(self, metadata_path: str | Path) -> list[dict[str, Any]]:
         metadata = _read_json(Path(metadata_path))
         if metadata.get("fetch_status") != "success":
             raise ValueError("only successful raw metadata can emit clean records")
@@ -93,10 +110,13 @@ class CleanRecordEmitter:
             raise ValueError("raw body hash does not match metadata")
 
         if metadata["source_type"] == "github_repo":
-            record = _github_repo_clean_record(metadata, body)
-        else:
-            raise ValueError(f"unsupported source_type: {metadata['source_type']}")
+            return [_github_repo_clean_record(metadata, body)]
+        if metadata["source_type"] == "arxiv_rss_keywords":
+            return _arxiv_rss_keywords_clean_records(metadata, body)
 
+        raise ValueError(f"unsupported source_type: {metadata['source_type']}")
+
+    def _write_clean_record(self, record: dict[str, Any]) -> CleanRecordWrite:
         validate_clean_record(record)
         path = self.paths.clean_record_path(record["record_id"])
         _write_json(path, record)
@@ -176,6 +196,66 @@ def _github_repo_clean_record(metadata: dict[str, Any], body: bytes) -> dict[str
         "raw_hash": metadata["body_hash"],
         "sanitizer_version": SANITIZER_VERSION,
     }
+
+
+def _arxiv_rss_keywords_clean_records(
+    metadata: dict[str, Any], body: bytes
+) -> list[dict[str, Any]]:
+    try:
+        root = ElementTree.fromstring(body)
+    except ElementTree.ParseError as exc:
+        raise ValueError("arxiv_rss_keywords raw body must be valid Atom XML") from exc
+
+    entries = _atom_entries(root)
+    if not entries:
+        raise ValueError("arxiv_rss_keywords raw body must include at least one entry")
+
+    return [_arxiv_entry_clean_record(metadata, entry) for entry in entries]
+
+
+def _arxiv_entry_clean_record(
+    metadata: dict[str, Any], entry: ElementTree.Element
+) -> dict[str, Any]:
+    canonical_url = _clean_text(_atom_text(entry, "id"))
+    if not canonical_url:
+        raise ValueError("arxiv_rss_keywords entry must include an id")
+
+    title = _clean_text(_atom_text(entry, "title") or canonical_url)
+    summary = _cap_length(_clean_text(_atom_text(entry, "summary")))
+    published_at = _optional_text(
+        _atom_text(entry, "published") or _atom_text(entry, "updated")
+    )
+    risk_flags = _risk_flags(" ".join([title, summary]))
+
+    return {
+        "record_id": _record_id("arxiv_rss_keywords", canonical_url),
+        "source_id": metadata["source_id"],
+        "source_type": "arxiv_rss_keywords",
+        "canonical_url": canonical_url,
+        "title": title,
+        "sanitized_summary": summary,
+        "published_at": published_at,
+        "license_or_terms_note": None,
+        "source_trust": "official",
+        "risk_flags": risk_flags,
+        "quarantined": bool(set(risk_flags) & _QUARANTINE_FLAGS),
+        "raw_hash": metadata["body_hash"],
+        "sanitizer_version": SANITIZER_VERSION,
+    }
+
+
+def _atom_entries(root: ElementTree.Element) -> list[ElementTree.Element]:
+    entries = root.findall("atom:entry", _ATOM_NAMESPACE)
+    return entries or root.findall("entry")
+
+
+def _atom_text(entry: ElementTree.Element, name: str) -> str:
+    node = entry.find(f"atom:{name}", _ATOM_NAMESPACE)
+    if node is None:
+        node = entry.find(name)
+    if node is None:
+        return ""
+    return "".join(node.itertext())
 
 
 def _risk_flags(text: str) -> list[str]:
