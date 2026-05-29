@@ -22,6 +22,7 @@ from shared_intake_governance.runtime import (  # noqa: E402
     SourceHealthWriter,
     ToolExecutionWriter,
     validate_approval_record,
+    validate_dry_run_result,
     validate_governance_audit_event,
     validate_raw_metadata,
     validate_run_manifest,
@@ -520,6 +521,7 @@ class RuntimeWriterTests(unittest.TestCase):
             paths = RuntimePaths(Path(tmp_dir) / "runtime")
             writer = DryRunWriter(paths)
             result = _dry_run_result()
+            validate_dry_run_result(result)
 
             dry_run_path = writer.write_result(result)
             first_write = dry_run_path.read_text(encoding="utf-8")
@@ -535,6 +537,39 @@ class RuntimeWriterTests(unittest.TestCase):
 
             writer.write_result(result)
             self.assertEqual(dry_run_path.read_text(encoding="utf-8"), first_write)
+
+    def test_dry_run_result_validation_rejects_contract_drift(self):
+        valid_result = _dry_run_result()
+
+        missing_required = dict(valid_result)
+        missing_required.pop("result_status")
+        with self.assertRaises(ValueError):
+            validate_dry_run_result(missing_required)
+
+        unknown_field = dict(valid_result)
+        unknown_field["score"] = 1
+        with self.assertRaises(ValueError):
+            validate_dry_run_result(unknown_field)
+
+        bad_action = dict(valid_result)
+        bad_action["action_class"] = "network"
+        with self.assertRaises(ValueError):
+            validate_dry_run_result(bad_action)
+
+        bad_kind = dict(valid_result)
+        bad_kind["dry_run_kind"] = "preview"
+        with self.assertRaises(ValueError):
+            validate_dry_run_result(bad_kind)
+
+        bad_status = dict(valid_result)
+        bad_status["result_status"] = "succeeded"
+        with self.assertRaises(ValueError):
+            validate_dry_run_result(bad_status)
+
+        bad_artifacts = dict(valid_result)
+        bad_artifacts["artifact_refs"] = ["dry-runs/result.json", 1]
+        with self.assertRaises(ValueError):
+            validate_dry_run_result(bad_artifacts)
 
     def test_mediation_writer_writes_record_deterministically(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
