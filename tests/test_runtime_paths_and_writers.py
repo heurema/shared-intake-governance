@@ -269,6 +269,29 @@ class RuntimeWriterTests(unittest.TestCase):
             writer.write_metadata(metadata)
             self.assertEqual(metadata_path.read_text(encoding="utf-8"), first_write)
 
+    def test_raw_writer_rejects_storage_path_outside_raw_root(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            paths = RuntimePaths(root / "runtime")
+            writer = RawWriter(paths)
+            body = b'{"ok": true}\n'
+            raw_body = writer.write_body("github-main", FETCHED_AT, body)
+            outside_body = root / "outside.body"
+            outside_body.write_bytes(body)
+            metadata = _raw_metadata(raw_body)
+            metadata["storage_path"] = str(outside_body)
+
+            with self.assertRaisesRegex(
+                ValueError, "raw metadata storage_path must stay under raw root"
+            ):
+                writer.write_metadata(metadata)
+
+            self.assertFalse(
+                paths.raw_metadata_path(
+                    "github-main", FETCHED_AT, raw_body.body_hash
+                ).exists()
+            )
+
     def test_raw_writer_writes_failed_fetch_metadata_without_body(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             paths = RuntimePaths(Path(tmp_dir) / "runtime")

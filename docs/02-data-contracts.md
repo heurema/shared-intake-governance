@@ -72,8 +72,8 @@ metadata writer may use an implementation-defined failure filename under the
 same source/date directory. The metadata contract, not the filename, is the
 source of truth.
 Runtime code validates raw metadata before writing it and before the sanitizer
-consumes it. Sanitizer raw body reads must stay under the configured runtime
-raw root.
+consumes it. Non-null raw metadata `storage_path` values and sanitizer raw body
+reads must stay under the configured runtime raw root.
 
 ## Clean record
 
