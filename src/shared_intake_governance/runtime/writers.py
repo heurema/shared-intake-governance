@@ -116,6 +116,31 @@ _APPROVAL_RECORD_REQUIRED = {
     "evidence_refs",
     "tool_intent_path",
 }
+_DRY_RUN_KINDS = {
+    "disposable_worktree",
+    "sandboxed_container",
+    "read_only_simulation",
+    "test_only_execution",
+    "custom",
+}
+_DRY_RUN_RESULT_STATUS = {"passed", "failed", "blocked"}
+_DRY_RUN_RESULT_REQUIRED = {
+    "schema_version",
+    "run_id",
+    "dry_run_id",
+    "intent_id",
+    "profile_id",
+    "action_class",
+    "tool_name",
+    "dry_run_kind",
+    "result_status",
+    "recorded_by",
+    "recorded_at",
+    "summary",
+    "artifact_refs",
+    "evidence_refs",
+    "tool_intent_path",
+}
 _SOURCE_HEALTH_REQUIRED = {
     "schema_version",
     "run_id",
@@ -240,6 +265,7 @@ class DryRunWriter:
         self.paths = paths
 
     def write_result(self, result: dict[str, Any]) -> Path:
+        validate_dry_run_result(result)
         path = self.paths.dry_run_result_path(
             str(result["run_id"]), str(result["dry_run_id"])
         )
@@ -371,6 +397,48 @@ def validate_approval_record(record: dict[str, Any]) -> None:
         record,
         "evidence_refs",
         "approval record evidence_refs",
+    )
+
+
+def validate_dry_run_result(result: dict[str, Any]) -> None:
+    missing = sorted(_DRY_RUN_RESULT_REQUIRED - set(result))
+    if missing:
+        raise ValueError(
+            "dry-run result missing required fields: " + ", ".join(missing)
+        )
+    extra = sorted(set(result) - _DRY_RUN_RESULT_REQUIRED)
+    if extra:
+        raise ValueError("dry-run result has unknown fields: " + ", ".join(extra))
+
+    if result["schema_version"] != "dry-run-result.v1":
+        raise ValueError("dry-run result must use dry-run-result.v1")
+    for field in [
+        "run_id",
+        "dry_run_id",
+        "intent_id",
+        "profile_id",
+        "tool_name",
+        "recorded_by",
+        "recorded_at",
+        "summary",
+        "tool_intent_path",
+    ]:
+        _require_text(result, field)
+    if result["action_class"] not in _ACTION_CLASSES:
+        raise ValueError("dry-run result has unsupported action_class")
+    if result["dry_run_kind"] not in _DRY_RUN_KINDS:
+        raise ValueError("dry-run result has unsupported dry_run_kind")
+    if result["result_status"] not in _DRY_RUN_RESULT_STATUS:
+        raise ValueError("dry-run result has unsupported result_status")
+    _require_string_array(
+        result,
+        "artifact_refs",
+        "dry-run result artifact_refs",
+    )
+    _require_string_array(
+        result,
+        "evidence_refs",
+        "dry-run result evidence_refs",
     )
 
 
