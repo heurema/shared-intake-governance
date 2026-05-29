@@ -22,21 +22,22 @@ Read in this order before making structural or runtime decisions:
 
 This repository currently defines docs, schemas, example profiles, and minimal
 file-based runtime helpers for paths, raw payload writes, raw metadata writes,
-run manifest writes, read-only `github_repo`, `arxiv_rss_keywords`, and `rss`
-collectors, clean-record emitters for `github_repo`, `arxiv_rss_keywords`, and
-`rss`,
+run manifest writes, read-only `github_repo`, `arxiv_rss_keywords`,
+`arxiv_query`, and `rss` collectors, clean-record emitters for `github_repo`,
+`arxiv_rss_keywords`, `arxiv_query`, and `rss`,
 one explicit-profile JSON projector, explicit profile seen-state updates, and
 narrow local CLI commands for the current `github_repo`, `arxiv_rss_keywords`,
-`rss`, and `source-config.v1` paths with run manifest and source health output.
+`arxiv_query`, `rss`, and `source-config.v1` paths with run manifest and
+source health output.
 It also includes governance decision, audit, approval, dry-run, execution
 mediation, provider request, provider result, explicit governed tool execution,
 and explicit provider command invocation runtime slices.
 
-No source collector family beyond `github_repo`, `arxiv_rss_keywords`, and
-`rss`, sanitizer source mapping beyond those three source types, automatic
-profile-state updates from projection, automatic command discovery, credential
-mapping, default provider/tool presets, or multi-profile report shaping exists
-yet.
+No source collector family beyond `github_repo`, `arxiv_rss_keywords`,
+`arxiv_query`, and `rss`, sanitizer source mapping beyond those four source
+types, automatic profile-state updates from projection, automatic command
+discovery, credential mapping, default provider/tool presets, or multi-profile
+report shaping exists yet.
 
 ## Core rules
 

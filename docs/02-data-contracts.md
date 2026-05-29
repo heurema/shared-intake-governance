@@ -146,6 +146,7 @@ Supported Phase 1 source configs:
 
 - `github_repo`
 - `arxiv_rss_keywords`
+- `arxiv_query`
 - `rss`
 
 Source configs must not contain credentials, runtime state, scoring rules,

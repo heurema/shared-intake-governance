@@ -113,6 +113,8 @@ class CleanRecordEmitter:
             return [_github_repo_clean_record(metadata, body)]
         if metadata["source_type"] == "arxiv_rss_keywords":
             return _arxiv_rss_keywords_clean_records(metadata, body)
+        if metadata["source_type"] == "arxiv_query":
+            return _arxiv_query_clean_records(metadata, body)
         if metadata["source_type"] == "rss":
             return _rss_clean_records(metadata, body)
 
@@ -203,24 +205,38 @@ def _github_repo_clean_record(metadata: dict[str, Any], body: bytes) -> dict[str
 def _arxiv_rss_keywords_clean_records(
     metadata: dict[str, Any], body: bytes
 ) -> list[dict[str, Any]]:
+    return _arxiv_atom_clean_records(metadata, body, "arxiv_rss_keywords")
+
+
+def _arxiv_query_clean_records(
+    metadata: dict[str, Any], body: bytes
+) -> list[dict[str, Any]]:
+    return _arxiv_atom_clean_records(metadata, body, "arxiv_query")
+
+
+def _arxiv_atom_clean_records(
+    metadata: dict[str, Any], body: bytes, source_type: str
+) -> list[dict[str, Any]]:
     try:
         root = ElementTree.fromstring(body)
     except ElementTree.ParseError as exc:
-        raise ValueError("arxiv_rss_keywords raw body must be valid Atom XML") from exc
+        raise ValueError(f"{source_type} raw body must be valid Atom XML") from exc
 
     entries = _atom_entries(root)
     if not entries:
-        raise ValueError("arxiv_rss_keywords raw body must include at least one entry")
+        raise ValueError(f"{source_type} raw body must include at least one entry")
 
-    return [_arxiv_entry_clean_record(metadata, entry) for entry in entries]
+    return [
+        _arxiv_entry_clean_record(metadata, entry, source_type) for entry in entries
+    ]
 
 
 def _arxiv_entry_clean_record(
-    metadata: dict[str, Any], entry: ElementTree.Element
+    metadata: dict[str, Any], entry: ElementTree.Element, source_type: str
 ) -> dict[str, Any]:
     canonical_url = _clean_text(_atom_text(entry, "id"))
     if not canonical_url:
-        raise ValueError("arxiv_rss_keywords entry must include an id")
+        raise ValueError(f"{source_type} entry must include an id")
 
     title = _clean_text(_atom_text(entry, "title") or canonical_url)
     summary = _cap_length(_clean_text(_atom_text(entry, "summary")))
@@ -230,9 +246,9 @@ def _arxiv_entry_clean_record(
     risk_flags = _risk_flags(" ".join([title, summary]))
 
     return {
-        "record_id": _record_id("arxiv_rss_keywords", canonical_url),
+        "record_id": _record_id(source_type, canonical_url),
         "source_id": metadata["source_id"],
-        "source_type": "arxiv_rss_keywords",
+        "source_type": source_type,
         "canonical_url": canonical_url,
         "title": title,
         "sanitized_summary": summary,

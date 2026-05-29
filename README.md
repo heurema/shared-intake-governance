@@ -69,15 +69,16 @@ What exists now:
 - minimal runtime path helpers and raw payload/metadata/run manifest writers;
 - minimal read-only `github_repo` collector that writes raw evidence only;
 - minimal read-only `arxiv_rss_keywords` collector that writes raw evidence only;
+- minimal read-only `arxiv_query` collector that writes raw evidence only;
 - minimal read-only `rss` collector that writes raw evidence only;
-- minimal clean-record emitter for `github_repo`, `arxiv_rss_keywords`, and
-  `rss` raw evidence;
+- minimal clean-record emitter for `github_repo`, `arxiv_rss_keywords`,
+  `arxiv_query`, and `rss` raw evidence;
 - minimal explicit-profile projector that writes deterministic JSON reports;
 - profile-state contract for profile-local runtime state artifacts;
 - explicit `update-profile-seen-state` CLI that merges one profile report into
   a profile-local `seen_records` state artifact;
-- narrow local CLI commands for `github_repo`, `arxiv_rss_keywords`, and `rss`
-  collect, sanitize, and project paths;
+- narrow local CLI commands for `github_repo`, `arxiv_rss_keywords`,
+  `arxiv_query`, and `rss` collect, sanitize, and project paths;
 - multi-profile CLI command that projects existing clean cache into multiple
   explicit profile reports;
 - config-driven one-source CLI command for source definitions stored in JSON;
@@ -109,10 +110,10 @@ What exists now:
 
 What does not exist yet:
 
-- source collector families beyond `github_repo`, `arxiv_rss_keywords`, and
-  `rss`;
-- sanitizer source mappings beyond `github_repo`, `arxiv_rss_keywords`, and
-  `rss`;
+- source collector families beyond `github_repo`, `arxiv_rss_keywords`,
+  `arxiv_query`, and `rss`;
+- sanitizer source mappings beyond `github_repo`, `arxiv_rss_keywords`,
+  `arxiv_query`, and `rss`;
 - multi-profile report shaping beyond deterministic per-profile JSON;
 - automatic profile-state updates from `project-profiles` or consumer-specific
   dedupe behavior;

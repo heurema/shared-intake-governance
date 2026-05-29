@@ -21,6 +21,7 @@ class SourceConfigExampleTests(unittest.TestCase):
             [path.name for path in example_paths],
             [
                 "arxiv-code-agents.json",
+                "arxiv-query-code-agents.json",
                 "github-signum.json",
                 "rss-github-blog.json",
             ],
@@ -30,16 +31,44 @@ class SourceConfigExampleTests(unittest.TestCase):
 
         self.assertEqual(
             [config["schema_version"] for config in configs],
-            ["source-config.v1", "source-config.v1", "source-config.v1"],
+            [
+                "source-config.v1",
+                "source-config.v1",
+                "source-config.v1",
+                "source-config.v1",
+            ],
         )
         self.assertEqual(
             [config["source_type"] for config in configs],
-            ["arxiv_rss_keywords", "github_repo", "rss"],
+            ["arxiv_rss_keywords", "arxiv_query", "github_repo", "rss"],
         )
         self.assertEqual(
             [config["source_id"] for config in configs],
-            ["arxiv-code-agents", "github-signum", "rss-github-blog"],
+            [
+                "arxiv-code-agents",
+                "arxiv-query-code-agents",
+                "github-signum",
+                "rss-github-blog",
+            ],
         )
+
+    def test_arxiv_query_source_config_requires_query(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            config_path = Path(tmp_dir) / "source-config.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": "source-config.v1",
+                        "source_type": "arxiv_query",
+                        "source_id": "arxiv-query-code-agents",
+                        "max_results": 5,
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaises(ValueError):
+                _load_source_config(config_path)
 
     def test_rss_source_config_requires_feed_url(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
