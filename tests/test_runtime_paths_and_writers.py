@@ -23,6 +23,7 @@ from shared_intake_governance.runtime import (  # noqa: E402
     ToolExecutionWriter,
     validate_approval_record,
     validate_dry_run_result,
+    validate_execution_mediation,
     validate_governance_audit_event,
     validate_raw_metadata,
     validate_run_manifest,
@@ -576,6 +577,7 @@ class RuntimeWriterTests(unittest.TestCase):
             paths = RuntimePaths(Path(tmp_dir) / "runtime")
             writer = MediationWriter(paths)
             record = _mediation_record()
+            validate_execution_mediation(record)
 
             mediation_path = writer.write_record(record)
             first_write = mediation_path.read_text(encoding="utf-8")
@@ -591,6 +593,44 @@ class RuntimeWriterTests(unittest.TestCase):
 
             writer.write_record(record)
             self.assertEqual(mediation_path.read_text(encoding="utf-8"), first_write)
+
+    def test_execution_mediation_validation_rejects_contract_drift(self):
+        valid_record = _mediation_record()
+
+        missing_required = dict(valid_record)
+        missing_required.pop("mediation_decision")
+        with self.assertRaises(ValueError):
+            validate_execution_mediation(missing_required)
+
+        unknown_field = dict(valid_record)
+        unknown_field["score"] = 1
+        with self.assertRaises(ValueError):
+            validate_execution_mediation(unknown_field)
+
+        bad_action = dict(valid_record)
+        bad_action["action_class"] = "network"
+        with self.assertRaises(ValueError):
+            validate_execution_mediation(bad_action)
+
+        bad_policy = dict(valid_record)
+        bad_policy["policy_decision"] = "approved"
+        with self.assertRaises(ValueError):
+            validate_execution_mediation(bad_policy)
+
+        bad_decision = dict(valid_record)
+        bad_decision["mediation_decision"] = "allowed"
+        with self.assertRaises(ValueError):
+            validate_execution_mediation(bad_decision)
+
+        bad_path = dict(valid_record)
+        bad_path["dry_run_result_path"] = 1
+        with self.assertRaises(ValueError):
+            validate_execution_mediation(bad_path)
+
+        bad_refs = dict(valid_record)
+        bad_refs["evidence_refs"] = ["profiles/report.json", 1]
+        with self.assertRaises(ValueError):
+            validate_execution_mediation(bad_refs)
 
     def test_provider_request_writer_writes_request_deterministically(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
