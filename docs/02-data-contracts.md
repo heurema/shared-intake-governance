@@ -66,6 +66,7 @@ The raw payload body remains outside the clean-record contract.
 For failed fetches, `body_hash`, `storage_path`, `canonical_url`, and
 `http_status` may be `null`, but the metadata file should still record the
 failure as evidence.
+`run_id` and `source_id` must be safe runtime path segments.
 
 Raw metadata files should be written next to raw bodies:
 
