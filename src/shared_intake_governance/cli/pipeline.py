@@ -31,7 +31,11 @@ from shared_intake_governance.governance import (
     mediate_tool_intent,
 )
 from shared_intake_governance.executor import execute_tool_intent
-from shared_intake_governance.projector import ProfileProjector, load_profile
+from shared_intake_governance.projector import (
+    ProfileProjector,
+    load_profile,
+    update_seen_records_state,
+)
 from shared_intake_governance.runtime import (
     AuditWriter,
     ApprovalWriter,
@@ -93,6 +97,8 @@ def main(
         return _list_profile_state(args, stdout)
     if args.command == "inspect-profile-state":
         return _inspect_profile_state(args, stdout)
+    if args.command == "update-profile-seen-state":
+        return _update_profile_seen_state(args, stdout)
     if args.command == "list-profile-reports":
         return _list_profile_reports(args, stdout)
     if args.command == "inspect-profile-report":
@@ -490,6 +496,27 @@ def _inspect_profile_state(args: argparse.Namespace, stdout: TextIO) -> int:
     state = dict(state)
     state["profile_state_path"] = str(state_path)
     _print_json(stdout, state)
+    return 0
+
+
+def _update_profile_seen_state(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    profile_report_path = Path(args.profile_report)
+    profile_report = _read_json(profile_report_path)
+    result = update_seen_records_state(
+        paths=paths,
+        profile_id=args.profile_id,
+        profile_report=profile_report,
+        state_id=args.state_id,
+        updated_at=_format_utc(datetime.now(timezone.utc)),
+    )
+    _print_json(
+        stdout,
+        {
+            "profile_state_path": str(result.path),
+            "profile_state": result.state,
+        },
+    )
     return 0
 
 
@@ -1308,6 +1335,15 @@ def _parser() -> argparse.ArgumentParser:
     inspect_profile_state.add_argument("--runtime-root", required=True)
     inspect_profile_state.add_argument("--profile-id", required=True)
     inspect_profile_state.add_argument("--state-id", required=True)
+
+    update_profile_state = subparsers.add_parser(
+        "update-profile-seen-state",
+        help="Merge one profile report into a profile-local seen-records state.",
+    )
+    update_profile_state.add_argument("--runtime-root", required=True)
+    update_profile_state.add_argument("--profile-id", required=True)
+    update_profile_state.add_argument("--profile-report", required=True)
+    update_profile_state.add_argument("--state-id", default="seen-records")
 
     list_profile_reports = subparsers.add_parser(
         "list-profile-reports",

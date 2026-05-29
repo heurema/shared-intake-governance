@@ -1378,6 +1378,75 @@ class CliPipelineTests(unittest.TestCase):
             self.assertEqual(summary["state_kind"], "seen_records")
             self.assertEqual(summary["record_ids"], ["github_repo-good"])
 
+    def test_update_profile_seen_state_merges_report_items(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            report_path = _write_profile_report(
+                paths,
+                profile_id="code-intel-kernel",
+                output_id=RUN_ID,
+                output_mode="research_digest",
+                items=["github_repo-good", "arxiv_rss_keywords-good"],
+            )
+            _write_profile_state(
+                paths,
+                profile_id="code-intel-kernel",
+                state_id="seen-records",
+                state_kind="seen_records",
+                record_ids=["github_repo-old", "github_repo-good"],
+            )
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "update-profile-seen-state",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--profile-id",
+                    "code-intel-kernel",
+                    "--profile-report",
+                    str(report_path),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            state_path = paths.profile_state_path("code-intel-kernel", "seen-records")
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(summary["profile_state_path"], str(state_path))
+            self.assertEqual(summary["profile_state"], state)
+            self.assertEqual(state["schema_version"], "profile-state.v1")
+            self.assertEqual(state["profile_id"], "code-intel-kernel")
+            self.assertEqual(state["state_kind"], "seen_records")
+            self.assertEqual(
+                state["record_ids"],
+                [
+                    "arxiv_rss_keywords-good",
+                    "github_repo-good",
+                    "github_repo-old",
+                ],
+            )
+
+            second_stdout = io.StringIO()
+            second_exit_code = main(
+                [
+                    "update-profile-seen-state",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--profile-id",
+                    "code-intel-kernel",
+                    "--profile-report",
+                    str(report_path),
+                ],
+                stdout=second_stdout,
+            )
+            second_state = json.loads(state_path.read_text(encoding="utf-8"))
+
+            self.assertEqual(second_exit_code, 0)
+            self.assertEqual(second_state["record_ids"], state["record_ids"])
+
     def test_evaluate_tool_intent_reads_intent_without_writes(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)

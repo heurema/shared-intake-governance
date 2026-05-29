@@ -72,6 +72,8 @@ What exists now:
 - minimal clean-record emitter for `github_repo` and `arxiv_rss_keywords` raw evidence;
 - minimal explicit-profile projector that writes deterministic JSON reports;
 - profile-state contract for profile-local runtime state artifacts;
+- explicit `update-profile-seen-state` CLI that merges one profile report into
+  a profile-local `seen_records` state artifact;
 - narrow local CLI commands for `github_repo` and `arxiv_rss_keywords` collect,
   sanitize, and project paths;
 - multi-profile CLI command that projects existing clean cache into multiple
@@ -108,7 +110,8 @@ What does not exist yet:
 - source collector families beyond `github_repo` and `arxiv_rss_keywords`;
 - sanitizer source mappings beyond `github_repo` and `arxiv_rss_keywords`;
 - multi-profile report shaping beyond deterministic per-profile JSON;
-- automatic profile-state updates or dedupe behavior;
+- automatic profile-state updates from `project-profiles` or consumer-specific
+  dedupe behavior;
 - automatic command discovery, credential mapping, or default provider/tool
   presets;
 - SQLite;

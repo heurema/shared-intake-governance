@@ -189,6 +189,11 @@ The first `profile-state.v1` shape is intentionally small. It is suitable for
 state inventories such as seen record ids or cursors, but it must not be used
 to encode project-specific ranking or editorial decisions.
 
+The current `seen_records` update path is explicit: it merges record ids from
+one `profile-projection.v1` report into one profile-local state file. It does
+not update state implicitly during projection and does not define consumer
+publication or dedupe policy.
+
 ## Profile loading rules
 
 Phase 1 profile loading should stay explicit and file-based:

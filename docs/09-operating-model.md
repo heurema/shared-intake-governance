@@ -172,6 +172,9 @@ Current CLI behavior:
   a deterministic inventory without writing runtime data;
 - `inspect-profile-state` reads one profile state artifact by profile id and
   state id without writing runtime data;
+- `update-profile-seen-state` reads one `profile-projection.v1` artifact and
+  explicitly merges its item record ids into a profile-local `seen_records`
+  state artifact;
 - `list-profile-reports` reads generated profile reports and returns a
   deterministic inventory without writing runtime data;
 - `inspect-profile-report` reads one profile report by profile id and output id
