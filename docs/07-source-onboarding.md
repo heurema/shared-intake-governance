@@ -40,6 +40,8 @@ Current runtime implementation:
   repository endpoint and writes raw evidence only.
 - `arxiv_rss_keywords` has a minimal read-only collector that calls the
   official arXiv API query endpoint and writes raw Atom evidence only.
+- clean-record emission exists for `github_repo` raw JSON and
+  `arxiv_rss_keywords` raw Atom entries.
 
 ## Source selection rules
 

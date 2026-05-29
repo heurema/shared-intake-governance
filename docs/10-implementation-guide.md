@@ -199,6 +199,10 @@ Current implementation:
 
 - `src/shared_intake_governance/sanitizer/clean_records.py`
 - `tests/test_clean_records_and_projection.py`
+- `github_repo` raw JSON maps to one clean record.
+- `arxiv_rss_keywords` raw Atom feeds map to one clean record per entry.
+- single-record emission rejects multi-entry raw evidence instead of silently
+  dropping records; use all-record emission for feed-shaped sources.
 
 ### Step 6: implement one projector
 
