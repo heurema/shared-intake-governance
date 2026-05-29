@@ -69,7 +69,7 @@ runtime paths consume them:
 - source health counts must match success/failure counts;
 - terminal run manifests must carry matching source-health refs;
 - projection counts must match emitted and excluded records;
-- profile seen-state record ids must be sorted and unique;
+- profile seen-state record ids must be safe path segments, sorted, and unique;
 - denied provider requests are rejected before provider-request records;
 - embedded governance audit events reuse standalone audit id validation;
 - `profile_id`, source ids, clean record ids, profile projection ids, raw

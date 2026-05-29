@@ -104,6 +104,8 @@ def _record_ids(state: dict[str, Any]) -> list[str]:
         isinstance(record_id, str) and record_id for record_id in record_ids
     ):
         raise ValueError("profile state record_ids must be non-empty strings")
+    for record_id in record_ids:
+        _safe_segment(record_id, "record_id")
     return record_ids
 
 
