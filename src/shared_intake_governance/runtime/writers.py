@@ -888,6 +888,14 @@ def validate_source_health(source_health: dict[str, Any]) -> None:
         if not isinstance(source_health[field], int) or source_health[field] < 0:
             raise ValueError(f"source health {field} must be non-negative")
 
+    if (
+        source_health["attempted_fetches"]
+        != source_health["successful_fetches"] + source_health["failed_fetches"]
+    ):
+        raise ValueError(
+            "source health attempted_fetches must equal successful_fetches plus failed_fetches"
+        )
+
     degraded_reasons = source_health["degraded_reasons"]
     if not isinstance(degraded_reasons, list) or not all(
         isinstance(reason, str) and reason for reason in degraded_reasons
@@ -900,6 +908,16 @@ def validate_source_health(source_health: dict[str, Any]) -> None:
     if source_health["next_retry_after"] is not None:
         _require_text(source_health, "next_retry_after")
         require_date_time(source_health["next_retry_after"], "next_retry_after")
+
+    if source_health["status"] == "healthy":
+        if source_health["failed_fetches"] != 0:
+            raise ValueError("healthy source health must not include failed fetches")
+        if degraded_reasons:
+            raise ValueError("healthy source health must not include degraded reasons")
+        if last_error is not None:
+            raise ValueError("healthy source health must not include errors")
+        if source_health["next_retry_after"] is not None:
+            raise ValueError("healthy source health must not include retry hints")
 
 
 def _validate_error_object(

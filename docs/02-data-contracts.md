@@ -152,6 +152,9 @@ next_retry_after
 
 If a source is degraded or failed, downstream consumers should see that state
 explicitly. Do not silently widen to weaker fallback sources.
+`attempted_fetches` must equal `successful_fetches + failed_fetches`.
+`healthy` records must not carry failed fetches, degraded reasons, errors, or
+retry hints.
 Runtime code validates source health artifacts before writing them.
 
 ## Source config

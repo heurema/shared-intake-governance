@@ -451,6 +451,32 @@ class RuntimeWriterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_source_health(bad_error)
 
+        bad_totals = dict(valid_health)
+        bad_totals["attempted_fetches"] = 2
+        with self.assertRaisesRegex(
+            ValueError,
+            "source health attempted_fetches must equal successful_fetches plus failed_fetches",
+        ):
+            validate_source_health(bad_totals)
+
+        healthy_with_failed_fetch = dict(valid_health)
+        healthy_with_failed_fetch["failed_fetches"] = 1
+        healthy_with_failed_fetch["attempted_fetches"] = 2
+        with self.assertRaisesRegex(
+            ValueError, "healthy source health must not include failed fetches"
+        ):
+            validate_source_health(healthy_with_failed_fetch)
+
+        healthy_with_error = dict(valid_health)
+        healthy_with_error["last_error"] = {
+            "kind": "timeout",
+            "message": "request timed out",
+        }
+        with self.assertRaisesRegex(
+            ValueError, "healthy source health must not include errors"
+        ):
+            validate_source_health(healthy_with_error)
+
     def test_audit_writer_appends_jsonl_events(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             paths = RuntimePaths(Path(tmp_dir) / "runtime")
