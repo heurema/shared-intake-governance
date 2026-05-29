@@ -79,6 +79,29 @@ class CleanRecordEmitterTests(unittest.TestCase):
 
             validate_clean_record(result.record)
 
+    def test_emit_rejects_malformed_raw_metadata_before_clean_record(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            metadata_path, _ = _write_github_raw(
+                paths,
+                {
+                    "full_name": "heurema/signum",
+                    "html_url": "https://github.com/heurema/signum",
+                    "description": "Coding agent benchmark toolkit.",
+                },
+            )
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            metadata["credentials"] = {"token": "do-not-clean"}
+            metadata_path.write_text(
+                json.dumps(metadata, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "raw metadata has unknown fields"):
+                CleanRecordEmitter(paths).emit_from_raw_metadata(metadata_path)
+
+            self.assertEqual([], list(paths.clean_root.glob("*.json")))
+
     def test_emit_clean_record_flags_and_quarantines_instruction_like_text(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             paths = RuntimePaths(Path(tmp_dir) / "runtime")

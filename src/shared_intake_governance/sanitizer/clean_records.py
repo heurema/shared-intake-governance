@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from shared_intake_governance.runtime import RuntimePaths
+from shared_intake_governance.runtime import RuntimePaths, validate_raw_metadata
 
 
 SANITIZER_VERSION = "clean-record.v1"
@@ -98,6 +98,7 @@ class CleanRecordEmitter:
 
     def _records_from_raw_metadata(self, metadata_path: str | Path) -> list[dict[str, Any]]:
         metadata = _read_json(Path(metadata_path))
+        validate_raw_metadata(metadata)
         if metadata.get("fetch_status") != "success":
             raise ValueError("only successful raw metadata can emit clean records")
         if metadata.get("body_hash") is None or metadata.get("storage_path") is None:
