@@ -684,6 +684,8 @@ def validate_provider_request(request: dict[str, Any]) -> None:
         "tool_name",
     ]:
         _require_text(request, field)
+    _require_safe_segment(request, "run_id")
+    _require_safe_segment(request, "request_id")
     require_date_time(request["prepared_at"], "prepared_at")
     if request["provider"] not in _PROVIDERS:
         raise ValueError("provider request has unsupported provider")
