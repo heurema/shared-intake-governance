@@ -10,16 +10,17 @@ The first stable contracts should cover:
 4. source health;
 5. source configs for one-source local runs;
 6. project profiles;
-7. profile-local runtime state;
-8. tool intents passed into governance;
-9. governance decisions returned by policy evaluation;
-10. governance audit events;
-11. approval records;
-12. dry-run results;
-13. execution mediation records;
-14. tool execution result records;
-15. provider request records;
-16. provider result records.
+7. profile projection reports;
+8. profile-local runtime state;
+9. tool intents passed into governance;
+10. governance decisions returned by policy evaluation;
+11. governance audit events;
+12. approval records;
+13. dry-run results;
+14. execution mediation records;
+15. tool execution result records;
+16. provider request records;
+17. provider result records.
 
 ## Raw payload metadata
 
@@ -170,6 +171,30 @@ Profiles must not define:
 - destructive action permissions;
 - credential material;
 - adapter internals.
+
+## Profile projection
+
+See [../schemas/profile-projection.schema.json](../schemas/profile-projection.schema.json).
+
+Profile projection reports are deterministic runtime artifacts produced from
+the clean cache and one explicit profile. They preserve enough provenance for
+consumer repos to apply their own ranking, report formatting, publication, or
+dedupe decisions without re-reading raw source payloads.
+
+Minimum fields:
+
+```text
+schema_version
+profile_id
+output_mode
+generated_at
+counts
+items
+```
+
+Projection items intentionally include sanitized summary text, risk flags,
+source trust, canonical URL, and raw hash. They must not include credentials,
+provider prompts, model outputs, or consumer-specific editorial decisions.
 
 ## Profile state
 

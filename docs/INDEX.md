@@ -71,6 +71,7 @@ Use this file as the main navigation layer.
 - [../schemas/source-health.schema.json](../schemas/source-health.schema.json)
 - [../schemas/source-config.schema.json](../schemas/source-config.schema.json)
 - [../schemas/profile.schema.json](../schemas/profile.schema.json)
+- [../schemas/profile-projection.schema.json](../schemas/profile-projection.schema.json)
 - [../schemas/profile-state.schema.json](../schemas/profile-state.schema.json)
 - [../schemas/tool-intent.schema.json](../schemas/tool-intent.schema.json)
 - [../schemas/governance-decision.schema.json](../schemas/governance-decision.schema.json)
