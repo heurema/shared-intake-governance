@@ -848,6 +848,7 @@ def validate_run_manifest(manifest: dict[str, Any]) -> None:
         "profiles_root",
     ]:
         _require_text(manifest, field)
+    _require_safe_segment(manifest, "run_id")
     require_date_time(manifest["started_at"], "started_at")
     if manifest["mode"] not in _RUN_MANIFEST_MODE:
         raise ValueError("run manifest has unsupported mode")
@@ -857,6 +858,7 @@ def validate_run_manifest(manifest: dict[str, Any]) -> None:
         _require_text(manifest, "finished_at")
         require_date_time(manifest["finished_at"], "finished_at")
     _require_string_list(manifest, "sources", "run manifest sources")
+    _require_safe_segment_list(manifest, "sources", "run manifest sources")
     _require_string_list(
         manifest,
         "source_health",
@@ -986,6 +988,11 @@ def _require_text(payload: dict[str, Any], field: str) -> None:
 def _require_safe_segment(payload: dict[str, Any], field: str) -> None:
     if not _SAFE_SEGMENT.fullmatch(payload[field]):
         raise ValueError(f"{field} must be a safe path segment")
+
+
+def _require_safe_segment_list(payload: dict[str, Any], field: str, label: str) -> None:
+    if not all(_SAFE_SEGMENT.fullmatch(item) for item in payload[field]):
+        raise ValueError(f"{label} must be safe path segments")
 
 
 def _require_string_list(payload: dict[str, Any], field: str, label: str) -> None:

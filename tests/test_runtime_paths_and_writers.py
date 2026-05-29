@@ -475,6 +475,20 @@ class RuntimeWriterTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 validate_run_manifest(bad_status)
 
+            bad_run_id = dict(valid_manifest)
+            bad_run_id["run_id"] = "../20260529T123045Z-deadbeef"
+            with self.assertRaisesRegex(
+                ValueError, "run_id must be a safe path segment"
+            ):
+                validate_run_manifest(bad_run_id)
+
+            bad_source_id = dict(valid_manifest)
+            bad_source_id["sources"] = ["../github-main"]
+            with self.assertRaisesRegex(
+                ValueError, "run manifest sources must be safe path segments"
+            ):
+                validate_run_manifest(bad_source_id)
+
             bad_counts = dict(valid_manifest)
             bad_counts["counts"] = dict(valid_manifest["counts"])
             bad_counts["counts"]["failed_sources"] = -1
@@ -512,6 +526,18 @@ class RuntimeWriterTests(unittest.TestCase):
                 "terminal run manifest source_health count must match sources count",
             ):
                 validate_run_manifest(missing_terminal_source_health)
+
+    def test_run_manifest_schema_tracks_runtime_id_constraints(self):
+        schema = _read_schema("run-manifest.schema.json")
+
+        self.assertEqual(
+            schema["properties"]["run_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["sources"]["items"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
 
     def test_source_health_writer_validates_and_writes_health(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
