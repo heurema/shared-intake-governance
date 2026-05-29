@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
 from shared_intake_governance.validation import require_https_url
 
 
+_SAFE_SEGMENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _SOURCE_TRUST = {"official", "maintainer", "platform", "secondary", "social", "unknown"}
 _SOURCE_TYPES = {
     "github_repo",
@@ -32,6 +34,7 @@ def validate_source_config(config: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("source config must use schema_version source-config.v1")
     _require_text(config, "source_type")
     _require_text(config, "source_id")
+    _safe_segment(config["source_id"], "source_id")
 
     source_type = config["source_type"]
     if source_type not in _SOURCE_TYPES:
@@ -168,6 +171,12 @@ def _reject_unknown(config: dict[str, Any], allowed: set[str]) -> None:
 def _require_text(config: dict[str, Any], field: str) -> None:
     if not isinstance(config.get(field), str) or not config[field]:
         raise ValueError(f"{field} must be a non-empty string")
+
+
+def _safe_segment(value: str, label: str) -> str:
+    if not _SAFE_SEGMENT.fullmatch(value):
+        raise ValueError(f"{label} must be a safe path segment")
+    return value
 
 
 def _require_string_list(config: dict[str, Any], field: str) -> None:
