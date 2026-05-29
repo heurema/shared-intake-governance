@@ -154,8 +154,8 @@ state artifact.
 The profile-state inspection commands read existing `profile-state.v1`
 artifacts only. The profile seen-state update command explicitly merges record
 ids from one `profile-projection.v1` report into one `seen_records` state
-artifact. `project-profiles` still does not update seen state implicitly or
-change projection behavior.
+artifact, validating existing and updated profile state. `project-profiles`
+still does not update seen state implicitly or change projection behavior.
 The governance evaluator reads one `tool-intent.v1` file and prints one
 `governance-decision.v1` decision; when `--runtime-root` and `--run-id` are
 provided together, it validates and appends one `governance-audit-event.v1`

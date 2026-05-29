@@ -6,7 +6,11 @@ from .profile import (
     load_profile,
     validate_profile_projection,
 )
-from .profile_state import ProfileStateWrite, update_seen_records_state
+from .profile_state import (
+    ProfileStateWrite,
+    update_seen_records_state,
+    validate_profile_state,
+)
 
 __all__ = [
     "ProfileProjectionWrite",
@@ -15,4 +19,5 @@ __all__ = [
     "load_profile",
     "update_seen_records_state",
     "validate_profile_projection",
+    "validate_profile_state",
 ]

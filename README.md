@@ -79,7 +79,7 @@ What exists now:
 - minimal explicit-profile projector that writes deterministic JSON reports;
 - runtime validation for profile projection reports before write and seen-state
   consumption;
-- profile-state contract for profile-local runtime state artifacts;
+- profile-state contract and validator for profile-local runtime state artifacts;
 - explicit `update-profile-seen-state` CLI that merges one profile report into
   a profile-local `seen_records` state artifact;
 - narrow local CLI commands for `github_repo`, `github_search`,
