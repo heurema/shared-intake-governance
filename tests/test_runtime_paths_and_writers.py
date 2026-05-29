@@ -21,6 +21,7 @@ from shared_intake_governance.runtime import (  # noqa: E402
     RuntimePaths,
     SourceHealthWriter,
     ToolExecutionWriter,
+    validate_run_manifest,
     validate_source_health,
     generate_run_id,
 )
@@ -296,28 +297,8 @@ class RuntimeWriterTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             paths = RuntimePaths(Path(tmp_dir) / "runtime")
             writer = RunWriter(paths)
-            manifest = {
-                "schema_version": "run-manifest.v1",
-                "run_id": "20260529T123045Z-deadbeef",
-                "mode": "daily_collection",
-                "status": "completed",
-                "started_at": "2026-05-29T12:30:45Z",
-                "finished_at": "2026-05-29T12:31:45Z",
-                "runtime_root": str(paths.root),
-                "raw_root": str(paths.raw_root),
-                "clean_root": str(paths.clean_root),
-                "profiles_root": str(paths.profiles_root),
-                "sources": ["github-main"],
-                "counts": {
-                    "raw_payloads_written": 1,
-                    "raw_metadata_written": 1,
-                    "clean_records_written": 0,
-                    "projected_profiles": 0,
-                    "quarantined_records": 0,
-                    "failed_sources": 0,
-                },
-                "source_health": [],
-            }
+            manifest = _run_manifest(paths)
+            validate_run_manifest(manifest)
 
             manifest_path = writer.write_manifest(manifest)
             first_write = manifest_path.read_text(encoding="utf-8")
@@ -331,6 +312,32 @@ class RuntimeWriterTests(unittest.TestCase):
 
             writer.write_manifest(manifest)
             self.assertEqual(manifest_path.read_text(encoding="utf-8"), first_write)
+
+    def test_run_manifest_validation_rejects_contract_drift(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            valid_manifest = _run_manifest(paths)
+
+            missing_required = dict(valid_manifest)
+            missing_required.pop("counts")
+            with self.assertRaises(ValueError):
+                validate_run_manifest(missing_required)
+
+            unknown_field = dict(valid_manifest)
+            unknown_field["score"] = 1
+            with self.assertRaises(ValueError):
+                validate_run_manifest(unknown_field)
+
+            bad_status = dict(valid_manifest)
+            bad_status["status"] = "ok"
+            with self.assertRaises(ValueError):
+                validate_run_manifest(bad_status)
+
+            bad_counts = dict(valid_manifest)
+            bad_counts["counts"] = dict(valid_manifest["counts"])
+            bad_counts["counts"]["failed_sources"] = -1
+            with self.assertRaises(ValueError):
+                validate_run_manifest(bad_counts)
 
     def test_source_health_writer_validates_and_writes_health(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -537,6 +544,31 @@ def _raw_metadata(raw_body):
         "storage_path": None if raw_body is None else str(raw_body.path),
         "collector_version": "test",
         "error": None,
+    }
+
+
+def _run_manifest(paths):
+    return {
+        "schema_version": "run-manifest.v1",
+        "run_id": "20260529T123045Z-deadbeef",
+        "mode": "daily_collection",
+        "status": "completed",
+        "started_at": "2026-05-29T12:30:45Z",
+        "finished_at": "2026-05-29T12:31:45Z",
+        "runtime_root": str(paths.root),
+        "raw_root": str(paths.raw_root),
+        "clean_root": str(paths.clean_root),
+        "profiles_root": str(paths.profiles_root),
+        "sources": ["github-main"],
+        "counts": {
+            "raw_payloads_written": 1,
+            "raw_metadata_written": 1,
+            "clean_records_written": 0,
+            "projected_profiles": 0,
+            "quarantined_records": 0,
+            "failed_sources": 0,
+        },
+        "source_health": [],
     }
 
 

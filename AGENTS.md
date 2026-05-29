@@ -30,7 +30,7 @@ one validated explicit-profile JSON projector, explicit profile seen-state
 updates, and
 narrow local CLI commands for the current `github_repo`, `github_search`,
 `arxiv_rss_keywords`, `arxiv_query`, `rss`, and `source-config.v1` paths with
-run manifest and validated source health output.
+validated run manifest and source health output.
 It also includes governance decision, audit, approval, dry-run, execution
 mediation, provider request, provider result, explicit governed tool execution,
 and explicit provider command invocation runtime slices.

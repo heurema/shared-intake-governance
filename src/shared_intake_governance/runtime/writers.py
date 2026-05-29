@@ -21,6 +21,36 @@ _SOURCE_TYPES = {
     "news",
     "custom",
 }
+_RUN_MANIFEST_MODE = {"backfill", "daily_collection", "shadow", "governance"}
+_RUN_MANIFEST_STATUS = {
+    "started",
+    "completed",
+    "completed_with_degradation",
+    "failed",
+}
+_RUN_MANIFEST_REQUIRED = {
+    "schema_version",
+    "run_id",
+    "mode",
+    "status",
+    "started_at",
+    "finished_at",
+    "runtime_root",
+    "raw_root",
+    "clean_root",
+    "profiles_root",
+    "sources",
+    "counts",
+    "source_health",
+}
+_RUN_MANIFEST_COUNT_REQUIRED = {
+    "raw_payloads_written",
+    "raw_metadata_written",
+    "clean_records_written",
+    "projected_profiles",
+    "quarantined_records",
+    "failed_sources",
+}
 _SOURCE_HEALTH_STATUS = {"healthy", "degraded", "failed", "skipped"}
 _SOURCE_HEALTH_REQUIRED = {
     "schema_version",
@@ -88,6 +118,7 @@ class RunWriter:
         self.paths = paths
 
     def write_manifest(self, manifest: dict[str, Any]) -> Path:
+        validate_run_manifest(manifest)
         path = self.paths.run_manifest_path(str(manifest["run_id"]))
         return _write_json(path, manifest)
 
@@ -200,6 +231,57 @@ class ProviderResultWriter:
         return _write_json(path, result)
 
 
+def validate_run_manifest(manifest: dict[str, Any]) -> None:
+    missing = sorted(_RUN_MANIFEST_REQUIRED - set(manifest))
+    if missing:
+        raise ValueError(f"run manifest missing required fields: {', '.join(missing)}")
+    extra = sorted(set(manifest) - _RUN_MANIFEST_REQUIRED)
+    if extra:
+        raise ValueError(f"run manifest has unknown fields: {', '.join(extra)}")
+
+    if manifest["schema_version"] != "run-manifest.v1":
+        raise ValueError("run manifest must use run-manifest.v1")
+    for field in [
+        "run_id",
+        "started_at",
+        "runtime_root",
+        "raw_root",
+        "clean_root",
+        "profiles_root",
+    ]:
+        _require_text(manifest, field)
+    if manifest["mode"] not in _RUN_MANIFEST_MODE:
+        raise ValueError("run manifest has unsupported mode")
+    if manifest["status"] not in _RUN_MANIFEST_STATUS:
+        raise ValueError("run manifest has unsupported status")
+    if manifest["finished_at"] is not None:
+        _require_text(manifest, "finished_at")
+    _require_string_list(manifest, "sources", "run manifest sources")
+    _require_string_list(
+        manifest,
+        "source_health",
+        "run manifest source_health",
+    )
+
+    counts = manifest["counts"]
+    if not isinstance(counts, dict):
+        raise ValueError("run manifest counts must be an object")
+    count_missing = sorted(_RUN_MANIFEST_COUNT_REQUIRED - set(counts))
+    if count_missing:
+        raise ValueError(
+            "run manifest counts missing required fields: "
+            + ", ".join(count_missing)
+        )
+    count_extra = sorted(set(counts) - _RUN_MANIFEST_COUNT_REQUIRED)
+    if count_extra:
+        raise ValueError(
+            "run manifest counts has unknown fields: " + ", ".join(count_extra)
+        )
+    for field in sorted(_RUN_MANIFEST_COUNT_REQUIRED):
+        if not isinstance(counts[field], int) or counts[field] < 0:
+            raise ValueError(f"run manifest count {field} must be non-negative")
+
+
 def validate_source_health(source_health: dict[str, Any]) -> None:
     missing = sorted(_SOURCE_HEALTH_REQUIRED - set(source_health))
     if missing:
@@ -264,6 +346,13 @@ def _validate_source_health_error(error: Any) -> None:
 def _require_text(payload: dict[str, Any], field: str) -> None:
     if not isinstance(payload[field], str) or not payload[field]:
         raise ValueError(f"{field} must be a non-empty string")
+
+
+def _require_string_list(payload: dict[str, Any], field: str, label: str) -> None:
+    if not isinstance(payload[field], list) or not all(
+        isinstance(item, str) and item for item in payload[field]
+    ):
+        raise ValueError(f"{label} must be strings")
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> Path:
