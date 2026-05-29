@@ -443,6 +443,7 @@ def validate_governance_audit_event(event: dict[str, Any]) -> None:
         "tool_intent_path",
     ]:
         _require_text(event, field)
+    _require_safe_segment(event, "run_id")
     require_date_time(event["recorded_at"], "recorded_at")
     if event["action_class"] not in _ACTION_CLASSES:
         raise ValueError("governance audit event has unsupported action_class")

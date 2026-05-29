@@ -671,10 +671,23 @@ class RuntimeWriterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_governance_audit_event(bad_decision)
 
+        bad_run_id = dict(valid_event)
+        bad_run_id["run_id"] = "../20260529T123045Z-deadbeef"
+        with self.assertRaisesRegex(ValueError, "run_id must be a safe path segment"):
+            validate_governance_audit_event(bad_run_id)
+
         bad_refs = dict(valid_event)
         bad_refs["evidence_refs"] = ["clean/good.json", 1]
         with self.assertRaises(ValueError):
             validate_governance_audit_event(bad_refs)
+
+    def test_governance_audit_event_schema_tracks_runtime_id_constraints(self):
+        schema = _read_schema("governance-audit-event.schema.json")
+
+        self.assertEqual(
+            schema["properties"]["run_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
 
     def test_approval_writer_writes_record_deterministically(self):
         with tempfile.TemporaryDirectory() as tmp_dir:

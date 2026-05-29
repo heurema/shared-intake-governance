@@ -373,6 +373,7 @@ tool_intent_path
 Audit events should record the decision surface, not the full tool arguments.
 Do not log secrets, credentials, private payloads, or unneeded side-effect
 arguments into audit JSONL.
+`run_id` must be a safe runtime path segment.
 Runtime code validates governance audit events before appending them.
 
 ## Approval record
