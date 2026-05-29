@@ -575,6 +575,7 @@ Provider result records should point at response artifacts or summaries rather
 than embedding full responses. They should not include credentials, tool
 arguments, raw source text, private payloads, or provider-specific policy truth.
 Failed or blocked results should include a compact error object.
+Runtime code validates provider results before writing them.
 
 ## Capability classes
 

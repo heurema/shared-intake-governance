@@ -181,9 +181,9 @@ validated `tool-execution-result.v1` artifact.
 The provider request command reads one ready `execution-mediation.v1` artifact
 and validates and writes one provider-neutral `provider-request.v1` artifact. It
 does not invoke providers, discover credentials, or execute tools.
-The provider result command reads one `provider-request.v1` artifact and writes
-one `provider-result.v1` artifact with response refs and usage metadata. It
-does not invoke providers or store full provider responses.
+The provider result command reads one `provider-request.v1` artifact and
+validates and writes one `provider-result.v1` artifact with response refs and
+usage metadata. It does not invoke providers or store full provider responses.
 The provider invocation command reads one `provider-request.v1` artifact, runs
 only the explicit local command supplied by the operator, passes the provider
 request JSON on stdin, stores stdout/stderr as runtime artifacts, and writes
