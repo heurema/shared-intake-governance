@@ -54,6 +54,25 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli run-source-config \
 Expected output is one JSON summary printed to stdout. The summary includes
 all clean record paths emitted from the Atom feed.
 
+## Isolated smoke run
+
+Use this when you want a live one-source check without choosing a persistent
+runtime root. The command creates a temporary runtime root outside the
+repository and writes `SMOKE_RUNTIME_DO_NOT_COMMIT.txt` inside it.
+
+```sh
+export SIG_RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-smoke"
+
+PYTHONPATH=src python3 -m shared_intake_governance.cli smoke-source-config \
+  --profile profiles/examples/code-intel-kernel.json \
+  --source-config sources/examples/github-signum.json \
+  --run-id "$SIG_RUN_ID" \
+  --output-id "$SIG_RUN_ID"
+```
+
+Expected output is one JSON summary printed to stdout. The summary includes
+`smoke_runtime_root`, `smoke_runtime_policy`, and `runtime_boundary_path`.
+
 ## Inspect output
 
 ```sh

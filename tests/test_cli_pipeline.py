@@ -1,5 +1,6 @@
 import io
 import json
+import shutil
 import sys
 import tempfile
 import unittest
@@ -488,6 +489,87 @@ class CliPipelineTests(unittest.TestCase):
 
             self.assertFalse(runtime_root.exists())
 
+    def test_smoke_source_config_defaults_to_temp_runtime_and_marks_boundary(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            profile_path = _write_profile(root)
+            source_config_path = _write_source_config(
+                root,
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_repo",
+                    "source_id": "github-signum",
+                    "owner": "heurema",
+                    "repo": "signum",
+                },
+            )
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "smoke-source-config",
+                    "--profile",
+                    str(profile_path),
+                    "--source-config",
+                    str(source_config_path),
+                    "--run-id",
+                    RUN_ID,
+                    "--output-id",
+                    RUN_ID,
+                ],
+                stdout=stdout,
+                collector_factory=SuccessfulCollector,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            smoke_runtime_root = Path(summary["smoke_runtime_root"])
+            boundary_path = Path(summary["runtime_boundary_path"])
+            self.addCleanup(shutil.rmtree, smoke_runtime_root, ignore_errors=True)
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(summary["status"], "completed")
+            self.assertEqual(summary["smoke_runtime_policy"], "do_not_commit")
+            self.assertTrue(smoke_runtime_root.exists())
+            self.assertFalse(_is_relative_to(smoke_runtime_root, Path.cwd()))
+            self.assertEqual(boundary_path.parent, smoke_runtime_root)
+            self.assertIn("Do not commit", boundary_path.read_text(encoding="utf-8"))
+            self.assertTrue(Path(summary["run_manifest_path"]).exists())
+
+    def test_smoke_source_config_rejects_repo_local_runtime_root(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            profile_path = _write_profile(root)
+            source_config_path = _write_source_config(
+                root,
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_repo",
+                    "source_id": "github-signum",
+                    "owner": "heurema",
+                    "repo": "signum",
+                },
+            )
+            runtime_root = Path.cwd() / ".smoke-runtime-test"
+
+            with self.assertRaises(ValueError):
+                main(
+                    [
+                        "smoke-source-config",
+                        "--runtime-root",
+                        str(runtime_root),
+                        "--profile",
+                        str(profile_path),
+                        "--source-config",
+                        str(source_config_path),
+                        "--run-id",
+                        RUN_ID,
+                    ],
+                    stdout=io.StringIO(),
+                    collector_factory=SuccessfulCollector,
+                )
+
+            self.assertFalse(runtime_root.exists())
+
 
 class SuccessfulCollector:
     def __init__(self, paths, **kwargs):
@@ -716,6 +798,14 @@ def _write_source_config(root, payload):
     source_config_path = root / "source-config.json"
     source_config_path.write_text(json.dumps(payload), encoding="utf-8")
     return source_config_path
+
+
+def _is_relative_to(path, parent):
+    try:
+        path.resolve().relative_to(parent.resolve())
+    except ValueError:
+        return False
+    return True
 
 
 if __name__ == "__main__":
