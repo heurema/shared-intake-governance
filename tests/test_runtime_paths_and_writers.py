@@ -365,6 +365,53 @@ class RuntimeWriterTests(unittest.TestCase):
         ):
             validate_raw_metadata(bad_canonical_url)
 
+        missing_success_body_hash = dict(valid_metadata)
+        missing_success_body_hash["body_hash"] = None
+        with self.assertRaisesRegex(
+            ValueError,
+            "successful raw metadata must include body_hash and storage_path",
+        ):
+            validate_raw_metadata(missing_success_body_hash)
+
+        missing_success_storage_path = dict(valid_metadata)
+        missing_success_storage_path["storage_path"] = None
+        with self.assertRaisesRegex(
+            ValueError,
+            "successful raw metadata must include body_hash and storage_path",
+        ):
+            validate_raw_metadata(missing_success_storage_path)
+
+        success_with_error = dict(valid_metadata)
+        success_with_error["error"] = {
+            "kind": "http_error",
+            "message": "HTTP 500",
+        }
+        with self.assertRaisesRegex(
+            ValueError, "successful raw metadata must not include an error"
+        ):
+            validate_raw_metadata(success_with_error)
+
+        failed_without_error = dict(valid_metadata)
+        failed_without_error["fetch_status"] = "failed"
+        failed_without_error["error"] = None
+        with self.assertRaisesRegex(
+            ValueError, "non-success raw metadata must include an error"
+        ):
+            validate_raw_metadata(failed_without_error)
+
+        partial_body_refs = dict(valid_metadata)
+        partial_body_refs["storage_path"] = None
+        partial_body_refs["fetch_status"] = "failed"
+        partial_body_refs["error"] = {
+            "kind": "http_error",
+            "message": "HTTP 500",
+        }
+        with self.assertRaisesRegex(
+            ValueError,
+            "raw metadata body_hash and storage_path must be present together",
+        ):
+            validate_raw_metadata(partial_body_refs)
+
     def test_run_writer_writes_manifest_deterministically(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             paths = RuntimePaths(Path(tmp_dir) / "runtime")
@@ -1007,6 +1054,12 @@ class RuntimeWriterTests(unittest.TestCase):
 
 
 def _raw_metadata(raw_body):
+    body_hash = "a" * 64 if raw_body is None else raw_body.body_hash
+    storage_path = (
+        "/runtime/raw/github-main/2026-05-29/test.body"
+        if raw_body is None
+        else str(raw_body.path)
+    )
     return {
         "schema_version": "raw-metadata.v1",
         "run_id": "20260529T123045Z-deadbeef",
@@ -1020,8 +1073,8 @@ def _raw_metadata(raw_body):
         "etag": '"abc"',
         "last_modified": None,
         "content_type": "application/json",
-        "body_hash": None if raw_body is None else raw_body.body_hash,
-        "storage_path": None if raw_body is None else str(raw_body.path),
+        "body_hash": body_hash,
+        "storage_path": storage_path,
         "collector_version": "test",
         "error": None,
     }

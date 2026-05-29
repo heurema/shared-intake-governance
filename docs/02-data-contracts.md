@@ -80,6 +80,9 @@ source of truth.
 Runtime code validates raw metadata before writing it and before the sanitizer
 consumes it. Non-null raw metadata `storage_path` values and sanitizer raw body
 reads must stay under the configured runtime raw root.
+Successful raw metadata must include both `body_hash` and `storage_path` and
+must not include `error`. Non-success raw metadata must include `error`.
+`body_hash` and `storage_path` must be present or absent together.
 
 ## Clean record
 
