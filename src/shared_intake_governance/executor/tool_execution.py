@@ -7,7 +7,7 @@ import subprocess
 from typing import Any, Sequence
 
 from shared_intake_governance.governance import validate_tool_intent
-from shared_intake_governance.runtime import RuntimePaths
+from shared_intake_governance.runtime import RuntimePaths, validate_execution_mediation
 
 
 _EXECUTION_STATUSES = {"succeeded", "failed", "blocked"}
@@ -30,6 +30,7 @@ def execute_tool_intent(
 ) -> dict[str, Any]:
     """Run an explicit local command only after matching ready mediation."""
     validate_tool_intent(intent)
+    validate_execution_mediation(mediation_record)
     if not command:
         raise ValueError("tool command must not be empty")
 

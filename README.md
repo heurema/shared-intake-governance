@@ -109,7 +109,7 @@ What exists now:
   execution.
 - tool-execution-result contract and local `execute-tool-intent` CLI for
   explicit governed local command execution with validated result records after
-  ready mediation.
+  validated ready mediation.
 - provider-request contract and local `prepare-provider-request` CLI for
   validated provider-neutral adapter request records without provider invocation.
 - provider-result contract and local `record-provider-result` CLI for validated
