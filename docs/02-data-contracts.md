@@ -260,6 +260,7 @@ record_ids
 The first `profile-state.v1` shape is intentionally small. It is suitable for
 state inventories such as seen record ids or cursors, but it must not be used
 to encode project-specific ranking or editorial decisions.
+`profile_id` and `state_id` must be safe runtime path segments.
 Runtime code validates profile state before consuming existing state and before
 writing updated state.
 `updated_at` must follow the shared `date-time` validation rule.

@@ -14,6 +14,10 @@ from shared_intake_governance.projector.profile_state import (  # noqa: E402
 from shared_intake_governance.runtime import RuntimePaths  # noqa: E402
 
 
+ROOT = Path(__file__).resolve().parents[1]
+SAFE_SEGMENT_PATTERN = "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+
+
 class ProfileStateUpdateTests(unittest.TestCase):
     def test_update_seen_records_state_merges_report_items_deterministically(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -130,6 +134,16 @@ class ProfileStateUpdateTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_profile_state(bad_schema)
 
+        bad_profile_id = dict(valid_state)
+        bad_profile_id["profile_id"] = "../code-intel-kernel"
+        with self.assertRaisesRegex(ValueError, "profile_id must be a safe path segment"):
+            validate_profile_state(bad_profile_id)
+
+        bad_state_id = dict(valid_state)
+        bad_state_id["state_id"] = "../seen-records"
+        with self.assertRaisesRegex(ValueError, "state_id must be a safe path segment"):
+            validate_profile_state(bad_state_id)
+
         bad_kind = dict(valid_state)
         bad_kind["state_kind"] = "seen"
         with self.assertRaises(ValueError):
@@ -166,6 +180,18 @@ class ProfileStateUpdateTests(unittest.TestCase):
             ValueError, "seen_records profile state record_ids must be sorted"
         ):
             validate_profile_state(unsorted_seen_records)
+
+    def test_profile_state_schema_tracks_runtime_id_constraints(self):
+        schema = _read_schema("profile-state.schema.json")
+
+        self.assertEqual(
+            schema["properties"]["profile_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["state_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
 
 
 def _profile_report(profile_id):
@@ -220,6 +246,11 @@ def _profile_state():
         "updated_at": "2026-05-28T12:30:45Z",
         "record_ids": ["github_repo-good", "github_repo-old"],
     }
+
+
+def _read_schema(filename):
+    path = ROOT / "schemas" / filename
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":
