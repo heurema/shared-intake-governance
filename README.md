@@ -64,6 +64,7 @@ What exists now:
 - operating model;
 - implementation staging guide;
 - example consumer profiles;
+- example source configs;
 - source config contract for one-source local runs;
 - minimal runtime path helpers and raw payload/metadata/run manifest writers;
 - minimal read-only `github_repo` collector that writes raw evidence only;
@@ -105,6 +106,7 @@ README.md            quick orientation and entrypoint
 docs/                canonical design, onboarding, threat model, roadmap
 schemas/             JSON schemas for contracts
 profiles/examples/   example consumer profiles
+sources/examples/    example one-source run configs
 src/                 minimal Python runtime helpers, collectors, sanitizer, projector, CLI
 tests/               focused runtime, collector, sanitizer, projector, and CLI tests
 ```

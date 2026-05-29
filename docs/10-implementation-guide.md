@@ -103,6 +103,8 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli run-github-repo`
 - `python -m shared_intake_governance.cli run-arxiv-rss-keywords`
 - `python -m shared_intake_governance.cli run-source-config`
+- `sources/examples/github-signum.json`
+- `sources/examples/arxiv-code-agents.json`
 - `src/shared_intake_governance/cli/pipeline.py`
 - `tests/test_cli_pipeline.py`
 
@@ -113,6 +115,8 @@ identifiers. They also write:
 
 - `runs/<run-id>.manifest.json`
 - `source-health/<run-id>/<source-id>.json`
+
+For current manual invocation examples, see [11-local-runbook.md](11-local-runbook.md).
 
 ## Concrete implementation order
 

@@ -39,6 +39,7 @@ Use this file as the main navigation layer.
 ### Continue runtime implementation
 
 - [10-implementation-guide.md](10-implementation-guide.md)
+- [11-local-runbook.md](11-local-runbook.md)
 - [04-mvp-roadmap.md](04-mvp-roadmap.md)
 - [03-provider-adapters.md](03-provider-adapters.md)
 
@@ -60,6 +61,7 @@ Use this file as the main navigation layer.
 9. [08-consumer-onboarding.md](08-consumer-onboarding.md)
 10. [09-operating-model.md](09-operating-model.md)
 11. [10-implementation-guide.md](10-implementation-guide.md)
+12. [11-local-runbook.md](11-local-runbook.md)
 
 ## Schemas and examples
 
@@ -73,6 +75,8 @@ Use this file as the main navigation layer.
 - [../profiles/examples/code-intel-kernel.json](../profiles/examples/code-intel-kernel.json)
 - [../profiles/examples/agent-bench-lab.json](../profiles/examples/agent-bench-lab.json)
 - [../profiles/examples/pulse.json](../profiles/examples/pulse.json)
+- [../sources/examples/github-signum.json](../sources/examples/github-signum.json)
+- [../sources/examples/arxiv-code-agents.json](../sources/examples/arxiv-code-agents.json)
 
 ## Runtime code
 
