@@ -468,6 +468,7 @@ Default mediation behavior:
 - `read_only` intents may become `ready` without dry-run or approval evidence;
 - side-effect classes require a matching `passed` dry-run result and a matching
   `approved` approval record;
+- `denied` policy decisions must stay `blocked` even when evidence is present;
 - mismatched or missing evidence blocks mediation;
 - mediation records should store refs and decision fields only, not full tool
   arguments, credentials, or private payloads.

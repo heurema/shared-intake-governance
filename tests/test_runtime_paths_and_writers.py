@@ -660,6 +660,14 @@ class RuntimeWriterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_execution_mediation(bad_decision)
 
+        ready_denied = dict(valid_record)
+        ready_denied["policy_decision"] = "denied"
+        ready_denied["mediation_decision"] = "ready"
+        with self.assertRaisesRegex(
+            ValueError, "denied policy decisions cannot be ready"
+        ):
+            validate_execution_mediation(ready_denied)
+
         bad_path = dict(valid_record)
         bad_path["dry_run_result_path"] = 1
         with self.assertRaises(ValueError):

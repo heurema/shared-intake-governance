@@ -56,6 +56,34 @@ class GovernanceMediationTests(unittest.TestCase):
             "side-effect action has passed dry run and approved approval record",
         )
 
+    def test_denied_policy_intent_blocks_even_with_evidence(self):
+        for action_class in [
+            "destructive_local",
+            "external_side_effect",
+            "credentialed_remote",
+        ]:
+            with self.subTest(action_class=action_class):
+                intent = _tool_intent(action_class=action_class, dry_run_supported=True)
+                record = mediate_tool_intent(
+                    run_id=RUN_ID,
+                    mediation_id="mediation-1",
+                    intent=intent,
+                    tool_intent_path="intent.json",
+                    dry_run_result=_dry_run_result(intent, result_status="passed"),
+                    dry_run_result_path="dry-runs/dry-run-1.json",
+                    approval_record=_approval_record(
+                        intent, approval_decision="approved"
+                    ),
+                    approval_record_path="approvals/approval-1.json",
+                    mediated_at="2026-05-29T12:30:45Z",
+                )
+
+                self.assertEqual(record["policy_decision"], "denied")
+                self.assertEqual(record["mediation_decision"], "blocked")
+                self.assertEqual(
+                    record["reason"], "denied policy decisions cannot become ready"
+                )
+
     def test_side_effect_intent_blocks_without_passed_dry_run(self):
         intent = _tool_intent(action_class="edit_local", dry_run_supported=True)
         record = mediate_tool_intent(
@@ -74,7 +102,7 @@ class GovernanceMediationTests(unittest.TestCase):
         self.assertEqual(record["reason"], "side-effect actions require a passed dry run")
 
     def test_side_effect_intent_blocks_without_approval(self):
-        intent = _tool_intent(action_class="external_side_effect", dry_run_supported=True)
+        intent = _tool_intent(action_class="edit_local", dry_run_supported=True)
         record = mediate_tool_intent(
             run_id=RUN_ID,
             mediation_id="mediation-1",
@@ -87,7 +115,7 @@ class GovernanceMediationTests(unittest.TestCase):
             mediated_at="2026-05-29T12:30:45Z",
         )
 
-        self.assertEqual(record["policy_decision"], "denied")
+        self.assertEqual(record["policy_decision"], "gated")
         self.assertEqual(record["mediation_decision"], "blocked")
         self.assertEqual(
             record["reason"],
