@@ -167,8 +167,9 @@ The dry-run recorder reads one `tool-intent.v1` file and validates and writes
 one `dry-run-result.v1` file. It records dry-run evidence only; it does not
 execute the requested tool or mediate side effects.
 The mediation command reads one `tool-intent.v1` file plus optional dry-run
-and approval records, then writes one `execution-mediation.v1` readiness record.
-It does not execute the requested tool or call provider adapters.
+and approval records, then validates and writes one `execution-mediation.v1`
+readiness record. It does not execute the requested tool or call provider
+adapters.
 The mediation inspection commands read existing `execution-mediation.v1`
 artifacts only and do not write runtime data.
 The tool execution command reads one `tool-intent.v1` artifact plus one matching

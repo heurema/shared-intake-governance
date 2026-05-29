@@ -141,6 +141,24 @@ _DRY_RUN_RESULT_REQUIRED = {
     "evidence_refs",
     "tool_intent_path",
 }
+_MEDIATION_DECISIONS = {"ready", "blocked"}
+_EXECUTION_MEDIATION_REQUIRED = {
+    "schema_version",
+    "run_id",
+    "mediation_id",
+    "mediated_at",
+    "intent_id",
+    "profile_id",
+    "action_class",
+    "tool_name",
+    "policy_decision",
+    "mediation_decision",
+    "reason",
+    "dry_run_result_path",
+    "approval_record_path",
+    "tool_intent_path",
+    "evidence_refs",
+}
 _SOURCE_HEALTH_REQUIRED = {
     "schema_version",
     "run_id",
@@ -279,6 +297,7 @@ class MediationWriter:
         self.paths = paths
 
     def write_record(self, record: dict[str, Any]) -> Path:
+        validate_execution_mediation(record)
         path = self.paths.mediation_record_path(
             str(record["run_id"]), str(record["mediation_id"])
         )
@@ -439,6 +458,54 @@ def validate_dry_run_result(result: dict[str, Any]) -> None:
         result,
         "evidence_refs",
         "dry-run result evidence_refs",
+    )
+
+
+def validate_execution_mediation(record: dict[str, Any]) -> None:
+    missing = sorted(_EXECUTION_MEDIATION_REQUIRED - set(record))
+    if missing:
+        raise ValueError(
+            "execution mediation missing required fields: " + ", ".join(missing)
+        )
+    extra = sorted(set(record) - _EXECUTION_MEDIATION_REQUIRED)
+    if extra:
+        raise ValueError(
+            "execution mediation has unknown fields: " + ", ".join(extra)
+        )
+
+    if record["schema_version"] != "execution-mediation.v1":
+        raise ValueError("execution mediation must use execution-mediation.v1")
+    for field in [
+        "run_id",
+        "mediation_id",
+        "mediated_at",
+        "intent_id",
+        "profile_id",
+        "tool_name",
+        "reason",
+        "tool_intent_path",
+    ]:
+        _require_text(record, field)
+    if record["action_class"] not in _ACTION_CLASSES:
+        raise ValueError("execution mediation has unsupported action_class")
+    if record["policy_decision"] not in _GOVERNANCE_DECISIONS:
+        raise ValueError("execution mediation has unsupported policy_decision")
+    if record["mediation_decision"] not in _MEDIATION_DECISIONS:
+        raise ValueError("execution mediation has unsupported mediation_decision")
+    _require_optional_string(
+        record,
+        "dry_run_result_path",
+        "execution mediation dry_run_result_path",
+    )
+    _require_optional_string(
+        record,
+        "approval_record_path",
+        "execution mediation approval_record_path",
+    )
+    _require_string_array(
+        record,
+        "evidence_refs",
+        "execution mediation evidence_refs",
     )
 
 

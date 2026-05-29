@@ -105,7 +105,7 @@ What exists now:
 - dry-run-result contract and local `record-dry-run` CLI for validated recorded
   dry-run evidence without tool execution.
 - execution-mediation contract and local `mediate-tool-intent` CLI for
-  pre-execution readiness checks without tool execution.
+  validated pre-execution readiness checks without tool execution.
 - tool-execution-result contract and local `execute-tool-intent` CLI for
   explicit governed local command execution after ready mediation.
 - provider-request contract and local `prepare-provider-request` CLI for
