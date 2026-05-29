@@ -691,6 +691,7 @@ def validate_provider_request(request: dict[str, Any]) -> None:
         _require_text(request, field)
     _require_safe_segment(request, "run_id")
     _require_safe_segment(request, "request_id")
+    _require_safe_segment(request, "mediation_id")
     _require_safe_segment(request, "profile_id")
     require_date_time(request["prepared_at"], "prepared_at")
     if request["provider"] not in _PROVIDERS:
@@ -750,6 +751,7 @@ def validate_provider_result(result: dict[str, Any]) -> None:
     _require_safe_segment(result, "run_id")
     _require_safe_segment(result, "result_id")
     _require_safe_segment(result, "request_id")
+    _require_safe_segment(result, "mediation_id")
     _require_safe_segment(result, "profile_id")
     require_date_time(result["recorded_at"], "recorded_at")
     if result["provider"] not in _PROVIDERS:

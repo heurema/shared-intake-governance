@@ -1052,6 +1052,13 @@ class RuntimeWriterTests(unittest.TestCase):
         ):
             validate_provider_request(bad_request_id)
 
+        bad_mediation_id = dict(valid_request)
+        bad_mediation_id["mediation_id"] = "../mediation-1"
+        with self.assertRaisesRegex(
+            ValueError, "mediation_id must be a safe path segment"
+        ):
+            validate_provider_request(bad_mediation_id)
+
         bad_profile_id = dict(valid_request)
         bad_profile_id["profile_id"] = "../code-intel-kernel"
         with self.assertRaisesRegex(
@@ -1078,6 +1085,10 @@ class RuntimeWriterTests(unittest.TestCase):
         )
         self.assertEqual(
             schema["properties"]["request_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["mediation_id"].get("pattern"),
             SAFE_SEGMENT_PATTERN,
         )
         self.assertEqual(
@@ -1269,6 +1280,13 @@ class RuntimeWriterTests(unittest.TestCase):
         ):
             validate_provider_result(bad_request_id)
 
+        bad_mediation_id = dict(valid_result)
+        bad_mediation_id["mediation_id"] = "../mediation-1"
+        with self.assertRaisesRegex(
+            ValueError, "mediation_id must be a safe path segment"
+        ):
+            validate_provider_result(bad_mediation_id)
+
         bad_profile_id = dict(valid_result)
         bad_profile_id["profile_id"] = "../code-intel-kernel"
         with self.assertRaisesRegex(
@@ -1299,6 +1317,10 @@ class RuntimeWriterTests(unittest.TestCase):
         )
         self.assertEqual(
             schema["properties"]["request_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["mediation_id"].get("pattern"),
             SAFE_SEGMENT_PATTERN,
         )
         self.assertEqual(
