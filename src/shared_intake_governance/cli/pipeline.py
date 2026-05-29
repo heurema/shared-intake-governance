@@ -64,6 +64,8 @@ def main(
             collector_factory,
             arxiv_collector_factory,
         )
+    if args.command == "list-runs":
+        return _list_runs(args, stdout)
     if args.command == "inspect-run":
         return _inspect_run(args, stdout)
     if args.command == "show-source-health":
@@ -323,6 +325,26 @@ def _smoke_source_config(
     return exit_code
 
 
+def _list_runs(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    manifests = []
+    if paths.runs_root.exists():
+        manifests = [
+            _run_manifest_summary(path)
+            for path in sorted(paths.runs_root.glob("*.manifest.json"))
+        ]
+    manifests.sort(key=lambda manifest: manifest["run_id"], reverse=True)
+    _print_json(
+        stdout,
+        {
+            "runtime_root": str(paths.root),
+            "run_count": len(manifests),
+            "runs": manifests,
+        },
+    )
+    return 0
+
+
 def _inspect_run(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     manifest_path = paths.run_manifest_path(args.run_id)
@@ -353,6 +375,21 @@ def _show_source_health(args: argparse.Namespace, stdout: TextIO) -> int:
     source_health["source_health_path"] = str(source_health_path)
     _print_json(stdout, source_health)
     return 0
+
+
+def _run_manifest_summary(manifest_path: Path) -> dict[str, Any]:
+    manifest = _read_json(manifest_path)
+    return {
+        "run_id": manifest["run_id"],
+        "run_manifest_path": str(manifest_path),
+        "mode": manifest["mode"],
+        "status": manifest["status"],
+        "started_at": manifest["started_at"],
+        "finished_at": manifest["finished_at"],
+        "sources": manifest["sources"],
+        "counts": manifest["counts"],
+        "source_health_count": len(manifest["source_health"]),
+    }
 
 
 def _source_health_summary(source_health_path: Path) -> dict[str, Any]:
@@ -613,6 +650,12 @@ def _parser() -> argparse.ArgumentParser:
     smoke.add_argument("--source-config", required=True)
     smoke.add_argument("--run-id")
     smoke.add_argument("--output-id")
+
+    list_runs = subparsers.add_parser(
+        "list-runs",
+        help="List run manifests under one runtime root.",
+    )
+    list_runs.add_argument("--runtime-root", required=True)
 
     inspect_run = subparsers.add_parser(
         "inspect-run",

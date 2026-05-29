@@ -128,6 +128,8 @@ Current CLI behavior:
   run manifest under `runs/`;
 - `smoke-source-config` runs one `source-config.v1` JSON file with a smoke
   runtime root outside the repository and writes a do-not-commit marker;
+- `list-runs` reads existing run manifests and returns a deterministic
+  inventory without writing runtime data;
 - `inspect-run` reads one run manifest and summarizes linked source health
   artifacts without writing runtime data;
 - `show-source-health` reads one source health artifact without writing

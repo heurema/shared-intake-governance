@@ -76,6 +76,9 @@ Expected output is one JSON summary printed to stdout. The summary includes
 ## Inspect output
 
 ```sh
+PYTHONPATH=src python3 -m shared_intake_governance.cli list-runs \
+  --runtime-root "$SIG_RUNTIME_ROOT"
+
 PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-run \
   --runtime-root "$SIG_RUNTIME_ROOT" \
   --run-id "$SIG_RUN_ID"
@@ -86,8 +89,8 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli show-source-health \
   --source-id github-signum
 ```
 
-Both commands are read-only. They do not fetch upstream sources and do not write
-runtime files.
+These commands are read-only. They do not fetch upstream sources and do not
+write runtime files.
 
 ## Reset local runtime data
 

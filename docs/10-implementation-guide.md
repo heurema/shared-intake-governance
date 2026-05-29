@@ -104,6 +104,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli run-arxiv-rss-keywords`
 - `python -m shared_intake_governance.cli run-source-config`
 - `python -m shared_intake_governance.cli smoke-source-config`
+- `python -m shared_intake_governance.cli list-runs`
 - `python -m shared_intake_governance.cli inspect-run`
 - `python -m shared_intake_governance.cli show-source-health`
 - `sources/examples/github-signum.json`
