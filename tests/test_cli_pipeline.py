@@ -61,11 +61,50 @@ class CliPipelineTests(unittest.TestCase):
             self.assertTrue(Path(summary["raw_body_path"]).exists())
             self.assertTrue(Path(summary["clean_record_path"]).exists())
             self.assertTrue(Path(summary["projection_path"]).exists())
+            self.assertTrue(Path(summary["run_manifest_path"]).exists())
+            self.assertTrue(Path(summary["source_health_path"]).exists())
             self.assertEqual(summary["projected_items"], 1)
 
             projection = json.loads(Path(summary["projection_path"]).read_text())
             self.assertEqual(projection["profile_id"], "code-intel-kernel")
             self.assertEqual(projection["counts"]["items_written"], 1)
+
+            manifest = json.loads(Path(summary["run_manifest_path"]).read_text())
+            self.assertEqual(manifest["schema_version"], "run-manifest.v1")
+            self.assertEqual(manifest["run_id"], RUN_ID)
+            self.assertEqual(manifest["mode"], "daily_collection")
+            self.assertEqual(manifest["status"], "completed")
+            self.assertEqual(manifest["runtime_root"], str(runtime_root))
+            self.assertEqual(manifest["raw_root"], str(runtime_root / "raw"))
+            self.assertEqual(manifest["clean_root"], str(runtime_root / "clean"))
+            self.assertEqual(manifest["profiles_root"], str(runtime_root / "profiles"))
+            self.assertEqual(manifest["sources"], ["github-signum"])
+            self.assertEqual(
+                manifest["counts"],
+                {
+                    "raw_payloads_written": 1,
+                    "raw_metadata_written": 1,
+                    "clean_records_written": 1,
+                    "projected_profiles": 1,
+                    "quarantined_records": 0,
+                    "failed_sources": 0,
+                },
+            )
+            self.assertEqual(manifest["source_health"], [summary["source_health_path"]])
+
+            source_health = json.loads(Path(summary["source_health_path"]).read_text())
+            self.assertEqual(source_health["schema_version"], "source-health.v1")
+            self.assertEqual(source_health["run_id"], RUN_ID)
+            self.assertEqual(source_health["source_id"], "github-signum")
+            self.assertEqual(source_health["source_type"], "github_repo")
+            self.assertEqual(source_health["status"], "healthy")
+            self.assertEqual(source_health["attempted_fetches"], 1)
+            self.assertEqual(source_health["successful_fetches"], 1)
+            self.assertEqual(source_health["failed_fetches"], 0)
+            self.assertEqual(source_health["raw_records_written"], 1)
+            self.assertEqual(source_health["degraded_reasons"], [])
+            self.assertIsNone(source_health["last_error"])
+            self.assertIsNone(source_health["next_retry_after"])
 
     def test_run_github_repo_pipeline_fails_closed_when_collection_fails(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -106,8 +145,41 @@ class CliPipelineTests(unittest.TestCase):
             self.assertIsNone(summary["raw_body_path"])
             self.assertIsNone(summary["clean_record_path"])
             self.assertIsNone(summary["projection_path"])
+            self.assertTrue(Path(summary["run_manifest_path"]).exists())
+            self.assertTrue(Path(summary["source_health_path"]).exists())
             self.assertFalse((runtime_root / "clean").exists())
             self.assertFalse((runtime_root / "profiles").exists())
+
+            manifest = json.loads(Path(summary["run_manifest_path"]).read_text())
+            self.assertEqual(manifest["status"], "failed")
+            self.assertEqual(
+                manifest["counts"],
+                {
+                    "raw_payloads_written": 0,
+                    "raw_metadata_written": 1,
+                    "clean_records_written": 0,
+                    "projected_profiles": 0,
+                    "quarantined_records": 0,
+                    "failed_sources": 1,
+                },
+            )
+            self.assertEqual(manifest["source_health"], [summary["source_health_path"]])
+
+            source_health = json.loads(Path(summary["source_health_path"]).read_text())
+            self.assertEqual(source_health["status"], "failed")
+            self.assertEqual(source_health["attempted_fetches"], 1)
+            self.assertEqual(source_health["successful_fetches"], 0)
+            self.assertEqual(source_health["failed_fetches"], 1)
+            self.assertEqual(source_health["raw_records_written"], 1)
+            self.assertEqual(source_health["degraded_reasons"], ["rate_limited"])
+            self.assertEqual(
+                source_health["last_error"],
+                {
+                    "kind": "rate_limited",
+                    "message": "HTTP 403",
+                    "retryable": True,
+                },
+            )
 
 
 class SuccessfulCollector:

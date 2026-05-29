@@ -1,4 +1,4 @@
-"""Writers for immutable raw evidence and run manifests."""
+"""Writers for immutable raw evidence and operational artifacts."""
 
 from __future__ import annotations
 
@@ -63,6 +63,19 @@ class RunWriter:
     def write_manifest(self, manifest: dict[str, Any]) -> Path:
         path = self.paths.run_manifest_path(str(manifest["run_id"]))
         return _write_json(path, manifest)
+
+
+class SourceHealthWriter:
+    """Write one source-health artifact for a run/source pair."""
+
+    def __init__(self, paths: RuntimePaths):
+        self.paths = paths
+
+    def write_source_health(self, source_health: dict[str, Any]) -> Path:
+        path = self.paths.source_health_path(
+            str(source_health["run_id"]), str(source_health["source_id"])
+        )
+        return _write_json(path, source_health)
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> Path:

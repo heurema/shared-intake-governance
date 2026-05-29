@@ -120,6 +120,11 @@ Even before a UI exists, the runtime should record:
 
 If a source is degraded, the system should say so explicitly instead of hiding it behind silence.
 
+Current CLI behavior:
+
+- `run-github-repo` writes one run manifest under `runs/`;
+- `run-github-repo` writes one source health artifact under `source-health/`.
+
 ## Cost discipline
 
 The architecture is meant to lower cost, not redistribute it invisibly.

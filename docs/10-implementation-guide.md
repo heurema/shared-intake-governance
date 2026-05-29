@@ -106,7 +106,10 @@ Current CLI implementation:
 
 This first command intentionally covers only the implemented `github_repo`
 path and requires explicit runtime root, profile path, source id, owner, repo,
-and run/output identifiers.
+and run/output identifiers. It also writes:
+
+- `runs/<run-id>.manifest.json`
+- `source-health/<run-id>/<source-id>.json`
 
 ## Concrete implementation order
 
