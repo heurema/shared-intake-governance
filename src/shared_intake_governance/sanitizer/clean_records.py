@@ -113,6 +113,8 @@ class CleanRecordEmitter:
             return [_github_repo_clean_record(metadata, body)]
         if metadata["source_type"] == "arxiv_rss_keywords":
             return _arxiv_rss_keywords_clean_records(metadata, body)
+        if metadata["source_type"] == "rss":
+            return _rss_clean_records(metadata, body)
 
         raise ValueError(f"unsupported source_type: {metadata['source_type']}")
 
@@ -242,6 +244,62 @@ def _arxiv_entry_clean_record(
         "raw_hash": metadata["body_hash"],
         "sanitizer_version": SANITIZER_VERSION,
     }
+
+
+def _rss_clean_records(metadata: dict[str, Any], body: bytes) -> list[dict[str, Any]]:
+    try:
+        root = ElementTree.fromstring(body)
+    except ElementTree.ParseError as exc:
+        raise ValueError("rss raw body must be valid XML") from exc
+
+    items = _rss_items(root)
+    if not items:
+        raise ValueError("rss raw body must include at least one item")
+
+    return [_rss_item_clean_record(metadata, item) for item in items]
+
+
+def _rss_item_clean_record(
+    metadata: dict[str, Any], item: ElementTree.Element
+) -> dict[str, Any]:
+    canonical_url = _clean_text(_rss_text(item, "link") or _rss_text(item, "guid"))
+    if not canonical_url:
+        raise ValueError("rss item must include link or guid")
+
+    title = _clean_text(_rss_text(item, "title") or canonical_url)
+    summary = _cap_length(
+        _clean_text(_rss_text(item, "description") or _rss_text(item, "summary"))
+    )
+    published_at = _optional_text(_rss_text(item, "pubDate"))
+    risk_flags = _risk_flags(" ".join([title, summary]))
+
+    return {
+        "record_id": _record_id("rss", canonical_url),
+        "source_id": metadata["source_id"],
+        "source_type": "rss",
+        "canonical_url": canonical_url,
+        "title": title,
+        "sanitized_summary": summary,
+        "published_at": published_at,
+        "license_or_terms_note": None,
+        "source_trust": metadata.get("source_trust") or "secondary",
+        "risk_flags": risk_flags,
+        "quarantined": bool(set(risk_flags) & _QUARANTINE_FLAGS),
+        "raw_hash": metadata["body_hash"],
+        "sanitizer_version": SANITIZER_VERSION,
+    }
+
+
+def _rss_items(root: ElementTree.Element) -> list[ElementTree.Element]:
+    items = root.findall("./channel/item")
+    return items or root.findall(".//item")
+
+
+def _rss_text(item: ElementTree.Element, name: str) -> str:
+    node = item.find(name)
+    if node is None:
+        return ""
+    return "".join(node.itertext())
 
 
 def _atom_entries(root: ElementTree.Element) -> list[ElementTree.Element]:

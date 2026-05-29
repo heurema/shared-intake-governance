@@ -1,0 +1,7 @@
+{
+  "schema_version": "source-config.v1",
+  "source_type": "rss",
+  "source_id": "rss-github-blog",
+  "feed_url": "https://github.blog/feed/",
+  "source_trust": "official"
+}

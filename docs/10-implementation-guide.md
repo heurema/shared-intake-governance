@@ -102,6 +102,7 @@ Current CLI implementation:
 
 - `python -m shared_intake_governance.cli run-github-repo`
 - `python -m shared_intake_governance.cli run-arxiv-rss-keywords`
+- `python -m shared_intake_governance.cli run-rss-feed`
 - `python -m shared_intake_governance.cli run-source-config`
 - `python -m shared_intake_governance.cli smoke-source-config`
 - `python -m shared_intake_governance.cli project-profiles`
@@ -127,14 +128,15 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli show-source-health`
 - `sources/examples/github-signum.json`
 - `sources/examples/arxiv-code-agents.json`
+- `sources/examples/rss-github-blog.json`
 - `src/shared_intake_governance/cli/pipeline.py`
 - `tests/test_cli_pipeline.py`
 
-These commands intentionally cover only the implemented `github_repo` and
-`arxiv_rss_keywords` paths. They require explicit runtime root, profile path,
-source-specific inputs or one `source-config.v1` file, and run/output
-identifiers. The smoke command may allocate an isolated temporary runtime root
-when none is provided. These commands also write:
+These commands intentionally cover only the implemented `github_repo`,
+`arxiv_rss_keywords`, and `rss` paths. They require explicit runtime root,
+profile path, source-specific inputs or one `source-config.v1` file, and
+run/output identifiers. The smoke command may allocate an isolated temporary
+runtime root when none is provided. These commands also write:
 
 - `runs/<run-id>.manifest.json`
 - `source-health/<run-id>/<source-id>.json`
@@ -262,8 +264,10 @@ Current implementation:
 
 - `src/shared_intake_governance/collector/github_repo.py`
 - `src/shared_intake_governance/collector/arxiv_rss_keywords.py`
+- `src/shared_intake_governance/collector/rss_feed.py`
 - `tests/test_github_repo_collector.py`
 - `tests/test_arxiv_rss_keywords_collector.py`
+- `tests/test_rss_feed_collector.py`
 
 ### Step 5: implement sanitizer and clean-record emission
 
@@ -282,6 +286,7 @@ Current implementation:
 - `tests/test_clean_records_and_projection.py`
 - `github_repo` raw JSON maps to one clean record.
 - `arxiv_rss_keywords` raw Atom feeds map to one clean record per entry.
+- `rss` raw XML feeds map to one clean record per item.
 - single-record emission rejects multi-entry raw evidence instead of silently
   dropping records; use all-record emission for feed-shaped sources.
 
@@ -385,8 +390,10 @@ Still missing:
 
 - automatic profile-state updates from `project-profiles` or consumer-specific
   dedupe behavior;
-- source collector families beyond `github_repo` and `arxiv_rss_keywords`;
-- sanitizer source mappings beyond `github_repo` and `arxiv_rss_keywords`;
+- source collector families beyond `github_repo`, `arxiv_rss_keywords`, and
+  `rss`;
+- sanitizer source mappings beyond `github_repo`, `arxiv_rss_keywords`, and
+  `rss`;
 - provider/tool command discovery, credential mapping, or default presets.
 
 ## Handoff rule for the next session

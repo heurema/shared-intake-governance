@@ -156,6 +156,7 @@ Current CLI behavior:
 
 - `run-github-repo` writes one run manifest under `runs/`;
 - `run-arxiv-rss-keywords` writes one run manifest under `runs/`;
+- `run-rss-feed` writes one run manifest under `runs/`;
 - `run-source-config` reads one `source-config.v1` JSON file and writes one
   run manifest under `runs/`;
 - `smoke-source-config` runs one `source-config.v1` JSON file with a smoke

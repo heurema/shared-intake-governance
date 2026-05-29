@@ -21,6 +21,11 @@ from shared_intake_governance.collector.github_repo import (
     GitHubRepoCollector,
     GitHubRepoSource,
 )
+from shared_intake_governance.collector.rss_feed import (
+    RssFeedCollectionResult,
+    RssFeedCollector,
+    RssFeedSource,
+)
 from shared_intake_governance.adapters import (
     invoke_provider_request,
     prepare_provider_request,
@@ -63,6 +68,7 @@ def main(
     arxiv_collector_factory: type[ArxivRssKeywordsCollector] = (
         ArxivRssKeywordsCollector
     ),
+    rss_collector_factory: type[RssFeedCollector] = RssFeedCollector,
 ) -> int:
     args = _parser().parse_args(argv)
     stdout = stdout or sys.stdout
@@ -71,12 +77,15 @@ def main(
         return _run_github_repo(args, stdout, collector_factory)
     if args.command == "run-arxiv-rss-keywords":
         return _run_arxiv_rss_keywords(args, stdout, arxiv_collector_factory)
+    if args.command == "run-rss-feed":
+        return _run_rss_feed(args, stdout, rss_collector_factory)
     if args.command == "run-source-config":
         return _run_source_config(
             args,
             stdout,
             collector_factory,
             arxiv_collector_factory,
+            rss_collector_factory,
         )
     if args.command == "smoke-source-config":
         return _smoke_source_config(
@@ -84,6 +93,7 @@ def main(
             stdout,
             collector_factory,
             arxiv_collector_factory,
+            rss_collector_factory,
         )
     if args.command == "project-profiles":
         return _project_profiles(args, stdout)
@@ -305,11 +315,101 @@ def _run_arxiv_rss_keywords(
     return 0
 
 
+def _run_rss_feed(
+    args: argparse.Namespace,
+    stdout: TextIO,
+    collector_factory: type[RssFeedCollector],
+) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    run_id = args.run_id or generate_run_id()
+    output_id = args.output_id or run_id
+    started_at = _format_utc(datetime.now(timezone.utc))
+    source = RssFeedSource(
+        source_id=args.source_id,
+        feed_url=args.feed_url,
+        source_trust=args.source_trust,
+    )
+    collector = collector_factory(paths)
+    collection = collector.collect(source, run_id=run_id)
+    raw_metadata = _read_json(collection.metadata_path)
+
+    summary = _collection_summary(run_id, collection)
+    if collection.fetch_status != "success":
+        evidence = _write_run_evidence(
+            paths,
+            run_id=run_id,
+            source_id=source.source_id,
+            status="failed",
+            started_at=started_at,
+            counts={
+                "raw_payloads_written": 0,
+                "raw_metadata_written": 1,
+                "clean_records_written": 0,
+                "projected_profiles": 0,
+                "quarantined_records": 0,
+                "failed_sources": 1,
+            },
+            raw_metadata=raw_metadata,
+        )
+        summary.update(
+            {
+                "status": "collection_failed",
+                "clean_record_paths": [],
+                "projection_path": None,
+                "projected_items": 0,
+                "run_manifest_path": str(evidence["run_manifest_path"]),
+                "source_health_path": str(evidence["source_health_path"]),
+            }
+        )
+        _print_json(stdout, summary)
+        return 2
+
+    clean_records = CleanRecordEmitter(paths).emit_all_from_raw_metadata(
+        collection.metadata_path
+    )
+    projection = ProfileProjector(paths).project(args.profile, output_id=output_id)
+    evidence = _write_run_evidence(
+        paths,
+        run_id=run_id,
+        source_id=source.source_id,
+        status="completed",
+        started_at=started_at,
+        counts={
+            "raw_payloads_written": 1 if collection.body_path is not None else 0,
+            "raw_metadata_written": 1,
+            "clean_records_written": len(clean_records),
+            "projected_profiles": 1,
+            "quarantined_records": sum(
+                1
+                for clean_record in clean_records
+                if clean_record.record["quarantined"]
+            ),
+            "failed_sources": 0,
+        },
+        raw_metadata=raw_metadata,
+    )
+    summary.update(
+        {
+            "status": "completed",
+            "clean_record_paths": [
+                str(clean_record.path) for clean_record in clean_records
+            ],
+            "projection_path": str(projection.path),
+            "projected_items": projection.report["counts"]["items_written"],
+            "run_manifest_path": str(evidence["run_manifest_path"]),
+            "source_health_path": str(evidence["source_health_path"]),
+        }
+    )
+    _print_json(stdout, summary)
+    return 0
+
+
 def _run_source_config(
     args: argparse.Namespace,
     stdout: TextIO,
     github_collector_factory: type[GitHubRepoCollector],
     arxiv_collector_factory: type[ArxivRssKeywordsCollector],
+    rss_collector_factory: type[RssFeedCollector],
 ) -> int:
     source_config = _load_source_config(args.source_config)
     source_type = source_config["source_type"]
@@ -344,6 +444,20 @@ def _run_source_config(
             stdout,
             arxiv_collector_factory,
         )
+    if source_type == "rss":
+        return _run_rss_feed(
+            argparse.Namespace(
+                runtime_root=args.runtime_root,
+                profile=args.profile,
+                source_id=source_config["source_id"],
+                feed_url=source_config["feed_url"],
+                source_trust=source_config["source_trust"],
+                run_id=args.run_id,
+                output_id=args.output_id,
+            ),
+            stdout,
+            rss_collector_factory,
+        )
 
     raise ValueError(f"unsupported source_type: {source_type}")
 
@@ -353,6 +467,7 @@ def _smoke_source_config(
     stdout: TextIO,
     github_collector_factory: type[GitHubRepoCollector],
     arxiv_collector_factory: type[ArxivRssKeywordsCollector],
+    rss_collector_factory: type[RssFeedCollector],
 ) -> int:
     runtime_root = _prepare_smoke_runtime_root(args.runtime_root)
     captured_stdout = io.StringIO()
@@ -367,6 +482,7 @@ def _smoke_source_config(
         captured_stdout,
         github_collector_factory,
         arxiv_collector_factory,
+        rss_collector_factory,
     )
     summary = json.loads(captured_stdout.getvalue())
     summary.update(
@@ -1019,7 +1135,11 @@ def _mediation_record_summary(record_path: Path) -> dict[str, Any]:
 
 def _collection_summary(
     run_id: str,
-    collection: GitHubRepoCollectionResult | ArxivRssKeywordsCollectionResult,
+    collection: (
+        GitHubRepoCollectionResult
+        | ArxivRssKeywordsCollectionResult
+        | RssFeedCollectionResult
+    ),
 ) -> dict[str, Any]:
     return {
         "run_id": run_id,
@@ -1077,6 +1197,22 @@ def _load_source_config(path: str | Path) -> dict[str, Any]:
         config = dict(config)
         config.setdefault("api_base_url", "https://export.arxiv.org/api/query")
         _require_text(config, "api_base_url")
+        return config
+    if source_type == "rss":
+        _reject_unknown(
+            config,
+            {
+                "schema_version",
+                "source_type",
+                "source_id",
+                "feed_url",
+                "source_trust",
+            },
+        )
+        _require_text(config, "feed_url")
+        config = dict(config)
+        config.setdefault("source_trust", "secondary")
+        _require_text(config, "source_trust")
         return config
 
     raise ValueError(f"unsupported source_type: {source_type}")
@@ -1268,6 +1404,18 @@ def _parser() -> argparse.ArgumentParser:
     arxiv.add_argument(
         "--api-base-url", default="https://export.arxiv.org/api/query"
     )
+
+    rss = subparsers.add_parser(
+        "run-rss-feed",
+        help="Collect one RSS feed, emit clean records, and project one profile.",
+    )
+    rss.add_argument("--runtime-root", required=True)
+    rss.add_argument("--profile", required=True)
+    rss.add_argument("--source-id", required=True)
+    rss.add_argument("--feed-url", required=True)
+    rss.add_argument("--source-trust", default="secondary")
+    rss.add_argument("--run-id")
+    rss.add_argument("--output-id")
 
     source_config = subparsers.add_parser(
         "run-source-config",
