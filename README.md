@@ -67,7 +67,8 @@ What exists now:
 - minimal runtime path helpers and raw payload/metadata/run manifest writers;
 - minimal read-only `github_repo` collector that writes raw evidence only;
 - minimal clean-record emitter for `github_repo` raw evidence;
-- minimal one-profile projector that writes deterministic JSON reports.
+- minimal one-profile projector that writes deterministic JSON reports;
+- narrow local CLI command for `github_repo` collect, sanitize, and project.
 
 What does not exist yet:
 
@@ -99,8 +100,8 @@ README.md            quick orientation and entrypoint
 docs/                canonical design, onboarding, threat model, roadmap
 schemas/             JSON schemas for contracts
 profiles/examples/   example consumer profiles
-src/                 minimal Python runtime helpers, collectors, sanitizer, projector
-tests/               focused runtime, collector, sanitizer, and projector tests
+src/                 minimal Python runtime helpers, collectors, sanitizer, projector, CLI
+tests/               focused runtime, collector, sanitizer, projector, and CLI tests
 ```
 
 ## Runtime boundary

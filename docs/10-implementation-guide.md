@@ -98,6 +98,16 @@ Optional later convenience:
 
 Do not start with a mega-command that hides every phase.
 
+Current CLI implementation:
+
+- `python -m shared_intake_governance.cli run-github-repo`
+- `src/shared_intake_governance/cli/pipeline.py`
+- `tests/test_cli_pipeline.py`
+
+This first command intentionally covers only the implemented `github_repo`
+path and requires explicit runtime root, profile path, source id, owner, repo,
+and run/output identifiers.
+
 ## Concrete implementation order
 
 ### Step 1: freeze the missing runtime contracts
