@@ -428,8 +428,9 @@ Current provider adapter boundary:
 
 Still missing:
 
-- implicit profile-state updates from `project-profiles` or consumer-specific
-  dedupe behavior;
+- consumer-specific dedupe behavior; implicit profile-state updates remain out
+  of current scope unless a new behavior decision replaces the explicit
+  `--update-seen-state` gate;
 - source collector families beyond `github_repo`, `github_search`,
   `arxiv_rss_keywords`, `arxiv_query`, and `rss`;
 - sanitizer source mappings beyond `github_repo`, `github_search`,
