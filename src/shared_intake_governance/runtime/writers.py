@@ -567,6 +567,8 @@ def validate_execution_mediation(record: dict[str, Any]) -> None:
         "tool_intent_path",
     ]:
         _require_text(record, field)
+    _require_safe_segment(record, "run_id")
+    _require_safe_segment(record, "mediation_id")
     require_date_time(record["mediated_at"], "mediated_at")
     if record["action_class"] not in _ACTION_CLASSES:
         raise ValueError("execution mediation has unsupported action_class")
