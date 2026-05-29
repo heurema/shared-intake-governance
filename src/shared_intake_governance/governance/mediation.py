@@ -4,6 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from shared_intake_governance.runtime import (
+    validate_approval_record,
+    validate_dry_run_result,
+)
+
 from .policy import evaluate_tool_intent
 
 
@@ -29,6 +34,10 @@ def mediate_tool_intent(
 ) -> dict[str, Any]:
     """Return a mediation record without executing the requested tool."""
     decision = evaluate_tool_intent(intent)
+    if dry_run_result is not None:
+        validate_dry_run_result(dry_run_result)
+    if approval_record is not None:
+        validate_approval_record(approval_record)
     action_class = decision["action_class"]
 
     mediation_decision, reason = _mediation_decision(

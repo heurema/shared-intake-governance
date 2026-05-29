@@ -116,6 +116,44 @@ class GovernanceMediationTests(unittest.TestCase):
             record["reason"], "dry-run result does not match the tool intent scope"
         )
 
+    def test_malformed_dry_run_result_is_rejected_before_mediation(self):
+        intent = _tool_intent(action_class="edit_local", dry_run_supported=True)
+        dry_run_result = _dry_run_result(intent, result_status="passed")
+        dry_run_result["arguments"] = {"report_id": RUN_ID}
+
+        with self.assertRaisesRegex(ValueError, "dry-run result has unknown fields"):
+            mediate_tool_intent(
+                run_id=RUN_ID,
+                mediation_id="mediation-1",
+                intent=intent,
+                tool_intent_path="intent.json",
+                dry_run_result=dry_run_result,
+                dry_run_result_path="dry-runs/dry-run-1.json",
+                approval_record=_approval_record(
+                    intent, approval_decision="approved"
+                ),
+                approval_record_path="approvals/approval-1.json",
+                mediated_at="2026-05-29T12:30:45Z",
+            )
+
+    def test_malformed_approval_record_is_rejected_before_mediation(self):
+        intent = _tool_intent(action_class="edit_local", dry_run_supported=True)
+        approval_record = _approval_record(intent, approval_decision="approved")
+        approval_record["credentials"] = {"token": "do-not-load"}
+
+        with self.assertRaisesRegex(ValueError, "approval record has unknown fields"):
+            mediate_tool_intent(
+                run_id=RUN_ID,
+                mediation_id="mediation-1",
+                intent=intent,
+                tool_intent_path="intent.json",
+                dry_run_result=_dry_run_result(intent, result_status="passed"),
+                dry_run_result_path="dry-runs/dry-run-1.json",
+                approval_record=approval_record,
+                approval_record_path="approvals/approval-1.json",
+                mediated_at="2026-05-29T12:30:45Z",
+            )
+
 
 def _tool_intent(*, action_class, dry_run_supported):
     return {
