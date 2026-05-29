@@ -133,6 +133,19 @@ class MediationWriter:
         return _write_json(path, record)
 
 
+class ToolExecutionWriter:
+    """Write one governed tool execution result."""
+
+    def __init__(self, paths: RuntimePaths):
+        self.paths = paths
+
+    def write_result(self, result: dict[str, Any]) -> Path:
+        path = self.paths.tool_execution_result_path(
+            str(result["run_id"]), str(result["execution_id"])
+        )
+        return _write_json(path, result)
+
+
 class ProviderRequestWriter:
     """Write one provider-neutral adapter request."""
 

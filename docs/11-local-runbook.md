@@ -245,6 +245,31 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-mediation-record 
 
 Both commands are read-only and should not create runtime files.
 
+## Execute a tool intent
+
+Use this only after mediation is `ready` and an operator has chosen the exact
+local command. If mediation is blocked or does not match the intent scope, the
+command is not invoked and a `blocked` execution result is written.
+
+```sh
+PYTHONPATH=src python3 -m shared_intake_governance.cli execute-tool-intent \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --run-id "$SIG_RUN_ID" \
+  --execution-id execution-1 \
+  --intent path/to/tool-intent.json \
+  --mediation-record "$SIG_RUNTIME_ROOT/mediation/$SIG_RUN_ID/mediation-1.json" \
+  --executed-by local-operator \
+  --command path/to/tool-wrapper \
+  --arg=--safe-mode \
+  --timeout-seconds 30 \
+  --metadata-key invocation_mode=explicit
+```
+
+The command receives the `tool-intent.v1` JSON on stdin. The execution result
+omits full tool arguments and points at stdout/stderr artifacts under
+`tool-executions/<run-id>/`. A zero exit code records `succeeded`; a nonzero
+exit or timeout records `failed` with a compact error object.
+
 ## Prepare a provider request
 
 Use this after a mediation record is `ready`. It writes a provider-neutral
