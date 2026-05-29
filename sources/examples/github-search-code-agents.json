@@ -1,0 +1,7 @@
+{
+  "schema_version": "source-config.v1",
+  "source_type": "github_search",
+  "source_id": "github-search-code-agents",
+  "query": "topic:coding-agent org:heurema",
+  "max_results": 5
+}

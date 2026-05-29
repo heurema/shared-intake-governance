@@ -111,6 +111,8 @@ class CleanRecordEmitter:
 
         if metadata["source_type"] == "github_repo":
             return [_github_repo_clean_record(metadata, body)]
+        if metadata["source_type"] == "github_search":
+            return _github_search_clean_records(metadata, body)
         if metadata["source_type"] == "arxiv_rss_keywords":
             return _arxiv_rss_keywords_clean_records(metadata, body)
         if metadata["source_type"] == "arxiv_query":
@@ -166,7 +168,34 @@ def _github_repo_clean_record(metadata: dict[str, Any], body: bytes) -> dict[str
     if not isinstance(payload, dict):
         raise ValueError("github_repo raw body must be a JSON object")
 
+    return _github_repository_clean_record(metadata, payload, "github_repo")
+
+
+def _github_search_clean_records(
+    metadata: dict[str, Any], body: bytes
+) -> list[dict[str, Any]]:
+    payload = json.loads(body.decode("utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("github_search raw body must be a JSON object")
+    items = payload.get("items")
+    if not isinstance(items, list) or not items:
+        raise ValueError("github_search raw body must include repository items")
+    records = []
+    for item in items:
+        if not isinstance(item, dict):
+            raise ValueError("github_search repository item must be a JSON object")
+        records.append(_github_repository_clean_record(metadata, item, "github_search"))
+    return records
+
+
+def _github_repository_clean_record(
+    metadata: dict[str, Any], payload: dict[str, Any], source_type: str
+) -> dict[str, Any]:
     canonical_url = _clean_text(metadata.get("canonical_url") or payload.get("html_url"))
+    if source_type == "github_search":
+        canonical_url = _clean_text(payload.get("html_url") or canonical_url)
+    if not canonical_url:
+        raise ValueError(f"{source_type} item must include html_url")
     title = _clean_text(payload.get("full_name") or payload.get("name") or canonical_url)
     description = _clean_text(payload.get("description") or "")
     topics = payload.get("topics") if isinstance(payload.get("topics"), list) else []
@@ -186,9 +215,9 @@ def _github_repo_clean_record(metadata: dict[str, Any], body: bytes) -> dict[str
     risk_flags = _risk_flags(" ".join([description, topic_text]))
 
     return {
-        "record_id": _record_id("github_repo", canonical_url),
+        "record_id": _record_id(source_type, canonical_url),
         "source_id": metadata["source_id"],
-        "source_type": "github_repo",
+        "source_type": source_type,
         "canonical_url": canonical_url,
         "title": title,
         "sanitized_summary": summary,

@@ -101,6 +101,7 @@ Do not start with a mega-command that hides every phase.
 Current CLI implementation:
 
 - `python -m shared_intake_governance.cli run-github-repo`
+- `python -m shared_intake_governance.cli run-github-search`
 - `python -m shared_intake_governance.cli run-arxiv-rss-keywords`
 - `python -m shared_intake_governance.cli run-arxiv-query`
 - `python -m shared_intake_governance.cli run-rss-feed`
@@ -128,6 +129,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli inspect-run`
 - `python -m shared_intake_governance.cli show-source-health`
 - `sources/examples/github-signum.json`
+- `sources/examples/github-search-code-agents.json`
 - `sources/examples/arxiv-code-agents.json`
 - `sources/examples/arxiv-query-code-agents.json`
 - `sources/examples/rss-github-blog.json`
@@ -135,10 +137,11 @@ Current CLI implementation:
 - `tests/test_cli_pipeline.py`
 
 These commands intentionally cover only the implemented `github_repo`,
-`arxiv_rss_keywords`, `arxiv_query`, and `rss` paths. They require explicit
-runtime root, profile path, source-specific inputs or one `source-config.v1`
-file, and run/output identifiers. The smoke command may allocate an isolated
-temporary runtime root when none is provided. These commands also write:
+`github_search`, `arxiv_rss_keywords`, `arxiv_query`, and `rss` paths. They
+require explicit runtime root, profile path, source-specific inputs or one
+`source-config.v1` file, and run/output identifiers. The smoke command may
+allocate an isolated temporary runtime root when none is provided. These
+commands also write:
 
 - `runs/<run-id>.manifest.json`
 - `source-health/<run-id>/<source-id>.json`
@@ -265,10 +268,12 @@ It should not sanitize or score inline.
 Current implementation:
 
 - `src/shared_intake_governance/collector/github_repo.py`
+- `src/shared_intake_governance/collector/github_search.py`
 - `src/shared_intake_governance/collector/arxiv_rss_keywords.py`
 - `src/shared_intake_governance/collector/arxiv_query.py`
 - `src/shared_intake_governance/collector/rss_feed.py`
 - `tests/test_github_repo_collector.py`
+- `tests/test_github_search_collector.py`
 - `tests/test_arxiv_rss_keywords_collector.py`
 - `tests/test_arxiv_query_collector.py`
 - `tests/test_rss_feed_collector.py`
@@ -289,6 +294,8 @@ Current implementation:
 - `src/shared_intake_governance/sanitizer/clean_records.py`
 - `tests/test_clean_records_and_projection.py`
 - `github_repo` raw JSON maps to one clean record.
+- `github_search` raw JSON repository search results map to one clean record
+  per repository item.
 - `arxiv_rss_keywords` raw Atom feeds map to one clean record per entry.
 - `arxiv_query` raw Atom feeds map to one clean record per entry.
 - `rss` raw XML feeds map to one clean record per item.
@@ -395,10 +402,10 @@ Still missing:
 
 - automatic profile-state updates from `project-profiles` or consumer-specific
   dedupe behavior;
-- source collector families beyond `github_repo`, `arxiv_rss_keywords`,
-  `arxiv_query`, and `rss`;
-- sanitizer source mappings beyond `github_repo`, `arxiv_rss_keywords`,
-  `arxiv_query`, and `rss`;
+- source collector families beyond `github_repo`, `github_search`,
+  `arxiv_rss_keywords`, `arxiv_query`, and `rss`;
+- sanitizer source mappings beyond `github_repo`, `github_search`,
+  `arxiv_rss_keywords`, `arxiv_query`, and `rss`;
 - provider/tool command discovery, credential mapping, or default presets.
 
 ## Handoff rule for the next session
