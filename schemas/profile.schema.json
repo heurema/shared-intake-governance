@@ -14,7 +14,8 @@
   "properties": {
     "profile_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
     },
     "description": {
       "type": "string",
@@ -23,7 +24,16 @@
     "accepted_sources": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "enum": [
+          "github_repo",
+          "github_search",
+          "arxiv_query",
+          "arxiv_rss_keywords",
+          "rss",
+          "news",
+          "custom"
+        ]
       }
     },
     "keywords": {

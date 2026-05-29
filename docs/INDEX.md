@@ -117,6 +117,7 @@ Use this file as the main navigation layer.
 - [../tests/test_docs_index.py](../tests/test_docs_index.py)
 - [../tests/test_runtime_paths_and_writers.py](../tests/test_runtime_paths_and_writers.py)
 - [../tests/test_source_config_examples.py](../tests/test_source_config_examples.py)
+- [../tests/test_profile_config_schema.py](../tests/test_profile_config_schema.py)
 - [../tests/test_profile_projection_schema.py](../tests/test_profile_projection_schema.py)
 - [../tests/test_profile_state.py](../tests/test_profile_state.py)
 - [../tests/test_governance_policy.py](../tests/test_governance_policy.py)
