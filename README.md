@@ -64,11 +64,12 @@ What exists now:
 - operating model;
 - implementation staging guide;
 - example consumer profiles;
-- minimal runtime path helpers and raw payload/metadata/run manifest writers.
+- minimal runtime path helpers and raw payload/metadata/run manifest writers;
+- minimal read-only `github_repo` collector that writes raw evidence only.
 
 What does not exist yet:
 
-- collector runtime;
+- additional source collector families;
 - sanitizer runtime;
 - projector runtime;
 - governance broker runtime;
@@ -96,8 +97,8 @@ README.md            quick orientation and entrypoint
 docs/                canonical design, onboarding, threat model, roadmap
 schemas/             JSON schemas for contracts
 profiles/examples/   example consumer profiles
-src/                 minimal Python runtime helpers
-tests/               focused runtime contract tests
+src/                 minimal Python runtime helpers and collectors
+tests/               focused runtime and collector tests
 ```
 
 ## Runtime boundary

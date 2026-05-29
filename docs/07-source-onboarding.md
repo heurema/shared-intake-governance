@@ -34,6 +34,11 @@ The current contract surface already anticipates these `source_type` values:
 
 Prefer reusing one of these families before introducing a new one.
 
+Current runtime implementation:
+
+- `github_repo` has a minimal read-only collector that calls the GitHub REST
+  repository endpoint and writes raw evidence only.
+
 ## Source selection rules
 
 Prefer sources in this order when possible:
