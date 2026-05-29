@@ -107,6 +107,7 @@ def validate_tool_intent(intent: dict[str, Any]) -> None:
 
     for field in ["intent_id", "profile_id", "tool_name", "justification"]:
         _require_text(intent, field)
+    _require_safe_segment(intent, "profile_id")
     if intent["action_class"] not in _ACTION_CLASSES:
         raise ValueError("tool intent has unsupported action_class")
     if not isinstance(intent["arguments"], dict):
@@ -131,6 +132,7 @@ def validate_governance_decision(decision: dict[str, Any]) -> None:
         raise ValueError("governance decision must use governance-decision.v1")
     for field in ["intent_id", "profile_id", "tool_name", "reason"]:
         _require_text(decision, field)
+    _require_safe_segment(decision, "profile_id")
     if decision["action_class"] not in _ACTION_CLASSES:
         raise ValueError("governance decision has unsupported action_class")
     if decision["decision"] not in _GOVERNANCE_DECISIONS:
@@ -180,6 +182,7 @@ def _validate_governance_audit_event(event: Any) -> None:
     ]:
         _require_text(event, field)
     _require_safe_segment(event, "run_id")
+    _require_safe_segment(event, "profile_id")
     require_date_time(event["recorded_at"], "recorded_at")
     if event["action_class"] not in _ACTION_CLASSES:
         raise ValueError("governance decision audit_event has unsupported action_class")

@@ -1,3 +1,4 @@
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -10,6 +11,9 @@ from shared_intake_governance.governance import (  # noqa: E402
     validate_governance_decision,
     validate_tool_intent,
 )
+
+
+SAFE_SEGMENT_PATTERN = "^[A-Za-z0-9][A-Za-z0-9._-]*$"
 
 
 class GovernancePolicyTests(unittest.TestCase):
@@ -92,6 +96,21 @@ class GovernancePolicyTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_tool_intent(bad_evidence_refs)
 
+        bad_profile_id = dict(valid)
+        bad_profile_id["profile_id"] = "../code-intel-kernel"
+        with self.assertRaisesRegex(
+            ValueError, "profile_id must be a safe path segment"
+        ):
+            validate_tool_intent(bad_profile_id)
+
+    def test_tool_intent_schema_tracks_runtime_profile_id_constraint(self):
+        schema = _read_schema("tool-intent.schema.json")
+
+        self.assertEqual(
+            schema["properties"]["profile_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+
     def test_evaluate_tool_intent_validates_input_before_policy(self):
         invalid = _tool_intent(action_class="read_only", dry_run_supported=False)
         del invalid["dry_run_supported"]
@@ -125,6 +144,13 @@ class GovernancePolicyTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_governance_decision(bad_decision)
 
+        bad_profile_id = dict(decision)
+        bad_profile_id["profile_id"] = "../code-intel-kernel"
+        with self.assertRaisesRegex(
+            ValueError, "profile_id must be a safe path segment"
+        ):
+            validate_governance_decision(bad_profile_id)
+
         bad_audit_event = dict(decision)
         bad_audit_event["audit_event"] = {
             "schema_version": "governance-audit-event.v1",
@@ -153,6 +179,23 @@ class GovernancePolicyTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "run_id must be a safe path segment"):
             validate_governance_decision(unsafe_audit_run_id)
 
+        unsafe_audit_profile_id = dict(decision)
+        unsafe_audit_profile_id["audit_event"] = dict(bad_audit_event["audit_event"])
+        unsafe_audit_profile_id["audit_event"]["recorded_at"] = "2026-05-29T12:30:45Z"
+        unsafe_audit_profile_id["audit_event"]["profile_id"] = "../code-intel-kernel"
+        with self.assertRaisesRegex(
+            ValueError, "profile_id must be a safe path segment"
+        ):
+            validate_governance_decision(unsafe_audit_profile_id)
+
+    def test_governance_decision_schema_tracks_runtime_profile_id_constraint(self):
+        schema = _read_schema("governance-decision.schema.json")
+
+        self.assertEqual(
+            schema["properties"]["profile_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+
 
 def _tool_intent(*, action_class, dry_run_supported):
     return {
@@ -165,3 +208,8 @@ def _tool_intent(*, action_class, dry_run_supported):
         "justification": "Inspect one clean record.",
         "evidence_refs": ["clean/github_repo-good.json"],
     }
+
+
+def _read_schema(filename):
+    path = Path(__file__).resolve().parents[1] / "schemas" / filename
+    return json.loads(path.read_text(encoding="utf-8"))

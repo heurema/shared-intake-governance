@@ -315,6 +315,9 @@ evidence_refs
 
 Runtime code validates tool intents before governance policy, approval, dry-run,
 mediation, or execution helpers consume them.
+`profile_id` must remain a safe runtime path segment so tool intents cannot
+introduce a profile identity that later profile-scoped artifacts could not
+address safely.
 
 ## Governance decision
 
@@ -342,6 +345,8 @@ evidence_refs
 Runtime code validates governance decisions before returning them from the
 default evaluator, including optional audit references when audit logging is
 requested.
+`profile_id` must remain a safe runtime path segment and match the validated
+tool intent scope.
 Embedded audit events must follow the same validation rules as standalone
 `governance-audit-event.v1` records.
 
@@ -376,7 +381,7 @@ tool_intent_path
 Audit events should record the decision surface, not the full tool arguments.
 Do not log secrets, credentials, private payloads, or unneeded side-effect
 arguments into audit JSONL.
-`run_id` must be a safe runtime path segment.
+`run_id` and `profile_id` must be safe runtime path segments.
 Runtime code validates governance audit events before appending them.
 
 ## Approval record
@@ -415,7 +420,7 @@ tool_intent_path
 Approval records should not include full tool arguments, credentials, or
 private payloads. A later executor must still enforce policy, check approval
 scope, and require dry-run evidence where applicable.
-`run_id` and `approval_id` must be safe runtime path segments.
+`run_id`, `approval_id`, and `profile_id` must be safe runtime path segments.
 Runtime code validates approval records before writing them.
 
 ## Dry-run result
@@ -455,7 +460,7 @@ tool_intent_path
 Dry-run results should not include full tool arguments, credentials, or private
 payloads. They should point at external artifacts or summaries that can be
 reviewed before an approval record is created.
-`run_id` and `dry_run_id` must be safe runtime path segments.
+`run_id`, `dry_run_id`, and `profile_id` must be safe runtime path segments.
 Runtime code validates dry-run results before writing them.
 
 ## Execution mediation
@@ -502,7 +507,7 @@ Default mediation behavior:
 - mismatched or missing evidence blocks mediation;
 - mediation records should store refs and decision fields only, not full tool
   arguments, credentials, or private payloads.
-`run_id` and `mediation_id` must be safe runtime path segments.
+`run_id`, `mediation_id`, and `profile_id` must be safe runtime path segments.
 Runtime code validates any provided `dry-run-result.v1` and
 `approval-record.v1` evidence before mediation consumes it, then validates the
 `execution-mediation.v1` record before writing it.
@@ -552,7 +557,7 @@ executions should point at output artifacts instead of embedding command output
 or tool arguments.
 Successful tool execution results must have `error: null`; failed or blocked
 tool execution results must include a compact error object.
-`run_id` and `execution_id` must be safe runtime path segments.
+`run_id`, `execution_id`, and `profile_id` must be safe runtime path segments.
 Runtime code validates the input `execution-mediation.v1` record before
 consuming it, then validates tool execution results before writing them.
 
@@ -597,7 +602,7 @@ Provider request records should not include full tool arguments, credentials,
 raw source text, private payloads, or provider-specific policy truth.
 Adapters must still enforce their own narrow translation boundary and must not
 expand capabilities beyond the governance-derived request.
-`run_id` and `request_id` must be safe runtime path segments.
+`run_id`, `request_id`, and `profile_id` must be safe runtime path segments.
 Runtime code validates provider requests before writing them.
 Runtime code also validates the ready execution mediation record before
 preparing a provider request.
@@ -649,7 +654,8 @@ than embedding full responses. They should not include credentials, tool
 arguments, raw source text, private payloads, or provider-specific policy truth.
 Successful provider results must have `error: null`; failed or blocked results
 must include a compact error object.
-`run_id`, `result_id`, and `request_id` must be safe runtime path segments.
+`run_id`, `result_id`, `request_id`, and `profile_id` must be safe runtime path
+segments.
 Runtime code validates provider results before writing them.
 Runtime code also validates provider requests before recording provider results
 or forwarding request JSON to an explicit local provider command.

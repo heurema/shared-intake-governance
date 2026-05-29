@@ -444,6 +444,7 @@ def validate_governance_audit_event(event: dict[str, Any]) -> None:
     ]:
         _require_text(event, field)
     _require_safe_segment(event, "run_id")
+    _require_safe_segment(event, "profile_id")
     require_date_time(event["recorded_at"], "recorded_at")
     if event["action_class"] not in _ACTION_CLASSES:
         raise ValueError("governance audit event has unsupported action_class")
@@ -484,6 +485,7 @@ def validate_approval_record(record: dict[str, Any]) -> None:
         _require_text(record, field)
     _require_safe_segment(record, "run_id")
     _require_safe_segment(record, "approval_id")
+    _require_safe_segment(record, "profile_id")
     require_date_time(record["approved_at"], "approved_at")
     if record["action_class"] not in _ACTION_CLASSES:
         raise ValueError("approval record has unsupported action_class")
@@ -523,6 +525,7 @@ def validate_dry_run_result(result: dict[str, Any]) -> None:
         _require_text(result, field)
     _require_safe_segment(result, "run_id")
     _require_safe_segment(result, "dry_run_id")
+    _require_safe_segment(result, "profile_id")
     require_date_time(result["recorded_at"], "recorded_at")
     if result["action_class"] not in _ACTION_CLASSES:
         raise ValueError("dry-run result has unsupported action_class")
@@ -569,6 +572,7 @@ def validate_execution_mediation(record: dict[str, Any]) -> None:
         _require_text(record, field)
     _require_safe_segment(record, "run_id")
     _require_safe_segment(record, "mediation_id")
+    _require_safe_segment(record, "profile_id")
     require_date_time(record["mediated_at"], "mediated_at")
     if record["action_class"] not in _ACTION_CLASSES:
         raise ValueError("execution mediation has unsupported action_class")
@@ -627,6 +631,7 @@ def validate_tool_execution_result(result: dict[str, Any]) -> None:
         _require_text(result, field)
     _require_safe_segment(result, "run_id")
     _require_safe_segment(result, "execution_id")
+    _require_safe_segment(result, "profile_id")
     require_date_time(result["executed_at"], "executed_at")
     if result["action_class"] not in _ACTION_CLASSES:
         raise ValueError("tool execution result has unsupported action_class")
@@ -686,6 +691,7 @@ def validate_provider_request(request: dict[str, Any]) -> None:
         _require_text(request, field)
     _require_safe_segment(request, "run_id")
     _require_safe_segment(request, "request_id")
+    _require_safe_segment(request, "profile_id")
     require_date_time(request["prepared_at"], "prepared_at")
     if request["provider"] not in _PROVIDERS:
         raise ValueError("provider request has unsupported provider")
@@ -744,6 +750,7 @@ def validate_provider_result(result: dict[str, Any]) -> None:
     _require_safe_segment(result, "run_id")
     _require_safe_segment(result, "result_id")
     _require_safe_segment(result, "request_id")
+    _require_safe_segment(result, "profile_id")
     require_date_time(result["recorded_at"], "recorded_at")
     if result["provider"] not in _PROVIDERS:
         raise ValueError("provider result has unsupported provider")
