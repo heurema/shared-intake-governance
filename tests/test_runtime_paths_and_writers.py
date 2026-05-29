@@ -458,6 +458,38 @@ class RuntimeWriterTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 validate_run_manifest(bad_counts)
 
+            started_with_finished_at = _run_manifest(paths)
+            started_with_finished_at["status"] = "started"
+            with self.assertRaisesRegex(
+                ValueError, "started run manifest must not include finished_at"
+            ):
+                validate_run_manifest(started_with_finished_at)
+
+            completed_without_finished_at = _run_manifest(paths)
+            completed_without_finished_at["finished_at"] = None
+            with self.assertRaisesRegex(
+                ValueError, "terminal run manifest must include finished_at"
+            ):
+                validate_run_manifest(completed_without_finished_at)
+
+            completed_with_failed_sources = _run_manifest(paths)
+            completed_with_failed_sources["counts"] = dict(
+                completed_with_failed_sources["counts"]
+            )
+            completed_with_failed_sources["counts"]["failed_sources"] = 1
+            with self.assertRaisesRegex(
+                ValueError, "completed run manifest must not include failed sources"
+            ):
+                validate_run_manifest(completed_with_failed_sources)
+
+            missing_terminal_source_health = _run_manifest(paths)
+            missing_terminal_source_health["source_health"] = []
+            with self.assertRaisesRegex(
+                ValueError,
+                "terminal run manifest source_health count must match sources count",
+            ):
+                validate_run_manifest(missing_terminal_source_health)
+
     def test_source_health_writer_validates_and_writes_health(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             paths = RuntimePaths(Path(tmp_dir) / "runtime")
@@ -1101,7 +1133,9 @@ def _run_manifest(paths):
             "quarantined_records": 0,
             "failed_sources": 0,
         },
-        "source_health": [],
+        "source_health": [
+            str(paths.source_health_path("20260529T123045Z-deadbeef", "github-main"))
+        ],
     }
 
 

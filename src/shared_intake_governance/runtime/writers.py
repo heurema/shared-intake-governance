@@ -876,6 +876,18 @@ def validate_run_manifest(manifest: dict[str, Any]) -> None:
         if not isinstance(counts[field], int) or counts[field] < 0:
             raise ValueError(f"run manifest count {field} must be non-negative")
 
+    terminal_status = manifest["status"] != "started"
+    if manifest["status"] == "started" and manifest["finished_at"] is not None:
+        raise ValueError("started run manifest must not include finished_at")
+    if terminal_status and manifest["finished_at"] is None:
+        raise ValueError("terminal run manifest must include finished_at")
+    if manifest["status"] == "completed" and counts["failed_sources"] != 0:
+        raise ValueError("completed run manifest must not include failed sources")
+    if terminal_status and len(manifest["source_health"]) != len(manifest["sources"]):
+        raise ValueError(
+            "terminal run manifest source_health count must match sources count"
+        )
+
 
 def validate_source_health(source_health: dict[str, Any]) -> None:
     missing = sorted(_SOURCE_HEALTH_REQUIRED - set(source_health))
