@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shared-intake-governance.local/schemas/profile-state.schema.json",
+  "title": "ProfileState",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "profile_id",
+    "state_id",
+    "state_kind",
+    "updated_at",
+    "record_ids"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "profile-state.v1"
+    },
+    "profile_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state_kind": {
+      "type": "string",
+      "enum": [
+        "seen_records",
+        "cursor",
+        "custom"
+      ]
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "record_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

@@ -10,7 +10,8 @@ The first stable contracts should cover:
 4. source health;
 5. source configs for one-source local runs;
 6. project profiles;
-7. tool intents passed into governance.
+7. profile-local runtime state;
+8. tool intents passed into governance.
 
 ## Raw payload metadata
 
@@ -155,6 +156,30 @@ Profiles must not define:
 - destructive action permissions;
 - credential material;
 - adapter internals.
+
+## Profile state
+
+See [../schemas/profile-state.schema.json](../schemas/profile-state.schema.json).
+
+Profile state is profile-local runtime data, not repository truth and not shared
+scoring state. The shared core may define an inspectable artifact shape, but
+consumer repos still own product semantics such as publication cadence, final
+report meaning, and dedupe policy.
+
+Minimum fields:
+
+```text
+schema_version
+profile_id
+state_id
+state_kind
+updated_at
+record_ids
+```
+
+The first `profile-state.v1` shape is intentionally small. It is suitable for
+state inventories such as seen record ids or cursors, but it must not be used
+to encode project-specific ranking or editorial decisions.
 
 ## Profile loading rules
 

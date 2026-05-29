@@ -105,6 +105,16 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-record \
   --runtime-root "$SIG_RUNTIME_ROOT" \
   --record-id "$SIG_RECORD_ID"
 
+PYTHONPATH=src python3 -m shared_intake_governance.cli list-profile-state \
+  --runtime-root "$SIG_RUNTIME_ROOT"
+
+export SIG_STATE_ID="seen-records"
+
+PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-profile-state \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --profile-id code-intel-kernel \
+  --state-id "$SIG_STATE_ID"
+
 PYTHONPATH=src python3 -m shared_intake_governance.cli list-profile-reports \
   --runtime-root "$SIG_RUNTIME_ROOT"
 
@@ -124,7 +134,9 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli show-source-health \
 ```
 
 These commands are read-only. They do not fetch upstream sources and do not
-write runtime files.
+write runtime files. `inspect-profile-state` requires an existing
+`profile-state.v1` artifact under `profiles/<profile-id>/state/`; current
+projector commands do not create or update profile state.
 
 ## Reset local runtime data
 

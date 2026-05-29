@@ -82,6 +82,12 @@ class RuntimePaths:
     def profile_state_dir(self, profile_id: str) -> Path:
         return self.profiles_root / _safe_segment(profile_id, "profile_id") / "state"
 
+    def profile_state_path(self, profile_id: str, state_id: str) -> Path:
+        return (
+            self.profile_state_dir(profile_id)
+            / f"{_safe_segment(state_id, 'state_id')}.json"
+        )
+
     def profile_reports_dir(self, profile_id: str) -> Path:
         return self.profiles_root / _safe_segment(profile_id, "profile_id") / "reports"
 

@@ -62,6 +62,7 @@ The canonical contract files for these runtime artifacts are:
 - [../schemas/run-manifest.schema.json](../schemas/run-manifest.schema.json)
 - [../schemas/source-health.schema.json](../schemas/source-health.schema.json)
 - [../schemas/profile.schema.json](../schemas/profile.schema.json)
+- [../schemas/profile-state.schema.json](../schemas/profile-state.schema.json)
 
 ## Modes of operation
 
@@ -136,6 +137,10 @@ Current CLI behavior:
   inventory without writing runtime data;
 - `inspect-record` reads one clean record by record id without writing runtime
   data;
+- `list-profile-state` reads profile-local runtime state artifacts and returns
+  a deterministic inventory without writing runtime data;
+- `inspect-profile-state` reads one profile state artifact by profile id and
+  state id without writing runtime data;
 - `list-profile-reports` reads generated profile reports and returns a
   deterministic inventory without writing runtime data;
 - `inspect-profile-report` reads one profile report by profile id and output id

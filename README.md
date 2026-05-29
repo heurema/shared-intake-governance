@@ -71,6 +71,7 @@ What exists now:
 - minimal read-only `arxiv_rss_keywords` collector that writes raw evidence only;
 - minimal clean-record emitter for `github_repo` and `arxiv_rss_keywords` raw evidence;
 - minimal explicit-profile projector that writes deterministic JSON reports;
+- profile-state contract for profile-local runtime state artifacts;
 - narrow local CLI commands for `github_repo` and `arxiv_rss_keywords` collect,
   sanitize, and project paths;
 - multi-profile CLI command that projects existing clean cache into multiple
@@ -79,7 +80,7 @@ What exists now:
 - isolated smoke CLI command for live one-source checks with runtime data
   outside git;
 - read-only CLI commands for listing and inspecting run manifests, clean
-  records, profile reports, and source health;
+  records, profile state, profile reports, and source health;
 - run manifest and source health artifacts from the CLI pipeline.
 
 What does not exist yet:
@@ -87,6 +88,7 @@ What does not exist yet:
 - source collector families beyond `github_repo` and `arxiv_rss_keywords`;
 - sanitizer source mappings beyond `github_repo` and `arxiv_rss_keywords`;
 - multi-profile report shaping beyond deterministic per-profile JSON;
+- automatic profile-state updates or dedupe behavior;
 - governance broker runtime;
 - provider adapter runtime;
 - SQLite;
