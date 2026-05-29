@@ -73,8 +73,9 @@ What exists now:
 - minimal read-only `arxiv_rss_keywords` collector that writes raw evidence only;
 - minimal read-only `arxiv_query` collector that writes raw evidence only;
 - minimal read-only `rss` collector that writes raw evidence only;
-- minimal clean-record emitter for `github_repo`, `github_search`,
-  `arxiv_rss_keywords`, `arxiv_query`, and `rss` raw evidence;
+- minimal clean-record emitter with validated raw metadata input for
+  `github_repo`, `github_search`, `arxiv_rss_keywords`, `arxiv_query`, and
+  `rss` raw evidence;
 - profile-projection contract for deterministic per-profile report artifacts;
 - minimal explicit-profile projector that writes deterministic JSON reports;
 - runtime validation for profile projection reports before write and seen-state

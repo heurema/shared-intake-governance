@@ -71,7 +71,8 @@ When there is no body because the fetch failed before a payload existed, the
 metadata writer may use an implementation-defined failure filename under the
 same source/date directory. The metadata contract, not the filename, is the
 source of truth.
-Runtime code validates raw metadata before writing it.
+Runtime code validates raw metadata before writing it and before the sanitizer
+consumes it.
 
 ## Clean record
 
