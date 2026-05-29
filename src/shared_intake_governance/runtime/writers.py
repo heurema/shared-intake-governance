@@ -198,6 +198,28 @@ _PROVIDER_REQUEST_REQUIRED = {
     "context_refs",
     "evidence_refs",
 }
+_PROVIDER_RESULT_STATUS = {"succeeded", "failed", "blocked"}
+_PROVIDER_RESULT_REQUIRED = {
+    "schema_version",
+    "run_id",
+    "result_id",
+    "request_id",
+    "provider",
+    "recorded_by",
+    "recorded_at",
+    "result_status",
+    "summary",
+    "provider_request_path",
+    "mediation_id",
+    "intent_id",
+    "profile_id",
+    "action_class",
+    "tool_name",
+    "response_refs",
+    "usage_metadata",
+    "error",
+    "evidence_refs",
+}
 _SOURCE_HEALTH_REQUIRED = {
     "schema_version",
     "run_id",
@@ -378,6 +400,7 @@ class ProviderResultWriter:
         self.paths = paths
 
     def write_result(self, result: dict[str, Any]) -> Path:
+        validate_provider_result(result)
         path = self.paths.provider_result_path(
             str(result["run_id"]), str(result["result_id"])
         )
@@ -650,6 +673,61 @@ def validate_provider_request(request: dict[str, Any]) -> None:
         request,
         "evidence_refs",
         "provider request evidence_refs",
+    )
+
+
+def validate_provider_result(result: dict[str, Any]) -> None:
+    missing = sorted(_PROVIDER_RESULT_REQUIRED - set(result))
+    if missing:
+        raise ValueError(
+            "provider result missing required fields: " + ", ".join(missing)
+        )
+    extra = sorted(set(result) - _PROVIDER_RESULT_REQUIRED)
+    if extra:
+        raise ValueError("provider result has unknown fields: " + ", ".join(extra))
+
+    if result["schema_version"] != "provider-result.v1":
+        raise ValueError("provider result must use provider-result.v1")
+    for field in [
+        "run_id",
+        "result_id",
+        "request_id",
+        "recorded_by",
+        "recorded_at",
+        "summary",
+        "provider_request_path",
+        "mediation_id",
+        "intent_id",
+        "profile_id",
+        "tool_name",
+    ]:
+        _require_text(result, field)
+    if result["provider"] not in _PROVIDERS:
+        raise ValueError("provider result has unsupported provider")
+    if result["action_class"] not in _ACTION_CLASSES:
+        raise ValueError("provider result has unsupported action_class")
+    if result["result_status"] not in _PROVIDER_RESULT_STATUS:
+        raise ValueError("provider result has unsupported result_status")
+    _require_string_array(
+        result,
+        "response_refs",
+        "provider result response_refs",
+    )
+    _require_string_object(
+        result,
+        "usage_metadata",
+        "provider result usage_metadata",
+    )
+    if result["error"] is not None:
+        _validate_error_object(
+            result["error"],
+            "provider result error",
+            allow_retryable=False,
+        )
+    _require_string_array(
+        result,
+        "evidence_refs",
+        "provider result evidence_refs",
     )
 
 

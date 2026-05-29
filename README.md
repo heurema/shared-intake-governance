@@ -111,8 +111,8 @@ What exists now:
   ready mediation.
 - provider-request contract and local `prepare-provider-request` CLI for
   validated provider-neutral adapter request records without provider invocation.
-- provider-result contract and local `record-provider-result` CLI for provider
-  response refs and usage metadata without provider invocation.
+- provider-result contract and local `record-provider-result` CLI for validated
+  provider response refs and usage metadata without provider invocation.
 - local `invoke-provider-request` CLI for running an explicit provider command
   with provider-request JSON on stdin, storing stdout/stderr as runtime
   artifacts, and recording `provider-result.v1`.

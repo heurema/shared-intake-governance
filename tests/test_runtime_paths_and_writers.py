@@ -26,6 +26,7 @@ from shared_intake_governance.runtime import (  # noqa: E402
     validate_execution_mediation,
     validate_governance_audit_event,
     validate_provider_request,
+    validate_provider_result,
     validate_raw_metadata,
     validate_run_manifest,
     validate_source_health,
@@ -754,6 +755,7 @@ class RuntimeWriterTests(unittest.TestCase):
             paths = RuntimePaths(Path(tmp_dir) / "runtime")
             writer = ProviderResultWriter(paths)
             result = _provider_result()
+            validate_provider_result(result)
 
             result_path = writer.write_result(result)
             first_write = result_path.read_text(encoding="utf-8")
@@ -769,6 +771,44 @@ class RuntimeWriterTests(unittest.TestCase):
 
             writer.write_result(result)
             self.assertEqual(result_path.read_text(encoding="utf-8"), first_write)
+
+    def test_provider_result_validation_rejects_contract_drift(self):
+        valid_result = _provider_result()
+
+        missing_required = dict(valid_result)
+        missing_required.pop("result_status")
+        with self.assertRaises(ValueError):
+            validate_provider_result(missing_required)
+
+        unknown_field = dict(valid_result)
+        unknown_field["score"] = 1
+        with self.assertRaises(ValueError):
+            validate_provider_result(unknown_field)
+
+        bad_provider = dict(valid_result)
+        bad_provider["provider"] = "unknown"
+        with self.assertRaises(ValueError):
+            validate_provider_result(bad_provider)
+
+        bad_action = dict(valid_result)
+        bad_action["action_class"] = "network"
+        with self.assertRaises(ValueError):
+            validate_provider_result(bad_action)
+
+        bad_status = dict(valid_result)
+        bad_status["result_status"] = "passed"
+        with self.assertRaises(ValueError):
+            validate_provider_result(bad_status)
+
+        bad_usage = dict(valid_result)
+        bad_usage["usage_metadata"] = {"input_tokens": 120}
+        with self.assertRaises(ValueError):
+            validate_provider_result(bad_usage)
+
+        bad_error = dict(valid_result)
+        bad_error["error"] = {"kind": "provider_error"}
+        with self.assertRaises(ValueError):
+            validate_provider_result(bad_error)
 
 
 def _raw_metadata(raw_body):
