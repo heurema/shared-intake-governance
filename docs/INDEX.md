@@ -71,6 +71,7 @@ Use this file as the main navigation layer.
 - [../schemas/source-health.schema.json](../schemas/source-health.schema.json)
 - [../schemas/source-config.schema.json](../schemas/source-config.schema.json)
 - [../schemas/profile.schema.json](../schemas/profile.schema.json)
+- [../schemas/profile-state.schema.json](../schemas/profile-state.schema.json)
 - [../schemas/tool-intent.schema.json](../schemas/tool-intent.schema.json)
 - [../profiles/examples/code-intel-kernel.json](../profiles/examples/code-intel-kernel.json)
 - [../profiles/examples/agent-bench-lab.json](../profiles/examples/agent-bench-lab.json)

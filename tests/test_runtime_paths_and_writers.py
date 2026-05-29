@@ -70,6 +70,10 @@ class RuntimePathTests(unittest.TestCase):
                 root / "profiles" / "pulse" / "state",
             )
             self.assertEqual(
+                paths.profile_state_path("pulse", "seen-records"),
+                root / "profiles" / "pulse" / "state" / "seen-records.json",
+            )
+            self.assertEqual(
                 paths.profile_reports_dir("pulse"),
                 root / "profiles" / "pulse" / "reports",
             )
@@ -95,6 +99,8 @@ class RuntimePathTests(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 paths.raw_body_path("../source", FETCHED_AT, "a" * 64)
+            with self.assertRaises(ValueError):
+                paths.profile_state_path("pulse", "../state")
             with self.assertRaises(ValueError):
                 paths.profile_report_path("pulse", "../report")
 

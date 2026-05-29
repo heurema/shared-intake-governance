@@ -108,6 +108,8 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli list-runs`
 - `python -m shared_intake_governance.cli list-clean-records`
 - `python -m shared_intake_governance.cli inspect-record`
+- `python -m shared_intake_governance.cli list-profile-state`
+- `python -m shared_intake_governance.cli inspect-profile-state`
 - `python -m shared_intake_governance.cli list-profile-reports`
 - `python -m shared_intake_governance.cli inspect-profile-report`
 - `python -m shared_intake_governance.cli inspect-run`
@@ -129,6 +131,8 @@ when none is provided. These commands also write:
 The inspection commands are read-only and should not create runtime files.
 The `project-profiles` command reads the shared clean cache and writes one
 deterministic report per explicit profile path.
+The profile-state inspection commands read existing `profile-state.v1`
+artifacts only; they do not update seen state or change projection behavior.
 
 For current manual invocation examples, see [11-local-runbook.md](11-local-runbook.md).
 
@@ -152,6 +156,7 @@ Current Phase 1 contract anchors:
 - runtime directory layout: `docs/09-operating-model.md`
 - clean record fields: `schemas/clean-record.schema.json`
 - profile loading rules: `docs/02-data-contracts.md`
+- profile state shape: `schemas/profile-state.schema.json`
 - source health output shape: `schemas/source-health.schema.json`
 - run manifest shape: `schemas/run-manifest.schema.json`
 

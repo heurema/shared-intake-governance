@@ -1235,6 +1235,149 @@ class CliPipelineTests(unittest.TestCase):
             self.assertEqual(summary["counts"]["items_written"], 1)
             self.assertEqual(summary["items"][0]["record_id"], "github_repo-good")
 
+    def test_list_profile_state_summarizes_state_without_writes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            first_state_path = _write_profile_state(
+                paths,
+                profile_id="code-intel-kernel",
+                state_id="seen-records",
+                state_kind="seen_records",
+                record_ids=["github_repo-good", "arxiv_rss_keywords-good"],
+            )
+            second_state_path = _write_profile_state(
+                paths,
+                profile_id="agent-bench-lab",
+                state_id="seen-records",
+                state_kind="seen_records",
+                record_ids=["arxiv_rss_keywords-good"],
+            )
+            before_paths = _all_files(paths.root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "list-profile-state",
+                    "--runtime-root",
+                    str(paths.root),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(paths.root), before_paths)
+            self.assertEqual(summary["runtime_root"], str(paths.root))
+            self.assertEqual(summary["profile_state_count"], 2)
+            self.assertEqual(
+                summary["profile_states"],
+                [
+                    {
+                        "profile_id": "agent-bench-lab",
+                        "state_id": "seen-records",
+                        "profile_state_path": str(second_state_path),
+                        "state_kind": "seen_records",
+                        "updated_at": "2026-05-29T12:30:45Z",
+                        "record_count": 1,
+                    },
+                    {
+                        "profile_id": "code-intel-kernel",
+                        "state_id": "seen-records",
+                        "profile_state_path": str(first_state_path),
+                        "state_kind": "seen_records",
+                        "updated_at": "2026-05-29T12:30:45Z",
+                        "record_count": 2,
+                    },
+                ],
+            )
+
+    def test_list_profile_state_can_filter_one_profile(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            _write_profile_state(
+                paths,
+                profile_id="code-intel-kernel",
+                state_id="seen-records",
+                state_kind="seen_records",
+                record_ids=["github_repo-good"],
+            )
+            state_path = _write_profile_state(
+                paths,
+                profile_id="agent-bench-lab",
+                state_id="seen-records",
+                state_kind="seen_records",
+                record_ids=["arxiv_rss_keywords-good"],
+            )
+            before_paths = _all_files(paths.root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "list-profile-state",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--profile-id",
+                    "agent-bench-lab",
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(paths.root), before_paths)
+            self.assertEqual(summary["profile_state_count"], 1)
+            self.assertEqual(
+                summary["profile_states"],
+                [
+                    {
+                        "profile_id": "agent-bench-lab",
+                        "state_id": "seen-records",
+                        "profile_state_path": str(state_path),
+                        "state_kind": "seen_records",
+                        "updated_at": "2026-05-29T12:30:45Z",
+                        "record_count": 1,
+                    }
+                ],
+            )
+
+    def test_inspect_profile_state_reads_one_state_without_writes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            state_path = _write_profile_state(
+                paths,
+                profile_id="code-intel-kernel",
+                state_id="seen-records",
+                state_kind="seen_records",
+                record_ids=["github_repo-good"],
+            )
+            before_paths = _all_files(paths.root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "inspect-profile-state",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--profile-id",
+                    "code-intel-kernel",
+                    "--state-id",
+                    "seen-records",
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(paths.root), before_paths)
+            self.assertEqual(summary["profile_state_path"], str(state_path))
+            self.assertEqual(summary["schema_version"], "profile-state.v1")
+            self.assertEqual(summary["profile_id"], "code-intel-kernel")
+            self.assertEqual(summary["state_kind"], "seen_records")
+            self.assertEqual(summary["record_ids"], ["github_repo-good"])
+
 
 class SuccessfulCollector:
     def __init__(self, paths, **kwargs):
@@ -1575,6 +1718,21 @@ def _write_profile_report(paths, *, profile_id, output_id, output_mode, items):
     path = paths.profile_report_path(profile_id, output_id)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(report, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
+def _write_profile_state(paths, *, profile_id, state_id, state_kind, record_ids):
+    state = {
+        "schema_version": "profile-state.v1",
+        "profile_id": profile_id,
+        "state_id": state_id,
+        "state_kind": state_kind,
+        "updated_at": "2026-05-29T12:30:45Z",
+        "record_ids": record_ids,
+    }
+    path = paths.profile_state_path(profile_id, state_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(state, sort_keys=True) + "\n", encoding="utf-8")
     return path
 
 

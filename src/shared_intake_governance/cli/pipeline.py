@@ -72,6 +72,10 @@ def main(
         return _list_clean_records(args, stdout)
     if args.command == "inspect-record":
         return _inspect_record(args, stdout)
+    if args.command == "list-profile-state":
+        return _list_profile_state(args, stdout)
+    if args.command == "inspect-profile-state":
+        return _inspect_profile_state(args, stdout)
     if args.command == "list-profile-reports":
         return _list_profile_reports(args, stdout)
     if args.command == "inspect-profile-report":
@@ -420,6 +424,38 @@ def _inspect_record(args: argparse.Namespace, stdout: TextIO) -> int:
     return 0
 
 
+def _list_profile_state(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    if args.profile_id:
+        state_paths = sorted(paths.profile_state_dir(args.profile_id).glob("*.json"))
+    elif paths.profiles_root.exists():
+        state_paths = sorted(paths.profiles_root.glob("*/state/*.json"))
+    else:
+        state_paths = []
+
+    states = [_profile_state_summary(path) for path in state_paths]
+    states.sort(key=lambda state: (state["profile_id"], state["state_id"]))
+    _print_json(
+        stdout,
+        {
+            "runtime_root": str(paths.root),
+            "profile_state_count": len(states),
+            "profile_states": states,
+        },
+    )
+    return 0
+
+
+def _inspect_profile_state(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    state_path = paths.profile_state_path(args.profile_id, args.state_id)
+    state = _read_json(state_path)
+    state = dict(state)
+    state["profile_state_path"] = str(state_path)
+    _print_json(stdout, state)
+    return 0
+
+
 def _list_profile_reports(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     if args.profile_id:
@@ -527,6 +563,21 @@ def _profile_report_summary(profile_report_path: Path) -> dict[str, Any]:
         "generated_at": report["generated_at"],
         "clean_records_seen": report["counts"]["clean_records_seen"],
         "items_written": report["counts"]["items_written"],
+    }
+
+
+def _profile_state_summary(profile_state_path: Path) -> dict[str, Any]:
+    state = _read_json(profile_state_path)
+    record_ids = state["record_ids"]
+    if not isinstance(record_ids, list):
+        raise ValueError("profile state record_ids must be a list")
+    return {
+        "profile_id": state["profile_id"],
+        "state_id": state["state_id"],
+        "profile_state_path": str(profile_state_path),
+        "state_kind": state["state_kind"],
+        "updated_at": state["updated_at"],
+        "record_count": len(record_ids),
     }
 
 
@@ -817,6 +868,21 @@ def _parser() -> argparse.ArgumentParser:
     )
     inspect_record.add_argument("--runtime-root", required=True)
     inspect_record.add_argument("--record-id", required=True)
+
+    list_profile_state = subparsers.add_parser(
+        "list-profile-state",
+        help="List profile state artifacts under one runtime root.",
+    )
+    list_profile_state.add_argument("--runtime-root", required=True)
+    list_profile_state.add_argument("--profile-id")
+
+    inspect_profile_state = subparsers.add_parser(
+        "inspect-profile-state",
+        help="Read one profile state artifact.",
+    )
+    inspect_profile_state.add_argument("--runtime-root", required=True)
+    inspect_profile_state.add_argument("--profile-id", required=True)
+    inspect_profile_state.add_argument("--state-id", required=True)
 
     list_profile_reports = subparsers.add_parser(
         "list-profile-reports",
