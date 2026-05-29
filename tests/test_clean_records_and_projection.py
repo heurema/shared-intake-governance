@@ -405,7 +405,7 @@ class CleanRecordEmitterTests(unittest.TestCase):
             self.assertEqual(first.record["title"], "Agent Benchmark News")
             self.assertIn("Benchmark for coding agents", first.record["sanitized_summary"])
             self.assertNotIn("<p>", first.record["sanitized_summary"])
-            self.assertEqual(first.record["published_at"], "Fri, 29 May 2026 12:00:00 GMT")
+            self.assertEqual(first.record["published_at"], "2026-05-29T12:00:00Z")
             self.assertEqual(first.record["source_trust"], "official")
             self.assertEqual(first.record["risk_flags"], [])
             self.assertFalse(first.record["quarantined"])
@@ -418,6 +418,29 @@ class CleanRecordEmitterTests(unittest.TestCase):
 
             for result in results:
                 validate_clean_record(result.record)
+
+    def test_emit_clean_records_from_rss_feed_drops_unparseable_pubdate(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            metadata_path, _ = _write_rss_raw(
+                paths,
+                [
+                    {
+                        "guid": "https://example.test/posts/no-date",
+                        "link": "https://example.test/posts/no-date",
+                        "title": "No Date",
+                        "description": "A feed item with an invalid pubDate.",
+                        "pubDate": "not a date",
+                    },
+                ],
+            )
+
+            [result] = CleanRecordEmitter(paths).emit_all_from_raw_metadata(
+                metadata_path
+            )
+
+            self.assertIsNone(result.record["published_at"])
+            validate_clean_record(result.record)
 
     def test_single_record_emitter_rejects_multi_entry_arxiv_feed(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -452,6 +475,13 @@ class CleanRecordEmitterTests(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             validate_clean_record(invalid_record)
+
+        invalid_published_at = dict(valid_record)
+        invalid_published_at["published_at"] = "Fri, 29 May 2026 12:00:00 GMT"
+        with self.assertRaisesRegex(
+            ValueError, "published_at must be a date-time string"
+        ):
+            validate_clean_record(invalid_published_at)
 
 
 class ProfileProjectorTests(unittest.TestCase):
