@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shared-intake-governance.local/schemas/tool-intent.schema.json",
+  "title": "ToolIntent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "intent_id",
+    "profile_id",
+    "action_class",
+    "tool_name",
+    "arguments",
+    "dry_run_supported",
+    "justification",
+    "evidence_refs"
+  ],
+  "properties": {
+    "intent_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profile_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "action_class": {
+      "type": "string",
+      "enum": [
+        "read_only",
+        "edit_local",
+        "destructive_local",
+        "external_side_effect",
+        "credentialed_remote"
+      ]
+    },
+    "tool_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "arguments": {
+      "type": "object"
+    },
+    "dry_run_supported": {
+      "type": "boolean"
+    },
+    "justification": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

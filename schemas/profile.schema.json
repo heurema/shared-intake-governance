@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shared-intake-governance.local/schemas/profile.schema.json",
+  "title": "ProfileConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "profile_id",
+    "description",
+    "accepted_sources",
+    "keywords",
+    "output_mode"
+  ],
+  "properties": {
+    "profile_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "accepted_sources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "required_risk_flags_absent": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "output_mode": {
+      "type": "string",
+      "enum": [
+        "research_digest",
+        "benchmark_brief",
+        "news_brief",
+        "custom"
+      ]
+    },
+    "provider_preferences": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "claude",
+          "gemini",
+          "vibe"
+        ]
+      }
+    }
+  }
+}

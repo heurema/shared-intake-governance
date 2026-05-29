@@ -1,0 +1,27 @@
+{
+  "profile_id": "code-intel-kernel",
+  "description": "Code intelligence research intake focused on repository evidence, benchmarks, and adjacent agent mechanics.",
+  "accepted_sources": [
+    "github_repo",
+    "github_search",
+    "arxiv_query",
+    "arxiv_rss_keywords"
+  ],
+  "keywords": [
+    "repository-level",
+    "program repair",
+    "code graph",
+    "coding agent",
+    "tree-sitter",
+    "benchmark"
+  ],
+  "required_risk_flags_absent": [
+    "instruction_like_content",
+    "tool_escalation_language"
+  ],
+  "output_mode": "research_digest",
+  "provider_preferences": [
+    "claude",
+    "gemini"
+  ]
+}

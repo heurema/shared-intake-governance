@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shared-intake-governance.local/schemas/clean-record.schema.json",
+  "title": "CleanRecord",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_id",
+    "source_id",
+    "source_type",
+    "canonical_url",
+    "title",
+    "sanitized_summary",
+    "source_trust",
+    "risk_flags",
+    "quarantined",
+    "raw_hash",
+    "sanitizer_version"
+  ],
+  "properties": {
+    "record_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "github_repo",
+        "github_search",
+        "arxiv_query",
+        "arxiv_rss_keywords",
+        "rss",
+        "news",
+        "custom"
+      ]
+    },
+    "canonical_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sanitized_summary": {
+      "type": "string"
+    },
+    "published_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "license_or_terms_note": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source_trust": {
+      "type": "string",
+      "enum": [
+        "official",
+        "maintainer",
+        "platform",
+        "secondary",
+        "social",
+        "unknown"
+      ]
+    },
+    "risk_flags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "quarantined": {
+      "type": "boolean"
+    },
+    "raw_hash": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sanitizer_version": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

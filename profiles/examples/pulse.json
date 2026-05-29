@@ -1,0 +1,25 @@
+{
+  "profile_id": "pulse",
+  "description": "Broader AI market and product pulse with source-backed summaries and explicit confidence handling.",
+  "accepted_sources": [
+    "rss",
+    "news",
+    "github_search",
+    "custom"
+  ],
+  "keywords": [
+    "agents",
+    "security",
+    "mcp",
+    "governance",
+    "enterprise",
+    "model release"
+  ],
+  "required_risk_flags_absent": [],
+  "output_mode": "news_brief",
+  "provider_preferences": [
+    "gemini",
+    "claude",
+    "vibe"
+  ]
+}
