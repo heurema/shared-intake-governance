@@ -164,6 +164,11 @@ class SourceConfigExampleTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "source-config.v1"):
             validate_source_config(bad_schema)
 
+        bad_source_id = dict(valid)
+        bad_source_id["source_id"] = "../github-search-code-agents"
+        with self.assertRaisesRegex(ValueError, "source_id must be a safe path segment"):
+            validate_source_config(bad_source_id)
+
         bad_max_results = dict(valid)
         bad_max_results["max_results"] = 0
         with self.assertRaisesRegex(ValueError, "between 1 and 100"):
