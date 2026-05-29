@@ -59,7 +59,8 @@ error
 ```
 
 Source-specific metadata may add bounded contract fields such as
-`source_trust` for `rss` feeds when that value is needed by the sanitizer.
+`source_trust` for `rss` and `news` feeds when that value is needed by the
+sanitizer.
 
 The raw payload body remains outside the clean-record contract.
 For failed fetches, `body_hash`, `storage_path`, `canonical_url`, and
@@ -178,6 +179,7 @@ Supported Phase 1 source configs:
 - `arxiv_rss_keywords`
 - `arxiv_query`
 - `rss`
+- `news`
 
 Source configs must not contain credentials, runtime state, scoring rules,
 profile logic, or publication semantics.

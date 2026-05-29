@@ -102,6 +102,22 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli run-source-config \
 Expected output is one JSON summary printed to stdout. The summary includes
 all clean record paths emitted from the RSS feed.
 
+## News feed source
+
+```sh
+export SIG_RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-news"
+
+PYTHONPATH=src python3 -m shared_intake_governance.cli run-source-config \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --profile profiles/examples/pulse.json \
+  --source-config sources/examples/news-openai-blog.json \
+  --run-id "$SIG_RUN_ID" \
+  --output-id "$SIG_RUN_ID"
+```
+
+Expected output is one JSON summary printed to stdout. The summary includes
+all clean record paths emitted from the news feed.
+
 ## Project multiple profiles
 
 Use this after one or more runs have written clean records:

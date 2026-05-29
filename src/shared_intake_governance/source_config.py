@@ -15,6 +15,7 @@ _SOURCE_TYPES = {
     "github_search",
     "arxiv_query",
     "arxiv_rss_keywords",
+    "news",
     "rss",
 }
 
@@ -51,7 +52,7 @@ def validate_source_config(config: dict[str, Any]) -> dict[str, Any]:
             required_field="query",
             default_api_base_url="https://export.arxiv.org/api/query",
         )
-    return _validate_rss_config(config)
+    return _validate_feed_config(config)
 
 
 def _validate_github_repo_config(config: dict[str, Any]) -> dict[str, Any]:
@@ -122,7 +123,7 @@ def _validate_arxiv_keywords_config(config: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
-def _validate_rss_config(config: dict[str, Any]) -> dict[str, Any]:
+def _validate_feed_config(config: dict[str, Any]) -> dict[str, Any]:
     _require_fields(config, {"feed_url"})
     _reject_unknown(
         config,

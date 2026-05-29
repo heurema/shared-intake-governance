@@ -47,9 +47,11 @@ Current runtime implementation:
   evidence only.
 - `rss` has a minimal read-only collector that fetches one explicit HTTPS feed
   URL and writes raw XML evidence only.
+- `news` has a minimal read-only collector that fetches one explicit HTTPS feed
+  URL and writes raw XML evidence only.
 - clean-record emission exists for `github_repo` raw JSON, `github_search`
   raw repository search items, `arxiv_rss_keywords` raw Atom entries,
-  `arxiv_query` raw Atom entries, and `rss` XML items.
+  `arxiv_query` raw Atom entries, `rss` XML items, and `news` XML items.
 
 ## Source selection rules
 

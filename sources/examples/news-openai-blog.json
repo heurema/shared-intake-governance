@@ -1,0 +1,7 @@
+{
+  "schema_version": "source-config.v1",
+  "source_type": "news",
+  "source_id": "news-openai-blog",
+  "feed_url": "https://openai.com/news/rss.xml",
+  "source_trust": "official"
+}

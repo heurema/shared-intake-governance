@@ -125,6 +125,8 @@ class CleanRecordEmitter:
             return _arxiv_query_clean_records(metadata, body)
         if metadata["source_type"] == "rss":
             return _rss_clean_records(metadata, body)
+        if metadata["source_type"] == "news":
+            return _news_clean_records(metadata, body)
 
         raise ValueError(f"unsupported source_type: {metadata['source_type']}")
 
@@ -301,24 +303,34 @@ def _arxiv_entry_clean_record(
 
 
 def _rss_clean_records(metadata: dict[str, Any], body: bytes) -> list[dict[str, Any]]:
+    return _feed_clean_records(metadata, body, "rss")
+
+
+def _news_clean_records(metadata: dict[str, Any], body: bytes) -> list[dict[str, Any]]:
+    return _feed_clean_records(metadata, body, "news")
+
+
+def _feed_clean_records(
+    metadata: dict[str, Any], body: bytes, source_type: str
+) -> list[dict[str, Any]]:
     try:
         root = ElementTree.fromstring(body)
     except ElementTree.ParseError as exc:
-        raise ValueError("rss raw body must be valid XML") from exc
+        raise ValueError(f"{source_type} raw body must be valid XML") from exc
 
     items = _rss_items(root)
     if not items:
-        raise ValueError("rss raw body must include at least one item")
+        raise ValueError(f"{source_type} raw body must include at least one item")
 
-    return [_rss_item_clean_record(metadata, item) for item in items]
+    return [_feed_item_clean_record(metadata, item, source_type) for item in items]
 
 
-def _rss_item_clean_record(
-    metadata: dict[str, Any], item: ElementTree.Element
+def _feed_item_clean_record(
+    metadata: dict[str, Any], item: ElementTree.Element, source_type: str
 ) -> dict[str, Any]:
     canonical_url = _clean_text(_rss_text(item, "link") or _rss_text(item, "guid"))
     if not canonical_url:
-        raise ValueError("rss item must include link or guid")
+        raise ValueError(f"{source_type} item must include link or guid")
 
     title = _clean_text(_rss_text(item, "title") or canonical_url)
     summary = _cap_length(
@@ -328,9 +340,9 @@ def _rss_item_clean_record(
     risk_flags = _risk_flags(" ".join([title, summary]))
 
     return {
-        "record_id": _record_id("rss", canonical_url),
+        "record_id": _record_id(source_type, canonical_url),
         "source_id": metadata["source_id"],
-        "source_type": "rss",
+        "source_type": source_type,
         "canonical_url": canonical_url,
         "title": title,
         "sanitized_summary": summary,

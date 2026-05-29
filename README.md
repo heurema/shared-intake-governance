@@ -73,9 +73,10 @@ What exists now:
 - minimal read-only `arxiv_rss_keywords` collector that writes raw evidence only;
 - minimal read-only `arxiv_query` collector that writes raw evidence only;
 - minimal read-only `rss` collector that writes raw evidence only;
+- minimal read-only `news` collector that writes raw evidence only;
 - minimal clean-record emitter with validated raw metadata input and raw-root
   bounded body reads for `github_repo`, `github_search`,
-  `arxiv_rss_keywords`, `arxiv_query`, and `rss` raw evidence;
+  `arxiv_rss_keywords`, `arxiv_query`, `rss`, and `news` raw evidence;
 - profile-projection contract for deterministic per-profile report artifacts;
 - minimal explicit-profile projector that writes deterministic JSON reports;
 - runtime validation for profile projection reports before write and seen-state
@@ -84,7 +85,7 @@ What exists now:
 - explicit `update-profile-seen-state` CLI that merges one profile report into
   a profile-local `seen_records` state artifact;
 - narrow local CLI commands for `github_repo`, `github_search`,
-  `arxiv_rss_keywords`, `arxiv_query`, and `rss` collect, sanitize, and
+  `arxiv_rss_keywords`, `arxiv_query`, `rss`, and `news` collect, sanitize, and
   project paths;
 - multi-profile CLI command that projects existing clean cache into multiple
   explicit profile reports;
@@ -122,9 +123,9 @@ What exists now:
 What does not exist yet:
 
 - source collector families beyond `github_repo`, `github_search`,
-  `arxiv_rss_keywords`, `arxiv_query`, and `rss`;
+  `arxiv_rss_keywords`, `arxiv_query`, `rss`, and `news`;
 - sanitizer source mappings beyond `github_repo`, `github_search`,
-  `arxiv_rss_keywords`, `arxiv_query`, and `rss`;
+  `arxiv_rss_keywords`, `arxiv_query`, `rss`, and `news`;
 - multi-profile report shaping beyond deterministic per-profile JSON;
 - consumer-specific dedupe behavior; implicit profile-state updates remain out
   of current scope unless a new behavior decision replaces the explicit

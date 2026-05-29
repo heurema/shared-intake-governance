@@ -105,6 +105,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli run-arxiv-rss-keywords`
 - `python -m shared_intake_governance.cli run-arxiv-query`
 - `python -m shared_intake_governance.cli run-rss-feed`
+- `python -m shared_intake_governance.cli run-news-feed`
 - `python -m shared_intake_governance.cli run-source-config`
 - `python -m shared_intake_governance.cli smoke-source-config`
 - `python -m shared_intake_governance.cli project-profiles`
@@ -132,13 +133,14 @@ Current CLI implementation:
 - `sources/examples/github-search-code-agents.json`
 - `sources/examples/arxiv-code-agents.json`
 - `sources/examples/arxiv-query-code-agents.json`
+- `sources/examples/news-openai-blog.json`
 - `sources/examples/rss-github-blog.json`
 - `src/shared_intake_governance/cli/pipeline.py`
 - `tests/test_cli_pipeline.py`
 
 These commands intentionally cover only the implemented `github_repo`,
-`github_search`, `arxiv_rss_keywords`, `arxiv_query`, and `rss` paths. They
-require explicit runtime root, profile path, source-specific inputs or one
+`github_search`, `arxiv_rss_keywords`, `arxiv_query`, `rss`, and `news` paths.
+They require explicit runtime root, profile path, source-specific inputs or one
 validated `source-config.v1` file, and run/output identifiers. The smoke
 command may allocate an isolated temporary runtime root when none is provided.
 These commands also write:
@@ -288,11 +290,13 @@ Current implementation:
 - `src/shared_intake_governance/collector/github_search.py`
 - `src/shared_intake_governance/collector/arxiv_rss_keywords.py`
 - `src/shared_intake_governance/collector/arxiv_query.py`
+- `src/shared_intake_governance/collector/news_feed.py`
 - `src/shared_intake_governance/collector/rss_feed.py`
 - `tests/test_github_repo_collector.py`
 - `tests/test_github_search_collector.py`
 - `tests/test_arxiv_rss_keywords_collector.py`
 - `tests/test_arxiv_query_collector.py`
+- `tests/test_news_feed_collector.py`
 - `tests/test_rss_feed_collector.py`
 
 ### Step 5: implement sanitizer and clean-record emission
@@ -318,6 +322,7 @@ Current implementation:
 - `arxiv_rss_keywords` raw Atom feeds map to one clean record per entry.
 - `arxiv_query` raw Atom feeds map to one clean record per entry.
 - `rss` raw XML feeds map to one clean record per item.
+- `news` raw XML feeds map to one clean record per item.
 - single-record emission rejects multi-entry raw evidence instead of silently
   dropping records; use all-record emission for feed-shaped sources.
 
@@ -432,9 +437,9 @@ Still missing:
   of current scope unless a new behavior decision replaces the explicit
   `--update-seen-state` gate;
 - source collector families beyond `github_repo`, `github_search`,
-  `arxiv_rss_keywords`, `arxiv_query`, and `rss`;
+  `arxiv_rss_keywords`, `arxiv_query`, `rss`, and `news`;
 - sanitizer source mappings beyond `github_repo`, `github_search`,
-  `arxiv_rss_keywords`, `arxiv_query`, and `rss`;
+  `arxiv_rss_keywords`, `arxiv_query`, `rss`, and `news`;
 - provider/tool command discovery, credential mapping, or default presets.
 
 ## Handoff rule for the next session
