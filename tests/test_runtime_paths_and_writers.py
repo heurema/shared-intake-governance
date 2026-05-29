@@ -21,6 +21,7 @@ from shared_intake_governance.runtime import (  # noqa: E402
     RuntimePaths,
     SourceHealthWriter,
     ToolExecutionWriter,
+    validate_approval_record,
     validate_governance_audit_event,
     validate_raw_metadata,
     validate_run_manifest,
@@ -464,6 +465,7 @@ class RuntimeWriterTests(unittest.TestCase):
             paths = RuntimePaths(Path(tmp_dir) / "runtime")
             writer = ApprovalWriter(paths)
             record = _approval_record()
+            validate_approval_record(record)
 
             approval_path = writer.write_record(record)
             first_write = approval_path.read_text(encoding="utf-8")
@@ -479,6 +481,39 @@ class RuntimeWriterTests(unittest.TestCase):
 
             writer.write_record(record)
             self.assertEqual(approval_path.read_text(encoding="utf-8"), first_write)
+
+    def test_approval_record_validation_rejects_contract_drift(self):
+        valid_record = _approval_record()
+
+        missing_required = dict(valid_record)
+        missing_required.pop("approval_decision")
+        with self.assertRaises(ValueError):
+            validate_approval_record(missing_required)
+
+        unknown_field = dict(valid_record)
+        unknown_field["score"] = 1
+        with self.assertRaises(ValueError):
+            validate_approval_record(unknown_field)
+
+        bad_action = dict(valid_record)
+        bad_action["action_class"] = "network"
+        with self.assertRaises(ValueError):
+            validate_approval_record(bad_action)
+
+        bad_decision = dict(valid_record)
+        bad_decision["approval_decision"] = "allowed"
+        with self.assertRaises(ValueError):
+            validate_approval_record(bad_decision)
+
+        bad_ref = dict(valid_record)
+        bad_ref["dry_run_ref"] = 1
+        with self.assertRaises(ValueError):
+            validate_approval_record(bad_ref)
+
+        bad_refs = dict(valid_record)
+        bad_refs["evidence_refs"] = ["profiles/report.json", 1]
+        with self.assertRaises(ValueError):
+            validate_approval_record(bad_refs)
 
     def test_dry_run_writer_writes_result_deterministically(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
