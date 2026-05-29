@@ -309,6 +309,7 @@ Current implementation:
 - `src/shared_intake_governance/sanitizer/clean_records.py`
 - `tests/test_clean_records_and_projection.py`
 - raw metadata is validated before sanitizer consumption.
+- sanitizer raw body reads are bounded to the configured runtime raw root.
 - `github_repo` raw JSON maps to one clean record.
 - `github_search` raw JSON repository search results map to one clean record
   per repository item.
