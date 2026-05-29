@@ -833,6 +833,13 @@ class RuntimeWriterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_provider_request(bad_mediation)
 
+        denied_ready = dict(valid_request)
+        denied_ready["policy_decision"] = "denied"
+        with self.assertRaisesRegex(
+            ValueError, "denied policy decisions cannot prepare provider requests"
+        ):
+            validate_provider_request(denied_ready)
+
         bad_capabilities = dict(valid_request)
         bad_capabilities["capabilities"] = ["edit_local", "network"]
         with self.assertRaises(ValueError):

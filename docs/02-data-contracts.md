@@ -582,6 +582,7 @@ expand capabilities beyond the governance-derived request.
 Runtime code validates provider requests before writing them.
 Runtime code also validates the ready execution mediation record before
 preparing a provider request.
+Denied policy decisions must not prepare provider requests.
 
 ## Provider result
 

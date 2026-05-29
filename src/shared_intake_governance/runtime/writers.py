@@ -683,6 +683,8 @@ def validate_provider_request(request: dict[str, Any]) -> None:
         raise ValueError("provider request has unsupported policy_decision")
     if request["mediation_decision"] != "ready":
         raise ValueError("provider request must use ready mediation")
+    if request["policy_decision"] == "denied":
+        raise ValueError("denied policy decisions cannot prepare provider requests")
     _require_enum_array(
         request,
         "capabilities",
