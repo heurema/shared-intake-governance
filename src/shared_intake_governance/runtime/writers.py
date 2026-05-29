@@ -806,6 +806,23 @@ def validate_raw_metadata(metadata: dict[str, Any]) -> None:
     if metadata["error"] is not None:
         _validate_error_object(metadata["error"], "raw metadata error")
 
+    has_body_hash = metadata["body_hash"] is not None
+    has_storage_path = metadata["storage_path"] is not None
+    if metadata["fetch_status"] == "success":
+        if not has_body_hash or not has_storage_path:
+            raise ValueError(
+                "successful raw metadata must include body_hash and storage_path"
+            )
+        if metadata["error"] is not None:
+            raise ValueError("successful raw metadata must not include an error")
+    else:
+        if has_body_hash != has_storage_path:
+            raise ValueError(
+                "raw metadata body_hash and storage_path must be present together"
+            )
+        if metadata["error"] is None:
+            raise ValueError("non-success raw metadata must include an error")
+
 
 def validate_run_manifest(manifest: dict[str, Any]) -> None:
     missing = sorted(_RUN_MANIFEST_REQUIRED - set(manifest))
