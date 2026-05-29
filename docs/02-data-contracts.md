@@ -412,6 +412,7 @@ tool_intent_path
 Approval records should not include full tool arguments, credentials, or
 private payloads. A later executor must still enforce policy, check approval
 scope, and require dry-run evidence where applicable.
+`run_id` and `approval_id` must be safe runtime path segments.
 Runtime code validates approval records before writing them.
 
 ## Dry-run result

@@ -482,6 +482,8 @@ def validate_approval_record(record: dict[str, Any]) -> None:
         "tool_intent_path",
     ]:
         _require_text(record, field)
+    _require_safe_segment(record, "run_id")
+    _require_safe_segment(record, "approval_id")
     require_date_time(record["approved_at"], "approved_at")
     if record["action_class"] not in _ACTION_CLASSES:
         raise ValueError("approval record has unsupported action_class")

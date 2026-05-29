@@ -734,6 +734,18 @@ class RuntimeWriterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_approval_record(bad_decision)
 
+        bad_run_id = dict(valid_record)
+        bad_run_id["run_id"] = "../20260529T123045Z-deadbeef"
+        with self.assertRaisesRegex(ValueError, "run_id must be a safe path segment"):
+            validate_approval_record(bad_run_id)
+
+        bad_approval_id = dict(valid_record)
+        bad_approval_id["approval_id"] = "../approval-1"
+        with self.assertRaisesRegex(
+            ValueError, "approval_id must be a safe path segment"
+        ):
+            validate_approval_record(bad_approval_id)
+
         bad_ref = dict(valid_record)
         bad_ref["dry_run_ref"] = 1
         with self.assertRaises(ValueError):
@@ -743,6 +755,18 @@ class RuntimeWriterTests(unittest.TestCase):
         bad_refs["evidence_refs"] = ["profiles/report.json", 1]
         with self.assertRaises(ValueError):
             validate_approval_record(bad_refs)
+
+    def test_approval_record_schema_tracks_runtime_id_constraints(self):
+        schema = _read_schema("approval-record.schema.json")
+
+        self.assertEqual(
+            schema["properties"]["run_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["approval_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
 
     def test_dry_run_writer_writes_result_deterministically(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
