@@ -46,6 +46,7 @@ _REQUIRED_CLEAN_FIELDS = {
 }
 _OPTIONAL_CLEAN_FIELDS = {"published_at", "license_or_terms_note"}
 _ALLOWED_CLEAN_FIELDS = _REQUIRED_CLEAN_FIELDS | _OPTIONAL_CLEAN_FIELDS
+_SAFE_SEGMENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _RISK_PATTERNS = {
     "instruction_like_content": [
         "ignore previous instructions",
@@ -148,6 +149,8 @@ def validate_clean_record(record: dict[str, Any]) -> None:
 
     _require_text(record, "record_id")
     _require_text(record, "source_id")
+    _require_safe_segment(record, "record_id")
+    _require_safe_segment(record, "source_id")
     _require_text(record, "canonical_url")
     require_absolute_uri(record["canonical_url"], "canonical_url")
     _require_text(record, "title")
@@ -435,6 +438,11 @@ def _normalize_optional_source_date_time(value: Any) -> str | None:
 def _require_text(record: dict[str, Any], field: str) -> None:
     if not isinstance(record[field], str) or not record[field]:
         raise ValueError(f"{field} must be a non-empty string")
+
+
+def _require_safe_segment(record: dict[str, Any], field: str) -> None:
+    if not _SAFE_SEGMENT.fullmatch(record[field]):
+        raise ValueError(f"{field} must be a safe path segment")
 
 
 def _raw_body_path(paths: RuntimePaths, storage_path: str) -> Path:

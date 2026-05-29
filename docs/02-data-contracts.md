@@ -101,6 +101,7 @@ Important properties:
 Clean record fields are already frozen for Phase 1 by
 `schemas/clean-record.schema.json`. Runtime code should validate emitted clean
 records against that schema before projection.
+`record_id` and `source_id` must be safe runtime path segments.
 When external sources provide publish dates in source-specific formats,
 sanitizers should normalize parseable values to `date-time` strings and omit
 unparseable values instead of carrying raw date text into clean records.
