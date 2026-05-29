@@ -11,7 +11,7 @@ from typing import Any
 
 from shared_intake_governance.runtime import RuntimePaths
 from shared_intake_governance.sanitizer import validate_clean_record
-from shared_intake_governance.validation import require_absolute_uri
+from shared_intake_governance.validation import require_absolute_uri, require_date_time
 
 
 _SAFE_SEGMENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
@@ -183,7 +183,7 @@ def validate_profile_projection(report: dict[str, Any]) -> None:
     if report["output_mode"] not in _OUTPUT_MODES:
         raise ValueError("profile projection has unsupported output_mode")
     _require_text(report, "generated_at")
-    _require_datetime_text(report, "generated_at")
+    require_date_time(report["generated_at"], "generated_at")
 
     counts = report["counts"]
     if not isinstance(counts, dict):
@@ -279,19 +279,6 @@ def _safe_segment(value: str, label: str) -> str:
 def _require_text(profile: dict[str, Any], field: str) -> None:
     if not isinstance(profile[field], str) or not profile[field]:
         raise ValueError(f"{field} must be a non-empty string")
-
-
-def _require_datetime_text(profile: dict[str, Any], field: str) -> None:
-    value = profile[field]
-    if not isinstance(value, str) or not value:
-        raise ValueError(f"{field} must be a date-time string")
-    parsed_value = value[:-1] + "+00:00" if value.endswith("Z") else value
-    try:
-        parsed = datetime.fromisoformat(parsed_value)
-    except ValueError as exc:
-        raise ValueError(f"{field} must be a date-time string") from exc
-    if parsed.tzinfo is None:
-        raise ValueError(f"{field} must be a date-time string")
 
 
 def _require_string_list(profile: dict[str, Any], field: str) -> None:
