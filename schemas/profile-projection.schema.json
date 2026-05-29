@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shared-intake-governance.local/schemas/profile-projection.schema.json",
+  "title": "ProfileProjection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "profile_id",
+    "output_mode",
+    "generated_at",
+    "counts",
+    "items"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "profile-projection.v1"
+    },
+    "profile_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "output_mode": {
+      "type": "string",
+      "enum": [
+        "research_digest",
+        "benchmark_brief",
+        "news_brief",
+        "custom"
+      ]
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clean_records_seen",
+        "items_written",
+        "excluded_by_source",
+        "excluded_by_keyword",
+        "excluded_by_risk",
+        "excluded_quarantined"
+      ],
+      "properties": {
+        "clean_records_seen": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "items_written": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "excluded_by_source": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "excluded_by_keyword": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "excluded_by_risk": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "excluded_quarantined": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "record_id",
+          "source_id",
+          "source_type",
+          "canonical_url",
+          "title",
+          "sanitized_summary",
+          "source_trust",
+          "risk_flags",
+          "raw_hash"
+        ],
+        "properties": {
+          "record_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "github_repo",
+              "github_search",
+              "arxiv_query",
+              "arxiv_rss_keywords",
+              "rss",
+              "news",
+              "custom"
+            ]
+          },
+          "canonical_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sanitized_summary": {
+            "type": "string"
+          },
+          "source_trust": {
+            "type": "string",
+            "enum": [
+              "official",
+              "maintainer",
+              "platform",
+              "secondary",
+              "social",
+              "unknown"
+            ]
+          },
+          "risk_flags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "raw_hash": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

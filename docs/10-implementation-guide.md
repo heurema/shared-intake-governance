@@ -212,6 +212,7 @@ Current Phase 1 contract anchors:
 - runtime directory layout: `docs/09-operating-model.md`
 - clean record fields: `schemas/clean-record.schema.json`
 - profile loading rules: `docs/02-data-contracts.md`
+- profile projection report shape: `schemas/profile-projection.schema.json`
 - profile state shape: `schemas/profile-state.schema.json`
 - source health output shape: `schemas/source-health.schema.json`
 - run manifest shape: `schemas/run-manifest.schema.json`
