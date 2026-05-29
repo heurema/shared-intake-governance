@@ -58,6 +58,21 @@ class ProviderRequestTests(unittest.TestCase):
                 prepared_at="2026-05-29T12:30:45Z",
             )
 
+    def test_malformed_mediation_record_is_rejected_before_request_preparation(self):
+        mediation_record = _mediation_record(mediation_decision="ready")
+        mediation_record["arguments"] = {"report_id": RUN_ID}
+
+        with self.assertRaisesRegex(ValueError, "unknown fields"):
+            prepare_provider_request(
+                run_id=RUN_ID,
+                request_id="provider-request-1",
+                provider="claude",
+                mediation_record=mediation_record,
+                mediation_record_path="mediation/20260529T123045Z-deadbeef/mediation-1.json",
+                context_refs=[],
+                prepared_at="2026-05-29T12:30:45Z",
+            )
+
 
 def _mediation_record(*, mediation_decision):
     return {

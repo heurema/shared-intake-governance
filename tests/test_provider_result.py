@@ -69,6 +69,25 @@ class ProviderResultTests(unittest.TestCase):
                 recorded_at="2026-05-29T12:30:45Z",
             )
 
+    def test_malformed_provider_request_is_rejected_before_result_recording(self):
+        provider_request = _provider_request()
+        provider_request["credentials"] = {"token": "do-not-record"}
+
+        with self.assertRaisesRegex(ValueError, "unknown fields"):
+            record_provider_result(
+                run_id=RUN_ID,
+                result_id="provider-result-1",
+                provider_request=provider_request,
+                provider_request_path="provider-requests/20260529T123045Z-deadbeef/provider-request-1.json",
+                result_status="succeeded",
+                recorded_by="local-operator",
+                summary="Provider completed the request.",
+                response_refs=[],
+                usage_metadata={},
+                error=None,
+                recorded_at="2026-05-29T12:30:45Z",
+            )
+
 
 def _provider_request():
     return {

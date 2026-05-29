@@ -114,8 +114,8 @@ What exists now:
 - provider-result contract and local `record-provider-result` CLI for validated
   provider response refs and usage metadata without provider invocation.
 - local `invoke-provider-request` CLI for running an explicit provider command
-  with provider-request JSON on stdin, storing stdout/stderr as runtime
-  artifacts, and recording `provider-result.v1`.
+  with validated provider-request JSON on stdin, storing stdout/stderr as
+  runtime artifacts, and recording `provider-result.v1`.
 
 What does not exist yet:
 

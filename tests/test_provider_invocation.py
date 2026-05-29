@@ -139,6 +139,35 @@ class ProviderInvocationTests(unittest.TestCase):
                 stdout_path.read_text(encoding="utf-8"), "before timeout\n"
             )
 
+    def test_invalid_provider_request_is_rejected_before_command_invocation(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            provider_request = _provider_request()
+            provider_request["credentials"] = {"token": "do-not-forward"}
+            stdout_path = paths.provider_result_artifact_path(
+                RUN_ID, "provider-result-1", "stdout.txt"
+            )
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
+                invoke_provider_request(
+                    paths=paths,
+                    run_id=RUN_ID,
+                    result_id="provider-result-1",
+                    provider_request=provider_request,
+                    provider_request_path="provider-requests/provider-request-1.json",
+                    command=[
+                        sys.executable,
+                        "-c",
+                        "print('should not run')",
+                    ],
+                    recorded_by="local-operator",
+                    timeout_seconds=5.0,
+                    usage_metadata={},
+                    recorded_at="2026-05-29T12:30:45Z",
+                )
+
+            self.assertFalse(stdout_path.exists())
+
 
 def _provider_request():
     return {

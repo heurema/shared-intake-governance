@@ -538,6 +538,8 @@ raw source text, private payloads, or provider-specific policy truth.
 Adapters must still enforce their own narrow translation boundary and must not
 expand capabilities beyond the governance-derived request.
 Runtime code validates provider requests before writing them.
+Runtime code also validates the ready execution mediation record before
+preparing a provider request.
 
 ## Provider result
 
@@ -585,6 +587,8 @@ than embedding full responses. They should not include credentials, tool
 arguments, raw source text, private payloads, or provider-specific policy truth.
 Failed or blocked results should include a compact error object.
 Runtime code validates provider results before writing them.
+Runtime code also validates provider requests before recording provider results
+or forwarding request JSON to an explicit local provider command.
 
 ## Capability classes
 
