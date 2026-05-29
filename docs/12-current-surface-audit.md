@@ -73,6 +73,8 @@ runtime paths consume them:
 - governance, tool-execution, and provider adapter artifacts reject unsafe
   `profile_id` values before those profile-scoped identities move across
   policy, mediation, execution, or provider boundaries;
+- provider request and result artifacts preserve safe `mediation_id` values
+  from execution mediation records;
 - denied provider requests are rejected before provider-request records;
 - embedded governance audit events reuse standalone audit id validation;
 - `profile_id`, source ids, clean record ids, profile projection ids, raw
