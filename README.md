@@ -160,6 +160,11 @@ See [docs/10-implementation-guide.md](docs/10-implementation-guide.md) for the e
 
 - [LICENSE](LICENSE)
 - [NOTICE](NOTICE)
+- [CONTRIBUTING](CONTRIBUTING.md)
+- [CODE_OF_CONDUCT](CODE_OF_CONDUCT.md)
+- [SECURITY](SECURITY.md)
+- [SUPPORT](SUPPORT.md)
+- [TRADEMARKS](TRADEMARKS.md)
 
 The repository is intended to be reusable as a local-first shared intake
 governance reference. Consumer-specific profiles, scoring, reports, runtime
