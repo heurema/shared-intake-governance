@@ -74,6 +74,21 @@ class ProfileStateUpdateTests(unittest.TestCase):
                     updated_at="2026-05-29T12:30:45Z",
                 )
 
+    def test_update_seen_records_state_rejects_malformed_profile_report(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            malformed_report = _profile_report("code-intel-kernel")
+            malformed_report["items"] = [{"record_id": "github_repo-good"}]
+
+            with self.assertRaises(ValueError):
+                update_seen_records_state(
+                    paths=paths,
+                    profile_id="code-intel-kernel",
+                    profile_report=malformed_report,
+                    state_id="seen-records",
+                    updated_at="2026-05-29T12:30:45Z",
+                )
+
 
 def _profile_report(profile_id):
     return {
@@ -90,9 +105,31 @@ def _profile_report(profile_id):
             "excluded_quarantined": 0,
         },
         "items": [
-            {"record_id": "github_repo-good"},
-            {"record_id": "arxiv_rss_keywords-good"},
+            _projection_item(
+                "github_repo-good",
+                source_type="github_repo",
+                source_trust="platform",
+            ),
+            _projection_item(
+                "arxiv_rss_keywords-good",
+                source_type="arxiv_rss_keywords",
+                source_trust="official",
+            ),
         ],
+    }
+
+
+def _projection_item(record_id, *, source_type, source_trust):
+    return {
+        "record_id": record_id,
+        "source_id": "test-source",
+        "source_type": source_type,
+        "canonical_url": f"https://example.test/{record_id}",
+        "title": record_id,
+        "sanitized_summary": "Test summary.",
+        "source_trust": source_trust,
+        "risk_flags": [],
+        "raw_hash": f"raw-{record_id}",
     }
 
 

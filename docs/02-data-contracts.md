@@ -195,6 +195,8 @@ items
 Projection items intentionally include sanitized summary text, risk flags,
 source trust, canonical URL, and raw hash. They must not include credentials,
 provider prompts, model outputs, or consumer-specific editorial decisions.
+Runtime code validates projection reports before writing them and before using
+them to update profile-local seen state.
 
 ## Profile state
 

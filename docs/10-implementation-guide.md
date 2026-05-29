@@ -322,6 +322,8 @@ Current implementation:
 - `src/shared_intake_governance/projector/profile_state.py`
 - `tests/test_clean_records_and_projection.py`
 - `tests/test_profile_state.py`
+- profile projection reports are validated before write and before seen-state
+  updates consume them.
 - `project-profiles` CLI can run the same projector for multiple explicit
   profile paths from one clean cache.
 - `project-profiles --update-seen-state` can explicitly merge each generated
