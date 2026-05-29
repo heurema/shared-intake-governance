@@ -166,6 +166,34 @@ class SourceConfigExampleTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "unsupported source_trust"):
                 load_source_config(config_path)
 
+    def test_source_config_schema_keeps_url_fields_https_only(self):
+        schema = json.loads(
+            (ROOT / "schemas" / "source-config.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        url_fields = []
+
+        for variant in schema["oneOf"]:
+            source_type = variant["properties"]["source_type"]["const"]
+            for field in ("api_base_url", "feed_url"):
+                if field in variant["properties"]:
+                    url_fields.append((source_type, field, variant["properties"][field]))
+
+        self.assertEqual(
+            [(source_type, field) for source_type, field, _ in url_fields],
+            [
+                ("github_repo", "api_base_url"),
+                ("github_search", "api_base_url"),
+                ("arxiv_query", "api_base_url"),
+                ("arxiv_rss_keywords", "api_base_url"),
+                ("rss", "feed_url"),
+            ],
+        )
+        for _source_type, _field, definition in url_fields:
+            self.assertEqual(definition["format"], "uri")
+            self.assertEqual(definition.get("pattern"), "^https://")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -36,7 +36,8 @@
         },
         "api_base_url": {
           "type": "string",
-          "format": "uri"
+          "format": "uri",
+          "pattern": "^https://"
         }
       }
     },
@@ -74,7 +75,8 @@
         },
         "api_base_url": {
           "type": "string",
-          "format": "uri"
+          "format": "uri",
+          "pattern": "^https://"
         }
       }
     },
@@ -112,7 +114,8 @@
         },
         "api_base_url": {
           "type": "string",
-          "format": "uri"
+          "format": "uri",
+          "pattern": "^https://"
         }
       }
     },
@@ -154,7 +157,8 @@
         },
         "api_base_url": {
           "type": "string",
-          "format": "uri"
+          "format": "uri",
+          "pattern": "^https://"
         }
       }
     },
@@ -182,7 +186,8 @@
         },
         "feed_url": {
           "type": "string",
-          "format": "uri"
+          "format": "uri",
+          "pattern": "^https://"
         },
         "source_trust": {
           "type": "string",
