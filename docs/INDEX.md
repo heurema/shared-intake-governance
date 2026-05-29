@@ -40,6 +40,7 @@ Use this file as the main navigation layer.
 
 - [10-implementation-guide.md](10-implementation-guide.md)
 - [11-local-runbook.md](11-local-runbook.md)
+- [12-current-surface-audit.md](12-current-surface-audit.md)
 - [04-mvp-roadmap.md](04-mvp-roadmap.md)
 - [03-provider-adapters.md](03-provider-adapters.md)
 
@@ -62,6 +63,7 @@ Use this file as the main navigation layer.
 10. [09-operating-model.md](09-operating-model.md)
 11. [10-implementation-guide.md](10-implementation-guide.md)
 12. [11-local-runbook.md](11-local-runbook.md)
+13. [12-current-surface-audit.md](12-current-surface-audit.md)
 
 ## Schemas and examples
 
