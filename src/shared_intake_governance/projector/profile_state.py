@@ -86,7 +86,12 @@ def validate_profile_state(state: dict[str, Any]) -> None:
     require_date_time(state["updated_at"], "updated_at")
     if state["state_kind"] not in _PROFILE_STATE_KINDS:
         raise ValueError("profile state has unsupported state_kind")
-    _record_ids(state)
+    record_ids = _record_ids(state)
+    if state["state_kind"] == "seen_records":
+        if len(record_ids) != len(set(record_ids)):
+            raise ValueError("seen_records profile state record_ids must be unique")
+        if record_ids != sorted(record_ids):
+            raise ValueError("seen_records profile state record_ids must be sorted")
 
 
 def _record_ids(state: dict[str, Any]) -> list[str]:

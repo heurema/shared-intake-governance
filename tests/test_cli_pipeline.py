@@ -1641,7 +1641,7 @@ class CliPipelineTests(unittest.TestCase):
                 profile_id="code-intel-kernel",
                 state_id="seen-records",
                 state_kind="seen_records",
-                record_ids=["github_repo-old", "github_repo-good"],
+                record_ids=["github_repo-good", "github_repo-old"],
             )
             stdout = io.StringIO()
 
@@ -1916,7 +1916,7 @@ class CliPipelineTests(unittest.TestCase):
                 profile_id="code-intel-kernel",
                 state_id="seen-records",
                 state_kind="seen_records",
-                record_ids=["github_repo-good", "arxiv_rss_keywords-good"],
+                record_ids=["arxiv_rss_keywords-good", "github_repo-good"],
             )
             second_state_path = _write_profile_state(
                 paths,
@@ -2114,7 +2114,7 @@ class CliPipelineTests(unittest.TestCase):
                 profile_id="code-intel-kernel",
                 state_id="seen-records",
                 state_kind="seen_records",
-                record_ids=["github_repo-old", "github_repo-good"],
+                record_ids=["github_repo-good", "github_repo-old"],
             )
             stdout = io.StringIO()
 

@@ -28,7 +28,7 @@ class ProfileStateUpdateTests(unittest.TestCase):
                         "state_id": "seen-records",
                         "state_kind": "seen_records",
                         "updated_at": "2026-05-28T12:30:45Z",
-                        "record_ids": ["github_repo-old", "github_repo-good"],
+                        "record_ids": ["github_repo-good", "github_repo-old"],
                     },
                     sort_keys=True,
                 )
@@ -147,6 +147,26 @@ class ProfileStateUpdateTests(unittest.TestCase):
         ):
             validate_profile_state(bad_updated_at)
 
+        duplicate_seen_records = dict(valid_state)
+        duplicate_seen_records["record_ids"] = [
+            "github_repo-good",
+            "github_repo-good",
+        ]
+        with self.assertRaisesRegex(
+            ValueError, "seen_records profile state record_ids must be unique"
+        ):
+            validate_profile_state(duplicate_seen_records)
+
+        unsorted_seen_records = dict(valid_state)
+        unsorted_seen_records["record_ids"] = [
+            "github_repo-old",
+            "github_repo-good",
+        ]
+        with self.assertRaisesRegex(
+            ValueError, "seen_records profile state record_ids must be sorted"
+        ):
+            validate_profile_state(unsorted_seen_records)
+
 
 def _profile_report(profile_id):
     return {
@@ -198,7 +218,7 @@ def _profile_state():
         "state_id": "seen-records",
         "state_kind": "seen_records",
         "updated_at": "2026-05-28T12:30:45Z",
-        "record_ids": ["github_repo-old", "github_repo-good"],
+        "record_ids": ["github_repo-good", "github_repo-old"],
     }
 
 
