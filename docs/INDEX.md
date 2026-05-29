@@ -63,7 +63,10 @@ Use this file as the main navigation layer.
 
 ## Schemas and examples
 
+- [../schemas/raw-metadata.schema.json](../schemas/raw-metadata.schema.json)
 - [../schemas/clean-record.schema.json](../schemas/clean-record.schema.json)
+- [../schemas/run-manifest.schema.json](../schemas/run-manifest.schema.json)
+- [../schemas/source-health.schema.json](../schemas/source-health.schema.json)
 - [../schemas/profile.schema.json](../schemas/profile.schema.json)
 - [../schemas/tool-intent.schema.json](../schemas/tool-intent.schema.json)
 - [../profiles/examples/code-intel-kernel.json](../profiles/examples/code-intel-kernel.json)

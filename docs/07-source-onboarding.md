@@ -93,7 +93,11 @@ Only introduce a new family when the transport, identity model, or extraction pa
 
 At minimum, the raw layer must preserve:
 
+- `schema_version`
+- `run_id`
 - `source_id`
+- `source_type`
+- `fetch_status`
 - `request_url`
 - `canonical_url`
 - `http_status`
@@ -101,10 +105,13 @@ At minimum, the raw layer must preserve:
 - `content_type`
 - `body_hash`
 - `storage_path`
+- `collector_version`
+- `error`
 - `etag` when available
 - `last_modified` when available
 
 The point of the raw layer is evidence, not convenience.
+See [../schemas/raw-metadata.schema.json](../schemas/raw-metadata.schema.json).
 
 ### Step 3: define clean record mapping
 
@@ -149,6 +156,9 @@ Document:
 - what counts as degraded versus failed;
 - whether there is an official fallback path;
 - what should be recorded in source health output.
+
+Source health output should validate against
+[../schemas/source-health.schema.json](../schemas/source-health.schema.json).
 
 Do not silently widen the source path during failure.
 

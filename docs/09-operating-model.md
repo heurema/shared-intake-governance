@@ -41,7 +41,10 @@ raw/
 clean/
   <record-id>.json
 runs/
-  <run-id>.json
+  <run-id>.manifest.json
+source-health/
+  <run-id>/
+    <source-id>.json
 audit/
   <run-id>.jsonl
 profiles/
@@ -51,6 +54,14 @@ profiles/
 ```
 
 Keep repository docs and runtime data separate.
+
+The canonical contract files for these runtime artifacts are:
+
+- [../schemas/raw-metadata.schema.json](../schemas/raw-metadata.schema.json)
+- [../schemas/clean-record.schema.json](../schemas/clean-record.schema.json)
+- [../schemas/run-manifest.schema.json](../schemas/run-manifest.schema.json)
+- [../schemas/source-health.schema.json](../schemas/source-health.schema.json)
+- [../schemas/profile.schema.json](../schemas/profile.schema.json)
 
 ## Modes of operation
 

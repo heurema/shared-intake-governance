@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shared-intake-governance.local/schemas/source-health.schema.json",
+  "title": "SourceHealth",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "source_id",
+    "source_type",
+    "status",
+    "checked_at",
+    "attempted_fetches",
+    "successful_fetches",
+    "failed_fetches",
+    "raw_records_written",
+    "degraded_reasons",
+    "last_error",
+    "next_retry_after"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "source-health.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "github_repo",
+        "github_search",
+        "arxiv_query",
+        "arxiv_rss_keywords",
+        "rss",
+        "news",
+        "custom"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "healthy",
+        "degraded",
+        "failed",
+        "skipped"
+      ]
+    },
+    "checked_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "attempted_fetches": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "successful_fetches": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "failed_fetches": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "raw_records_written": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "degraded_reasons": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "last_error": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "message"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retryable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "next_retry_after": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}
