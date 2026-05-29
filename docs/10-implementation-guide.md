@@ -104,6 +104,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli run-arxiv-rss-keywords`
 - `python -m shared_intake_governance.cli run-source-config`
 - `python -m shared_intake_governance.cli smoke-source-config`
+- `python -m shared_intake_governance.cli project-profiles`
 - `python -m shared_intake_governance.cli list-runs`
 - `python -m shared_intake_governance.cli list-clean-records`
 - `python -m shared_intake_governance.cli inspect-record`
@@ -124,6 +125,8 @@ when none is provided. These commands also write:
 - `source-health/<run-id>/<source-id>.json`
 
 The inspection commands are read-only and should not create runtime files.
+The `project-profiles` command reads the shared clean cache and writes one
+deterministic report per explicit profile path.
 
 For current manual invocation examples, see [11-local-runbook.md](11-local-runbook.md).
 
@@ -235,6 +238,8 @@ Current implementation:
 
 - `src/shared_intake_governance/projector/profile.py`
 - `tests/test_clean_records_and_projection.py`
+- `project-profiles` CLI can run the same projector for multiple explicit
+  profile paths from one clean cache.
 
 ### Step 7: add tests before more features
 
