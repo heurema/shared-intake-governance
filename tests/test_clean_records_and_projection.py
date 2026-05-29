@@ -597,6 +597,13 @@ class ProfileProjectorTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_profile_projection(malformed_item)
 
+        invalid_generated_at = dict(valid_report)
+        invalid_generated_at["generated_at"] = "not-a-date-time"
+        with self.assertRaisesRegex(
+            ValueError, "generated_at must be a date-time string"
+        ):
+            validate_profile_projection(invalid_generated_at)
+
     def test_profile_loader_defaults_required_risk_flags_absent(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             profile_path = Path(tmp_dir) / "profile.json"

@@ -216,6 +216,7 @@ source trust, canonical URL, and raw hash. They must not include credentials,
 provider prompts, model outputs, or consumer-specific editorial decisions.
 Runtime code validates projection reports before writing them and before using
 them to update profile-local seen state.
+`generated_at` must follow the shared `date-time` validation rule.
 
 ## Profile state
 
@@ -242,6 +243,7 @@ state inventories such as seen record ids or cursors, but it must not be used
 to encode project-specific ranking or editorial decisions.
 Runtime code validates profile state before consuming existing state and before
 writing updated state.
+`updated_at` must follow the shared `date-time` validation rule.
 
 The current `seen_records` update paths are explicit: `update-profile-seen-state`
 merges record ids from one `profile-projection.v1` report into one

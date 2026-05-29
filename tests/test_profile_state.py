@@ -140,6 +140,13 @@ class ProfileStateUpdateTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_profile_state(bad_record_ids)
 
+        bad_updated_at = dict(valid_state)
+        bad_updated_at["updated_at"] = "not-a-date-time"
+        with self.assertRaisesRegex(
+            ValueError, "updated_at must be a date-time string"
+        ):
+            validate_profile_state(bad_updated_at)
+
 
 def _profile_report(profile_id):
     return {
