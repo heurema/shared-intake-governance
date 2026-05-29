@@ -266,6 +266,9 @@ justification
 evidence_refs
 ```
 
+Runtime code validates tool intents before governance policy, approval, dry-run,
+mediation, or execution helpers consume them.
+
 ## Governance decision
 
 See [../schemas/governance-decision.schema.json](../schemas/governance-decision.schema.json).
@@ -288,6 +291,10 @@ reason
 dry_run_supported
 evidence_refs
 ```
+
+Runtime code validates governance decisions before returning them from the
+default evaluator, including optional audit references when audit logging is
+requested.
 
 ## Governance audit event
 
