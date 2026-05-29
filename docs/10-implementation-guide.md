@@ -120,6 +120,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli inspect-mediation-record`
 - `python -m shared_intake_governance.cli prepare-provider-request`
 - `python -m shared_intake_governance.cli record-provider-result`
+- `python -m shared_intake_governance.cli invoke-provider-request`
 - `python -m shared_intake_governance.cli inspect-run`
 - `python -m shared_intake_governance.cli show-source-health`
 - `sources/examples/github-signum.json`
@@ -162,6 +163,12 @@ invoke providers, discover credentials, or execute tools.
 The provider result command reads one `provider-request.v1` artifact and writes
 one `provider-result.v1` artifact with response refs and usage metadata. It
 does not invoke providers or store full provider responses.
+The provider invocation command reads one `provider-request.v1` artifact, runs
+only the explicit local command supplied by the operator, passes the provider
+request JSON on stdin, stores stdout/stderr as runtime artifacts, and writes
+one `provider-result.v1` artifact. It does not discover provider CLIs, load
+credentials, choose default provider commands, or execute the requested tool
+directly.
 
 For current manual invocation examples, see [11-local-runbook.md](11-local-runbook.md).
 
@@ -340,19 +347,23 @@ Current governance runtime:
 
 Current provider adapter boundary:
 
+- `src/shared_intake_governance/adapters/provider_invocation.py`
 - `src/shared_intake_governance/adapters/provider_request.py`
 - `src/shared_intake_governance/adapters/provider_result.py`
+- `tests/test_provider_invocation.py`
 - `tests/test_provider_request.py`
 - `tests/test_provider_result.py`
 - `prepare-provider-request` writes a provider-neutral request record from one
   ready mediation record without invoking providers.
 - `record-provider-result` writes provider response refs and usage metadata
   from one provider request without invoking providers.
+- `invoke-provider-request` runs one explicit local command with the provider
+  request JSON on stdin, stores stdout/stderr as response refs, and records a
+  provider result.
 
 Still missing:
 
-- actual tool execution;
-- provider invocation runtime.
+- actual governed tool execution.
 
 ## Handoff rule for the next session
 

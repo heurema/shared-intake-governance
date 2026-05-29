@@ -290,6 +290,30 @@ For failed or blocked results, provide `--error-kind` and `--error-message`.
 Expected output is one summary containing `provider_result_path` and the
 written `provider-result.v1` object.
 
+## Invoke a provider request
+
+Use this only when an operator has chosen the exact local command. The core
+does not discover provider CLIs, load credentials, choose defaults, or execute
+the requested tool directly. For smoke checks, use a fake local command.
+
+```sh
+PYTHONPATH=src python3 -m shared_intake_governance.cli invoke-provider-request \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --run-id "$SIG_RUN_ID" \
+  --result-id provider-result-1 \
+  --provider-request "$SIG_RUNTIME_ROOT/provider-requests/$SIG_RUN_ID/provider-request-1.json" \
+  --recorded-by local-operator \
+  --command path/to/provider-wrapper \
+  --arg=--safe-mode \
+  --timeout-seconds 30 \
+  --usage-key invocation_mode=explicit
+```
+
+The command receives the `provider-request.v1` JSON on stdin. Stdout and stderr
+are written under `provider-results/<run-id>/` and referenced from the
+`provider-result.v1` record. A zero exit code records `succeeded`; a nonzero
+exit or timeout records `failed` with a compact error object.
+
 ## Reset local runtime data
 
 Only remove runtime data outside the repository:

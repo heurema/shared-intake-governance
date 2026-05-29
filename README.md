@@ -97,6 +97,9 @@ What exists now:
   provider-neutral adapter request records without provider invocation.
 - provider-result contract and local `record-provider-result` CLI for provider
   response refs and usage metadata without provider invocation.
+- local `invoke-provider-request` CLI for running an explicit provider command
+  with provider-request JSON on stdin, storing stdout/stderr as runtime
+  artifacts, and recording `provider-result.v1`.
 
 What does not exist yet:
 
@@ -105,7 +108,8 @@ What does not exist yet:
 - multi-profile report shaping beyond deterministic per-profile JSON;
 - automatic profile-state updates or dedupe behavior;
 - actual governed tool execution beyond pre-execution mediation records;
-- provider invocation runtime beyond request and result records;
+- provider-specific command discovery, credential mapping, or default provider
+  presets;
 - SQLite;
 - daemon;
 - web UI.
@@ -184,13 +188,13 @@ This repository should own only the shared substrate:
 
 ## Next implementation step
 
-The next useful runtime slice is Phase 1:
+The next useful runtime slice is an explicit governed tool execution boundary:
 
-- support `github_repo` and `arxiv_rss_keywords`;
-- write immutable raw payloads;
-- emit clean records with risk flags;
-- project one profile from shared clean cache;
-- do all of that without LLM dependence.
+- consume ready mediation evidence;
+- run only explicit local commands;
+- write compact execution artifacts outside git;
+- keep destructive and external side effects denied unless the governance
+  record proves they are ready.
 
 See [docs/10-implementation-guide.md](docs/10-implementation-guide.md) for the exact order.
 

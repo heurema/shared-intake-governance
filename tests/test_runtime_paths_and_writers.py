@@ -122,6 +122,17 @@ class RuntimePathTests(unittest.TestCase):
                 / "provider-result-1.json",
             )
             self.assertEqual(
+                paths.provider_result_artifact_path(
+                    "20260529T123045Z-deadbeef",
+                    "provider-result-1",
+                    "stdout.txt",
+                ),
+                root
+                / "provider-results"
+                / "20260529T123045Z-deadbeef"
+                / "provider-result-1.stdout.txt",
+            )
+            self.assertEqual(
                 paths.source_health_path("20260529T123045Z-deadbeef", "github-main"),
                 root / "source-health" / "20260529T123045Z-deadbeef" / "github-main.json",
             )
@@ -171,6 +182,10 @@ class RuntimePathTests(unittest.TestCase):
                 paths.provider_request_path("20260529T123045Z-deadbeef", "../request")
             with self.assertRaises(ValueError):
                 paths.provider_result_path("20260529T123045Z-deadbeef", "../result")
+            with self.assertRaises(ValueError):
+                paths.provider_result_artifact_path(
+                    "20260529T123045Z-deadbeef", "provider-result-1", "../stdout"
+                )
             with self.assertRaises(ValueError):
                 paths.profile_state_path("pulse", "../state")
             with self.assertRaises(ValueError):

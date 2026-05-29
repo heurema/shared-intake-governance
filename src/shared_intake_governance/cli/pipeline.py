@@ -22,6 +22,7 @@ from shared_intake_governance.collector.github_repo import (
     GitHubRepoSource,
 )
 from shared_intake_governance.adapters import (
+    invoke_provider_request,
     prepare_provider_request,
     record_provider_result,
 )
@@ -110,6 +111,8 @@ def main(
         return _prepare_provider_request(args, stdout)
     if args.command == "record-provider-result":
         return _record_provider_result(args, stdout)
+    if args.command == "invoke-provider-request":
+        return _invoke_provider_request(args, stdout)
     if args.command == "inspect-run":
         return _inspect_run(args, stdout)
     if args.command == "show-source-health":
@@ -769,6 +772,33 @@ def _record_provider_result(args: argparse.Namespace, stdout: TextIO) -> int:
     return 0
 
 
+def _invoke_provider_request(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    provider_request_path = Path(args.provider_request)
+    provider_request = _read_json(provider_request_path)
+    result = invoke_provider_request(
+        paths=paths,
+        run_id=args.run_id,
+        result_id=args.result_id,
+        provider_request=provider_request,
+        provider_request_path=str(provider_request_path),
+        command=[args.provider_command] + (args.provider_args or []),
+        recorded_by=args.recorded_by,
+        timeout_seconds=args.timeout_seconds,
+        usage_metadata=_usage_metadata(args.usage_keys or []),
+        recorded_at=_format_utc(datetime.now(timezone.utc)),
+    )
+    provider_result_path = ProviderResultWriter(paths).write_result(result)
+    _print_json(
+        stdout,
+        {
+            "provider_result_path": str(provider_result_path),
+            "provider_result": result,
+        },
+    )
+    return 0 if result["result_status"] == "succeeded" else 1
+
+
 def _dry_run_result(
     *,
     run_id: str,
@@ -1356,6 +1386,20 @@ def _parser() -> argparse.ArgumentParser:
     provider_result.add_argument("--usage-key", dest="usage_keys", action="append")
     provider_result.add_argument("--error-kind")
     provider_result.add_argument("--error-message")
+
+    provider_invocation = subparsers.add_parser(
+        "invoke-provider-request",
+        help="Invoke one explicit local command for a provider-request.v1 record.",
+    )
+    provider_invocation.add_argument("--runtime-root", required=True)
+    provider_invocation.add_argument("--run-id", required=True)
+    provider_invocation.add_argument("--result-id", required=True)
+    provider_invocation.add_argument("--provider-request", required=True)
+    provider_invocation.add_argument("--recorded-by", required=True)
+    provider_invocation.add_argument("--command", dest="provider_command", required=True)
+    provider_invocation.add_argument("--arg", dest="provider_args", action="append")
+    provider_invocation.add_argument("--timeout-seconds", type=float, default=30.0)
+    provider_invocation.add_argument("--usage-key", dest="usage_keys", action="append")
 
     inspect_run = subparsers.add_parser(
         "inspect-run",

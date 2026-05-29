@@ -16,6 +16,9 @@ The first stable contracts should cover:
 10. governance audit events;
 11. approval records;
 12. dry-run results.
+13. execution mediation records;
+14. provider request records;
+15. provider result records.
 
 ## Raw payload metadata
 
@@ -438,13 +441,16 @@ expand capabilities beyond the governance-derived request.
 See [../schemas/provider-result.schema.json](../schemas/provider-result.schema.json).
 
 Provider results are adapter boundary records for response refs and usage
-metadata. They are recorded from a provider request but do not invoke providers
-or store full provider responses.
+metadata. They may be recorded manually from a provider request or written by
+the explicit local invocation runner. They do not store full provider
+responses.
 
 Provider results are written under:
 
 ```text
 provider-results/<run-id>/<result-id>.json
+provider-results/<run-id>/<result-id>.stdout.txt
+provider-results/<run-id>/<result-id>.stderr.txt
 ```
 
 Minimum properties:

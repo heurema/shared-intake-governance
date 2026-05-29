@@ -62,6 +62,8 @@ provider-requests/
 provider-results/
   <run-id>/
     <result-id>.json
+    <result-id>.stdout.txt
+    <result-id>.stderr.txt
 profiles/
   <profile-id>/
     state/
@@ -192,6 +194,10 @@ Current CLI behavior:
 - `record-provider-result` reads one `provider-request.v1` artifact and writes
   one `provider-result.v1` artifact with response refs and usage metadata
   without invoking providers;
+- `invoke-provider-request` reads one `provider-request.v1` artifact, invokes
+  only the explicit local command supplied by the operator, stores stdout/stderr
+  as provider-result runtime artifacts, and writes one `provider-result.v1`
+  artifact;
 - all current run commands write one source health artifact under
   `source-health/`.
 
