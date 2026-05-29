@@ -676,6 +676,13 @@ class RuntimeWriterTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "run_id must be a safe path segment"):
             validate_governance_audit_event(bad_run_id)
 
+        bad_profile_id = dict(valid_event)
+        bad_profile_id["profile_id"] = "../code-intel-kernel"
+        with self.assertRaisesRegex(
+            ValueError, "profile_id must be a safe path segment"
+        ):
+            validate_governance_audit_event(bad_profile_id)
+
         bad_refs = dict(valid_event)
         bad_refs["evidence_refs"] = ["clean/good.json", 1]
         with self.assertRaises(ValueError):
@@ -686,6 +693,10 @@ class RuntimeWriterTests(unittest.TestCase):
 
         self.assertEqual(
             schema["properties"]["run_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["profile_id"].get("pattern"),
             SAFE_SEGMENT_PATTERN,
         )
 
@@ -746,6 +757,13 @@ class RuntimeWriterTests(unittest.TestCase):
         ):
             validate_approval_record(bad_approval_id)
 
+        bad_profile_id = dict(valid_record)
+        bad_profile_id["profile_id"] = "../code-intel-kernel"
+        with self.assertRaisesRegex(
+            ValueError, "profile_id must be a safe path segment"
+        ):
+            validate_approval_record(bad_profile_id)
+
         bad_ref = dict(valid_record)
         bad_ref["dry_run_ref"] = 1
         with self.assertRaises(ValueError):
@@ -765,6 +783,10 @@ class RuntimeWriterTests(unittest.TestCase):
         )
         self.assertEqual(
             schema["properties"]["approval_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["profile_id"].get("pattern"),
             SAFE_SEGMENT_PATTERN,
         )
 
@@ -830,6 +852,13 @@ class RuntimeWriterTests(unittest.TestCase):
         ):
             validate_dry_run_result(bad_dry_run_id)
 
+        bad_profile_id = dict(valid_result)
+        bad_profile_id["profile_id"] = "../code-intel-kernel"
+        with self.assertRaisesRegex(
+            ValueError, "profile_id must be a safe path segment"
+        ):
+            validate_dry_run_result(bad_profile_id)
+
         bad_artifacts = dict(valid_result)
         bad_artifacts["artifact_refs"] = ["dry-runs/result.json", 1]
         with self.assertRaises(ValueError):
@@ -844,6 +873,10 @@ class RuntimeWriterTests(unittest.TestCase):
         )
         self.assertEqual(
             schema["properties"]["dry_run_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["profile_id"].get("pattern"),
             SAFE_SEGMENT_PATTERN,
         )
 
@@ -909,6 +942,13 @@ class RuntimeWriterTests(unittest.TestCase):
         ):
             validate_execution_mediation(bad_mediation_id)
 
+        bad_profile_id = dict(valid_record)
+        bad_profile_id["profile_id"] = "../code-intel-kernel"
+        with self.assertRaisesRegex(
+            ValueError, "profile_id must be a safe path segment"
+        ):
+            validate_execution_mediation(bad_profile_id)
+
         ready_denied = dict(valid_record)
         ready_denied["policy_decision"] = "denied"
         ready_denied["mediation_decision"] = "ready"
@@ -936,6 +976,10 @@ class RuntimeWriterTests(unittest.TestCase):
         )
         self.assertEqual(
             schema["properties"]["mediation_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["profile_id"].get("pattern"),
             SAFE_SEGMENT_PATTERN,
         )
 
@@ -1008,6 +1052,13 @@ class RuntimeWriterTests(unittest.TestCase):
         ):
             validate_provider_request(bad_request_id)
 
+        bad_profile_id = dict(valid_request)
+        bad_profile_id["profile_id"] = "../code-intel-kernel"
+        with self.assertRaisesRegex(
+            ValueError, "profile_id must be a safe path segment"
+        ):
+            validate_provider_request(bad_profile_id)
+
         bad_capabilities = dict(valid_request)
         bad_capabilities["capabilities"] = ["edit_local", "network"]
         with self.assertRaises(ValueError):
@@ -1027,6 +1078,10 @@ class RuntimeWriterTests(unittest.TestCase):
         )
         self.assertEqual(
             schema["properties"]["request_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["profile_id"].get("pattern"),
             SAFE_SEGMENT_PATTERN,
         )
 
@@ -1087,6 +1142,13 @@ class RuntimeWriterTests(unittest.TestCase):
         ):
             validate_tool_execution_result(bad_execution_id)
 
+        bad_profile_id = dict(valid_result)
+        bad_profile_id["profile_id"] = "../code-intel-kernel"
+        with self.assertRaisesRegex(
+            ValueError, "profile_id must be a safe path segment"
+        ):
+            validate_tool_execution_result(bad_profile_id)
+
         bad_metadata = dict(valid_result)
         bad_metadata["execution_metadata"] = {"exit_code": 0}
         with self.assertRaises(ValueError):
@@ -1106,6 +1168,10 @@ class RuntimeWriterTests(unittest.TestCase):
         )
         self.assertEqual(
             schema["properties"]["execution_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["profile_id"].get("pattern"),
             SAFE_SEGMENT_PATTERN,
         )
 
@@ -1203,6 +1269,13 @@ class RuntimeWriterTests(unittest.TestCase):
         ):
             validate_provider_result(bad_request_id)
 
+        bad_profile_id = dict(valid_result)
+        bad_profile_id["profile_id"] = "../code-intel-kernel"
+        with self.assertRaisesRegex(
+            ValueError, "profile_id must be a safe path segment"
+        ):
+            validate_provider_result(bad_profile_id)
+
         bad_usage = dict(valid_result)
         bad_usage["usage_metadata"] = {"input_tokens": 120}
         with self.assertRaises(ValueError):
@@ -1226,6 +1299,10 @@ class RuntimeWriterTests(unittest.TestCase):
         )
         self.assertEqual(
             schema["properties"]["request_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["profile_id"].get("pattern"),
             SAFE_SEGMENT_PATTERN,
         )
 
