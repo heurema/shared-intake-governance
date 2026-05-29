@@ -96,6 +96,10 @@ def main(
         return _record_dry_run(args, stdout)
     if args.command == "mediate-tool-intent":
         return _mediate_tool_intent(args, stdout)
+    if args.command == "list-mediation-records":
+        return _list_mediation_records(args, stdout)
+    if args.command == "inspect-mediation-record":
+        return _inspect_mediation_record(args, stdout)
     if args.command == "inspect-run":
         return _inspect_run(args, stdout)
     if args.command == "show-source-health":
@@ -669,6 +673,39 @@ def _mediate_tool_intent(args: argparse.Namespace, stdout: TextIO) -> int:
     return 0
 
 
+def _list_mediation_records(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    if args.run_id:
+        mediation_dir = paths.mediation_record_path(args.run_id, "probe").parent
+        record_paths = sorted(mediation_dir.glob("*.json"))
+    elif paths.mediation_root.exists():
+        record_paths = sorted(paths.mediation_root.glob("*/*.json"))
+    else:
+        record_paths = []
+
+    records = [_mediation_record_summary(path) for path in record_paths]
+    records.sort(key=lambda record: (record["run_id"], record["mediation_id"]))
+    _print_json(
+        stdout,
+        {
+            "runtime_root": str(paths.root),
+            "mediation_record_count": len(records),
+            "mediation_records": records,
+        },
+    )
+    return 0
+
+
+def _inspect_mediation_record(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    record_path = paths.mediation_record_path(args.run_id, args.mediation_id)
+    record = _read_json(record_path)
+    record = dict(record)
+    record["mediation_record_path"] = str(record_path)
+    _print_json(stdout, record)
+    return 0
+
+
 def _dry_run_result(
     *,
     run_id: str,
@@ -802,6 +839,26 @@ def _source_health_summary(source_health_path: Path) -> dict[str, Any]:
         "status": source_health["status"],
         "degraded_reasons": source_health["degraded_reasons"],
         "last_error": source_health["last_error"],
+    }
+
+
+def _mediation_record_summary(record_path: Path) -> dict[str, Any]:
+    record = _read_json(record_path)
+    return {
+        "mediation_record_path": str(record_path),
+        "run_id": record["run_id"],
+        "mediation_id": record["mediation_id"],
+        "mediated_at": record["mediated_at"],
+        "intent_id": record["intent_id"],
+        "profile_id": record["profile_id"],
+        "action_class": record["action_class"],
+        "tool_name": record["tool_name"],
+        "policy_decision": record["policy_decision"],
+        "mediation_decision": record["mediation_decision"],
+        "reason": record["reason"],
+        "dry_run_result_path": record["dry_run_result_path"],
+        "approval_record_path": record["approval_record_path"],
+        "tool_intent_path": record["tool_intent_path"],
     }
 
 
@@ -1170,6 +1227,21 @@ def _parser() -> argparse.ArgumentParser:
     mediation.add_argument("--intent", required=True)
     mediation.add_argument("--dry-run-result")
     mediation.add_argument("--approval-record")
+
+    list_mediation = subparsers.add_parser(
+        "list-mediation-records",
+        help="List execution-mediation.v1 records under one runtime root.",
+    )
+    list_mediation.add_argument("--runtime-root", required=True)
+    list_mediation.add_argument("--run-id")
+
+    inspect_mediation = subparsers.add_parser(
+        "inspect-mediation-record",
+        help="Read one execution-mediation.v1 record.",
+    )
+    inspect_mediation.add_argument("--runtime-root", required=True)
+    inspect_mediation.add_argument("--run-id", required=True)
+    inspect_mediation.add_argument("--mediation-id", required=True)
 
     inspect_run = subparsers.add_parser(
         "inspect-run",

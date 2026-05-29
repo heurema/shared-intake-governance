@@ -175,6 +175,10 @@ Current CLI behavior:
 - `mediate-tool-intent` reads one `tool-intent.v1` JSON file plus optional
   dry-run and approval records, then writes one `execution-mediation.v1`
   readiness record without executing tools;
+- `list-mediation-records` reads existing `execution-mediation.v1` artifacts
+  and returns a deterministic inventory without writing runtime data;
+- `inspect-mediation-record` reads one `execution-mediation.v1` artifact
+  without writing runtime data;
 - all current run commands write one source health artifact under
   `source-health/`.
 
