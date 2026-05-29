@@ -2,6 +2,9 @@
 
 Local-first shared intake and agent-governance core for multiple AI research, benchmark, news, and coding-agent workflows.
 
+This is an early docs/contracts-first repository. It is useful as a reusable
+architecture and contract baseline, but it is not a finished runtime package.
+
 ## What this repository is
 
 This repository is the shared core below multiple project-specific R&D loops.
@@ -152,3 +155,16 @@ The next useful runtime slice is Phase 1:
 - do all of that without LLM dependence.
 
 See [docs/10-implementation-guide.md](docs/10-implementation-guide.md) for the exact order.
+
+## Open source and reuse
+
+- [LICENSE](LICENSE)
+- [NOTICE](NOTICE)
+
+The repository is intended to be reusable as a local-first shared intake
+governance reference. Consumer-specific profiles, scoring, reports, runtime
+state, credentials, and publication flows should stay outside this core.
+
+## License
+
+[Apache License 2.0](LICENSE)

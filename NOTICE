@@ -1,0 +1,13 @@
+Shared Intake Governance
+Copyright 2026 Shared Intake Governance Authors
+
+Unless otherwise noted, source code and original documentation in this
+repository are provided under the Apache License, Version 2.0.
+
+The Apache License does not grant trademark rights. The Shared Intake
+Governance name and related project identity are not licensed for
+unrestricted reuse.
+
+This repository is docs/contracts-first. Runtime data, credentials, generated
+reports, and consumer-owned state are intentionally outside the repository and
+are not covered by repository examples.
