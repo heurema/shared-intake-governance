@@ -76,6 +76,29 @@ _RUN_MANIFEST_COUNT_REQUIRED = {
     "failed_sources",
 }
 _SOURCE_HEALTH_STATUS = {"healthy", "degraded", "failed", "skipped"}
+_ACTION_CLASSES = {
+    "read_only",
+    "edit_local",
+    "destructive_local",
+    "external_side_effect",
+    "credentialed_remote",
+}
+_GOVERNANCE_DECISIONS = {"allowed", "gated", "denied"}
+_GOVERNANCE_AUDIT_REQUIRED = {
+    "schema_version",
+    "run_id",
+    "event_type",
+    "recorded_at",
+    "intent_id",
+    "profile_id",
+    "action_class",
+    "tool_name",
+    "decision",
+    "reason",
+    "dry_run_supported",
+    "evidence_refs",
+    "tool_intent_path",
+}
 _SOURCE_HEALTH_REQUIRED = {
     "schema_version",
     "run_id",
@@ -169,6 +192,7 @@ class AuditWriter:
         self.paths = paths
 
     def write_event(self, event: dict[str, Any]) -> Path:
+        validate_governance_audit_event(event)
         path = self.paths.audit_log_path(str(event["run_id"]))
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as handle:
@@ -254,6 +278,46 @@ class ProviderResultWriter:
             str(result["run_id"]), str(result["result_id"])
         )
         return _write_json(path, result)
+
+
+def validate_governance_audit_event(event: dict[str, Any]) -> None:
+    missing = sorted(_GOVERNANCE_AUDIT_REQUIRED - set(event))
+    if missing:
+        raise ValueError(
+            "governance audit event missing required fields: "
+            + ", ".join(missing)
+        )
+    extra = sorted(set(event) - _GOVERNANCE_AUDIT_REQUIRED)
+    if extra:
+        raise ValueError(
+            "governance audit event has unknown fields: " + ", ".join(extra)
+        )
+
+    if event["schema_version"] != "governance-audit-event.v1":
+        raise ValueError("governance audit event must use governance-audit-event.v1")
+    if event["event_type"] != "tool_intent_evaluated":
+        raise ValueError("governance audit event has unsupported event_type")
+    for field in [
+        "run_id",
+        "recorded_at",
+        "intent_id",
+        "profile_id",
+        "tool_name",
+        "reason",
+        "tool_intent_path",
+    ]:
+        _require_text(event, field)
+    if event["action_class"] not in _ACTION_CLASSES:
+        raise ValueError("governance audit event has unsupported action_class")
+    if event["decision"] not in _GOVERNANCE_DECISIONS:
+        raise ValueError("governance audit event has unsupported decision")
+    if not isinstance(event["dry_run_supported"], bool):
+        raise ValueError("governance audit event dry_run_supported must be boolean")
+    _require_string_array(
+        event,
+        "evidence_refs",
+        "governance audit event evidence_refs",
+    )
 
 
 def validate_raw_metadata(metadata: dict[str, Any]) -> None:
@@ -415,6 +479,13 @@ def _require_text(payload: dict[str, Any], field: str) -> None:
 def _require_string_list(payload: dict[str, Any], field: str, label: str) -> None:
     if not isinstance(payload[field], list) or not all(
         isinstance(item, str) and item for item in payload[field]
+    ):
+        raise ValueError(f"{label} must be strings")
+
+
+def _require_string_array(payload: dict[str, Any], field: str, label: str) -> None:
+    if not isinstance(payload[field], list) or not all(
+        isinstance(item, str) for item in payload[field]
     ):
         raise ValueError(f"{label} must be strings")
 
