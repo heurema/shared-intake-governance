@@ -13,7 +13,16 @@ It is not a roadmap and not a release note. Use it to distinguish:
 
 ## Audit date
 
-2026-05-29
+2026-05-30
+
+## Current completion boundary
+
+As of this audit, the non-deferred docs/contracts/runtime surface described in
+the verified entrypoints below is implemented and locally verified.
+
+This does not mean the repository is a finished hosted product or broad
+automation platform. The remaining not-yet-implemented areas are explicit
+deferred scope and require a new behavior decision before implementation.
 
 ## Verified source-of-truth entrypoints
 
@@ -97,6 +106,34 @@ Do not treat these as missing bugs without a new behavior decision:
 - automatic command discovery;
 - credential mapping or default provider/tool presets;
 - SQLite, daemon, web UI, cloud service, dashboard, or scheduler.
+
+## Latest verification evidence
+
+Local verification on 2026-05-30:
+
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 198 tests.
+- `jq empty schemas/*.json profiles/examples/*.json sources/examples/*.json`
+  passed.
+- `git diff --check` passed.
+- `PYTHONPATH=src python3 -m compileall -q src tests` passed.
+- `PYTHONPATH=src python3 -m shared_intake_governance.cli --help` passed.
+- `GH_SAFE_ACCOUNT=t3chn gh issue list --state open --limit 20 --json number,title,url`
+  returned `[]`.
+- Local `main` matched `origin/main` before this audit refresh.
+
+Live isolated source smoke on 2026-05-30:
+
+- command: `smoke-source-config` with
+  `sources/examples/arxiv-code-agents.json` and
+  `profiles/examples/code-intel-kernel.json`;
+- runtime policy: temporary runtime root outside the repository with
+  `SMOKE_RUNTIME_DO_NOT_COMMIT.txt`;
+- result: `status=completed`, `fetch_status=success`, `http_status=200`;
+- output: 1 raw payload, 1 raw metadata artifact, 10 clean records, 1
+  projection report, 8 projected items, 1 run manifest, and 1 healthy source
+  health artifact;
+- read-only inspection commands validated the smoke run manifest, source
+  health artifact, and profile report.
 
 ## Verification commands
 
