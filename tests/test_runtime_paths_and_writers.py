@@ -25,6 +25,7 @@ from shared_intake_governance.runtime import (  # noqa: E402
     validate_dry_run_result,
     validate_execution_mediation,
     validate_governance_audit_event,
+    validate_provider_request,
     validate_raw_metadata,
     validate_run_manifest,
     validate_source_health,
@@ -638,6 +639,7 @@ class RuntimeWriterTests(unittest.TestCase):
             paths = RuntimePaths(Path(tmp_dir) / "runtime")
             writer = ProviderRequestWriter(paths)
             request = _provider_request()
+            validate_provider_request(request)
 
             request_path = writer.write_request(request)
             first_write = request_path.read_text(encoding="utf-8")
@@ -653,6 +655,44 @@ class RuntimeWriterTests(unittest.TestCase):
 
             writer.write_request(request)
             self.assertEqual(request_path.read_text(encoding="utf-8"), first_write)
+
+    def test_provider_request_validation_rejects_contract_drift(self):
+        valid_request = _provider_request()
+
+        missing_required = dict(valid_request)
+        missing_required.pop("provider")
+        with self.assertRaises(ValueError):
+            validate_provider_request(missing_required)
+
+        unknown_field = dict(valid_request)
+        unknown_field["score"] = 1
+        with self.assertRaises(ValueError):
+            validate_provider_request(unknown_field)
+
+        bad_provider = dict(valid_request)
+        bad_provider["provider"] = "unknown"
+        with self.assertRaises(ValueError):
+            validate_provider_request(bad_provider)
+
+        bad_action = dict(valid_request)
+        bad_action["action_class"] = "network"
+        with self.assertRaises(ValueError):
+            validate_provider_request(bad_action)
+
+        bad_mediation = dict(valid_request)
+        bad_mediation["mediation_decision"] = "blocked"
+        with self.assertRaises(ValueError):
+            validate_provider_request(bad_mediation)
+
+        bad_capabilities = dict(valid_request)
+        bad_capabilities["capabilities"] = ["edit_local", "network"]
+        with self.assertRaises(ValueError):
+            validate_provider_request(bad_capabilities)
+
+        bad_context = dict(valid_request)
+        bad_context["context_refs"] = ["profiles/report.json", 1]
+        with self.assertRaises(ValueError):
+            validate_provider_request(bad_context)
 
     def test_tool_execution_writer_writes_result_deterministically(self):
         with tempfile.TemporaryDirectory() as tmp_dir:

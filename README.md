@@ -110,7 +110,7 @@ What exists now:
   explicit governed local command execution with validated result records after
   ready mediation.
 - provider-request contract and local `prepare-provider-request` CLI for
-  provider-neutral adapter request records without provider invocation.
+  validated provider-neutral adapter request records without provider invocation.
 - provider-result contract and local `record-provider-result` CLI for provider
   response refs and usage metadata without provider invocation.
 - local `invoke-provider-request` CLI for running an explicit provider command
