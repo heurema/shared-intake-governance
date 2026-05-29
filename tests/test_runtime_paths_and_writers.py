@@ -28,6 +28,7 @@ from shared_intake_governance.runtime import (  # noqa: E402
     validate_raw_metadata,
     validate_run_manifest,
     validate_source_health,
+    validate_tool_execution_result,
     generate_run_id,
 )
 
@@ -658,6 +659,7 @@ class RuntimeWriterTests(unittest.TestCase):
             paths = RuntimePaths(Path(tmp_dir) / "runtime")
             writer = ToolExecutionWriter(paths)
             result = _tool_execution_result()
+            validate_tool_execution_result(result)
 
             result_path = writer.write_result(result)
             first_write = result_path.read_text(encoding="utf-8")
@@ -673,6 +675,39 @@ class RuntimeWriterTests(unittest.TestCase):
 
             writer.write_result(result)
             self.assertEqual(result_path.read_text(encoding="utf-8"), first_write)
+
+    def test_tool_execution_result_validation_rejects_contract_drift(self):
+        valid_result = _tool_execution_result()
+
+        missing_required = dict(valid_result)
+        missing_required.pop("execution_status")
+        with self.assertRaises(ValueError):
+            validate_tool_execution_result(missing_required)
+
+        unknown_field = dict(valid_result)
+        unknown_field["score"] = 1
+        with self.assertRaises(ValueError):
+            validate_tool_execution_result(unknown_field)
+
+        bad_action = dict(valid_result)
+        bad_action["action_class"] = "network"
+        with self.assertRaises(ValueError):
+            validate_tool_execution_result(bad_action)
+
+        bad_status = dict(valid_result)
+        bad_status["execution_status"] = "passed"
+        with self.assertRaises(ValueError):
+            validate_tool_execution_result(bad_status)
+
+        bad_metadata = dict(valid_result)
+        bad_metadata["execution_metadata"] = {"exit_code": 0}
+        with self.assertRaises(ValueError):
+            validate_tool_execution_result(bad_metadata)
+
+        bad_error = dict(valid_result)
+        bad_error["error"] = {"kind": "timeout"}
+        with self.assertRaises(ValueError):
+            validate_tool_execution_result(bad_error)
 
     def test_provider_result_writer_writes_result_deterministically(self):
         with tempfile.TemporaryDirectory() as tmp_dir:

@@ -485,6 +485,7 @@ If mediation is blocked or mismatched, the executor must write a `blocked`
 result and must not invoke the supplied command. Successful and failed
 executions should point at output artifacts instead of embedding command output
 or tool arguments.
+Runtime code validates tool execution results before writing them.
 
 ## Provider request
 
