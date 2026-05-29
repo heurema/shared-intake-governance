@@ -64,6 +64,10 @@ def main(
             collector_factory,
             arxiv_collector_factory,
         )
+    if args.command == "inspect-run":
+        return _inspect_run(args, stdout)
+    if args.command == "show-source-health":
+        return _show_source_health(args, stdout)
 
     raise ValueError(f"unsupported command: {args.command}")
 
@@ -319,6 +323,50 @@ def _smoke_source_config(
     return exit_code
 
 
+def _inspect_run(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    manifest_path = paths.run_manifest_path(args.run_id)
+    manifest = _read_json(manifest_path)
+    source_health = [
+        _source_health_summary(Path(path)) for path in manifest["source_health"]
+    ]
+    _print_json(
+        stdout,
+        {
+            "run_id": manifest["run_id"],
+            "run_manifest_path": str(manifest_path),
+            "mode": manifest["mode"],
+            "status": manifest["status"],
+            "sources": manifest["sources"],
+            "counts": manifest["counts"],
+            "source_health": source_health,
+        },
+    )
+    return 0
+
+
+def _show_source_health(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    source_health_path = paths.source_health_path(args.run_id, args.source_id)
+    source_health = _read_json(source_health_path)
+    source_health = dict(source_health)
+    source_health["source_health_path"] = str(source_health_path)
+    _print_json(stdout, source_health)
+    return 0
+
+
+def _source_health_summary(source_health_path: Path) -> dict[str, Any]:
+    source_health = _read_json(source_health_path)
+    return {
+        "source_health_path": str(source_health_path),
+        "source_id": source_health["source_id"],
+        "source_type": source_health["source_type"],
+        "status": source_health["status"],
+        "degraded_reasons": source_health["degraded_reasons"],
+        "last_error": source_health["last_error"],
+    }
+
+
 def _collection_summary(
     run_id: str,
     collection: GitHubRepoCollectionResult | ArxivRssKeywordsCollectionResult,
@@ -565,4 +613,19 @@ def _parser() -> argparse.ArgumentParser:
     smoke.add_argument("--source-config", required=True)
     smoke.add_argument("--run-id")
     smoke.add_argument("--output-id")
+
+    inspect_run = subparsers.add_parser(
+        "inspect-run",
+        help="Read one run manifest and summarize source health.",
+    )
+    inspect_run.add_argument("--runtime-root", required=True)
+    inspect_run.add_argument("--run-id", required=True)
+
+    source_health = subparsers.add_parser(
+        "show-source-health",
+        help="Read one source-health artifact.",
+    )
+    source_health.add_argument("--runtime-root", required=True)
+    source_health.add_argument("--run-id", required=True)
+    source_health.add_argument("--source-id", required=True)
     return parser

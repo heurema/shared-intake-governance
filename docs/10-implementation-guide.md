@@ -104,6 +104,8 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli run-arxiv-rss-keywords`
 - `python -m shared_intake_governance.cli run-source-config`
 - `python -m shared_intake_governance.cli smoke-source-config`
+- `python -m shared_intake_governance.cli inspect-run`
+- `python -m shared_intake_governance.cli show-source-health`
 - `sources/examples/github-signum.json`
 - `sources/examples/arxiv-code-agents.json`
 - `src/shared_intake_governance/cli/pipeline.py`
@@ -117,6 +119,8 @@ when none is provided. These commands also write:
 
 - `runs/<run-id>.manifest.json`
 - `source-health/<run-id>/<source-id>.json`
+
+The inspection commands are read-only and should not create runtime files.
 
 For current manual invocation examples, see [11-local-runbook.md](11-local-runbook.md).
 
