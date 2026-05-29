@@ -175,11 +175,11 @@ adapters.
 The mediation inspection commands read existing `execution-mediation.v1`
 artifacts only and do not write runtime data.
 The tool execution command reads one `tool-intent.v1` artifact plus one matching
-`execution-mediation.v1` artifact. It refuses blocked or mismatched mediation
-without invoking the command. When mediation is ready, it runs only the explicit
-local command supplied by the operator, passes the tool intent JSON on stdin,
-stores stdout/stderr as runtime artifacts, and writes one
-validated `tool-execution-result.v1` artifact.
+validated `execution-mediation.v1` artifact. It refuses blocked or mismatched
+mediation without invoking the command. When mediation is ready, it runs only
+the explicit local command supplied by the operator, passes the tool intent JSON
+on stdin, stores stdout/stderr as runtime artifacts, and writes one validated
+`tool-execution-result.v1` artifact.
 The provider request command reads one ready `execution-mediation.v1` artifact
 and validates and writes one provider-neutral `provider-request.v1` artifact.
 It validates the input mediation record and does not invoke providers, discover
@@ -401,7 +401,8 @@ Current governance runtime:
 - read-only runtime inventory and inspection commands validate artifacts before
   returning summaries or full objects.
 - `execute-tool-intent` writes one `tool-execution-result.v1` artifact after
-  checking ready mediation and running only an explicit local command.
+  validating and checking ready mediation, then running only an explicit local
+  command.
 - tool intents, optional mediation evidence, and governance decisions are
   validated before the governance runtime consumes or returns them.
 

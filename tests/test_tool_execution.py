@@ -219,6 +219,41 @@ class ToolExecutionTests(unittest.TestCase):
 
             self.assertFalse(stdout_path.exists())
 
+    def test_invalid_mediation_record_is_rejected_before_command_execution(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            mediation_record = _mediation_record(mediation_decision="ready")
+            mediation_record["arguments"] = {"report_id": RUN_ID}
+            stdout_path = paths.tool_execution_artifact_path(
+                RUN_ID, "execution-1", "stdout.txt"
+            )
+
+            with self.assertRaisesRegex(
+                ValueError, "execution mediation has unknown fields"
+            ):
+                execute_tool_intent(
+                    paths=paths,
+                    run_id=RUN_ID,
+                    execution_id="execution-1",
+                    intent=_tool_intent(),
+                    tool_intent_path="intent.json",
+                    mediation_record=mediation_record,
+                    mediation_record_path=(
+                        "mediation/20260529T123045Z-deadbeef/mediation-1.json"
+                    ),
+                    command=[
+                        sys.executable,
+                        "-c",
+                        "print('should not run')",
+                    ],
+                    executed_by="local-operator",
+                    timeout_seconds=5.0,
+                    execution_metadata={},
+                    executed_at="2026-05-29T12:30:45Z",
+                )
+
+            self.assertFalse(stdout_path.exists())
+
 
 def _tool_intent():
     return {
