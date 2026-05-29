@@ -102,6 +102,33 @@ class CleanRecordEmitterTests(unittest.TestCase):
 
             self.assertEqual([], list(paths.clean_root.glob("*.json")))
 
+    def test_emit_rejects_raw_body_path_outside_raw_root(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            paths = RuntimePaths(root / "runtime")
+            payload = {
+                "full_name": "heurema/signum",
+                "html_url": "https://github.com/heurema/signum",
+                "description": "Coding agent benchmark toolkit.",
+            }
+            metadata_path, _ = _write_github_raw(paths, payload)
+            outside_body = root / "outside-body.json"
+            outside_body.write_bytes(json.dumps(payload, sort_keys=True).encode("utf-8"))
+
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            metadata["storage_path"] = str(outside_body)
+            metadata_path.write_text(
+                json.dumps(metadata, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                ValueError, "raw metadata storage_path must stay under raw root"
+            ):
+                CleanRecordEmitter(paths).emit_from_raw_metadata(metadata_path)
+
+            self.assertEqual([], list(paths.clean_root.glob("*.json")))
+
     def test_emit_clean_record_flags_and_quarantines_instruction_like_text(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             paths = RuntimePaths(Path(tmp_dir) / "runtime")

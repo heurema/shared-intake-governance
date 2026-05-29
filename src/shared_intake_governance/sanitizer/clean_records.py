@@ -104,7 +104,7 @@ class CleanRecordEmitter:
         if metadata.get("body_hash") is None or metadata.get("storage_path") is None:
             raise ValueError("successful raw metadata must include body storage")
 
-        body_path = Path(str(metadata["storage_path"]))
+        body_path = _raw_body_path(self.paths, str(metadata["storage_path"]))
         body = body_path.read_bytes()
         body_hash = hashlib.sha256(body).hexdigest()
         if body_hash != metadata["body_hash"]:
@@ -408,6 +408,18 @@ def _optional_text(value: Any) -> str | None:
 def _require_text(record: dict[str, Any], field: str) -> None:
     if not isinstance(record[field], str) or not record[field]:
         raise ValueError(f"{field} must be a non-empty string")
+
+
+def _raw_body_path(paths: RuntimePaths, storage_path: str) -> Path:
+    body_path = Path(storage_path).resolve()
+    raw_root = paths.raw_root.resolve()
+    try:
+        body_path.relative_to(raw_root)
+    except ValueError as exc:
+        raise ValueError(
+            "raw metadata storage_path must stay under raw root"
+        ) from exc
+    return body_path
 
 
 def _read_json(path: Path) -> dict[str, Any]:
