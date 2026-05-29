@@ -14,6 +14,7 @@ from shared_intake_governance.source_config import (  # noqa: E402
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SAFE_SEGMENT_PATTERN = "^[A-Za-z0-9][A-Za-z0-9._-]*$"
 
 
 class SourceConfigExampleTests(unittest.TestCase):
@@ -234,6 +235,31 @@ class SourceConfigExampleTests(unittest.TestCase):
         for _source_type, _field, definition in url_fields:
             self.assertEqual(definition["format"], "uri")
             self.assertEqual(definition.get("pattern"), "^https://")
+
+    def test_source_config_schema_tracks_runtime_source_id_constraint(self):
+        schema = json.loads(
+            (ROOT / "schemas" / "source-config.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+
+        self.assertEqual(
+            [
+                (
+                    variant["properties"]["source_type"]["const"],
+                    variant["properties"]["source_id"].get("pattern"),
+                )
+                for variant in schema["oneOf"]
+            ],
+            [
+                ("github_repo", SAFE_SEGMENT_PATTERN),
+                ("github_search", SAFE_SEGMENT_PATTERN),
+                ("arxiv_query", SAFE_SEGMENT_PATTERN),
+                ("arxiv_rss_keywords", SAFE_SEGMENT_PATTERN),
+                ("rss", SAFE_SEGMENT_PATTERN),
+                ("news", SAFE_SEGMENT_PATTERN),
+            ],
+        )
 
 
 if __name__ == "__main__":
