@@ -996,6 +996,18 @@ class RuntimeWriterTests(unittest.TestCase):
         ):
             validate_provider_request(denied_ready)
 
+        bad_run_id = dict(valid_request)
+        bad_run_id["run_id"] = "../20260529T123045Z-deadbeef"
+        with self.assertRaisesRegex(ValueError, "run_id must be a safe path segment"):
+            validate_provider_request(bad_run_id)
+
+        bad_request_id = dict(valid_request)
+        bad_request_id["request_id"] = "../provider-request-1"
+        with self.assertRaisesRegex(
+            ValueError, "request_id must be a safe path segment"
+        ):
+            validate_provider_request(bad_request_id)
+
         bad_capabilities = dict(valid_request)
         bad_capabilities["capabilities"] = ["edit_local", "network"]
         with self.assertRaises(ValueError):
@@ -1005,6 +1017,18 @@ class RuntimeWriterTests(unittest.TestCase):
         bad_context["context_refs"] = ["profiles/report.json", 1]
         with self.assertRaises(ValueError):
             validate_provider_request(bad_context)
+
+    def test_provider_request_schema_tracks_runtime_id_constraints(self):
+        schema = _read_schema("provider-request.schema.json")
+
+        self.assertEqual(
+            schema["properties"]["run_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["request_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
 
     def test_tool_execution_writer_writes_result_deterministically(self):
         with tempfile.TemporaryDirectory() as tmp_dir:

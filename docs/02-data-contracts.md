@@ -594,6 +594,7 @@ Provider request records should not include full tool arguments, credentials,
 raw source text, private payloads, or provider-specific policy truth.
 Adapters must still enforce their own narrow translation boundary and must not
 expand capabilities beyond the governance-derived request.
+`run_id` and `request_id` must be safe runtime path segments.
 Runtime code validates provider requests before writing them.
 Runtime code also validates the ready execution mediation record before
 preparing a provider request.
