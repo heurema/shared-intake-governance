@@ -74,8 +74,8 @@ runtime paths consume them:
 - `profile_id`, source ids, raw metadata ids, run-manifest ids,
   source-health ids, governance audit ids, approval record ids, dry-run result
   ids, execution mediation ids, tool execution result ids, provider request
-  ids, and profile-state ids use safe path segments at their relevant contract
-  boundaries.
+  ids, provider result ids, and profile-state ids use safe path segments at
+  their relevant contract boundaries.
 
 ## Explicitly deferred scope
 

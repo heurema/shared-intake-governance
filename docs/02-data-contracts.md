@@ -646,6 +646,7 @@ than embedding full responses. They should not include credentials, tool
 arguments, raw source text, private payloads, or provider-specific policy truth.
 Successful provider results must have `error: null`; failed or blocked results
 must include a compact error object.
+`run_id`, `result_id`, and `request_id` must be safe runtime path segments.
 Runtime code validates provider results before writing them.
 Runtime code also validates provider requests before recording provider results
 or forwarding request JSON to an explicit local provider command.

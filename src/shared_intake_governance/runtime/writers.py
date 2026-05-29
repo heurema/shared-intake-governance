@@ -741,6 +741,9 @@ def validate_provider_result(result: dict[str, Any]) -> None:
         "tool_name",
     ]:
         _require_text(result, field)
+    _require_safe_segment(result, "run_id")
+    _require_safe_segment(result, "result_id")
+    _require_safe_segment(result, "request_id")
     require_date_time(result["recorded_at"], "recorded_at")
     if result["provider"] not in _PROVIDERS:
         raise ValueError("provider result has unsupported provider")
