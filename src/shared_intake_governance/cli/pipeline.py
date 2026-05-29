@@ -45,6 +45,13 @@ def main(
         return _run_github_repo(args, stdout, collector_factory)
     if args.command == "run-arxiv-rss-keywords":
         return _run_arxiv_rss_keywords(args, stdout, arxiv_collector_factory)
+    if args.command == "run-source-config":
+        return _run_source_config(
+            args,
+            stdout,
+            collector_factory,
+            arxiv_collector_factory,
+        )
 
     raise ValueError(f"unsupported command: {args.command}")
 
@@ -223,6 +230,49 @@ def _run_arxiv_rss_keywords(
     return 0
 
 
+def _run_source_config(
+    args: argparse.Namespace,
+    stdout: TextIO,
+    github_collector_factory: type[GitHubRepoCollector],
+    arxiv_collector_factory: type[ArxivRssKeywordsCollector],
+) -> int:
+    source_config = _load_source_config(args.source_config)
+    source_type = source_config["source_type"]
+
+    if source_type == "github_repo":
+        return _run_github_repo(
+            argparse.Namespace(
+                runtime_root=args.runtime_root,
+                profile=args.profile,
+                source_id=source_config["source_id"],
+                owner=source_config["owner"],
+                repo=source_config["repo"],
+                api_base_url=source_config["api_base_url"],
+                run_id=args.run_id,
+                output_id=args.output_id,
+            ),
+            stdout,
+            github_collector_factory,
+        )
+    if source_type == "arxiv_rss_keywords":
+        return _run_arxiv_rss_keywords(
+            argparse.Namespace(
+                runtime_root=args.runtime_root,
+                profile=args.profile,
+                source_id=source_config["source_id"],
+                keywords=source_config["keywords"],
+                max_results=source_config["max_results"],
+                api_base_url=source_config["api_base_url"],
+                run_id=args.run_id,
+                output_id=args.output_id,
+            ),
+            stdout,
+            arxiv_collector_factory,
+        )
+
+    raise ValueError(f"unsupported source_type: {source_type}")
+
+
 def _collection_summary(
     run_id: str,
     collection: GitHubRepoCollectionResult | ArxivRssKeywordsCollectionResult,
@@ -237,6 +287,73 @@ def _collection_summary(
             None if collection.body_path is None else str(collection.body_path)
         ),
     }
+
+
+def _load_source_config(path: str | Path) -> dict[str, Any]:
+    config = _read_json(Path(path))
+    if config.get("schema_version") != "source-config.v1":
+        raise ValueError("source config must use schema_version source-config.v1")
+    _require_text(config, "source_type")
+    _require_text(config, "source_id")
+
+    source_type = config["source_type"]
+    if source_type == "github_repo":
+        _reject_unknown(
+            config,
+            {
+                "schema_version",
+                "source_type",
+                "source_id",
+                "owner",
+                "repo",
+                "api_base_url",
+            },
+        )
+        _require_text(config, "owner")
+        _require_text(config, "repo")
+        config = dict(config)
+        config.setdefault("api_base_url", "https://api.github.com")
+        _require_text(config, "api_base_url")
+        return config
+    if source_type == "arxiv_rss_keywords":
+        _reject_unknown(
+            config,
+            {
+                "schema_version",
+                "source_type",
+                "source_id",
+                "keywords",
+                "max_results",
+                "api_base_url",
+            },
+        )
+        _require_string_list(config, "keywords")
+        if not isinstance(config.get("max_results"), int):
+            raise ValueError("max_results must be an integer")
+        config = dict(config)
+        config.setdefault("api_base_url", "https://export.arxiv.org/api/query")
+        _require_text(config, "api_base_url")
+        return config
+
+    raise ValueError(f"unsupported source_type: {source_type}")
+
+
+def _reject_unknown(config: dict[str, Any], allowed: set[str]) -> None:
+    unknown = sorted(set(config) - allowed)
+    if unknown:
+        raise ValueError(f"source config has unknown fields: {', '.join(unknown)}")
+
+
+def _require_text(config: dict[str, Any], field: str) -> None:
+    if not isinstance(config.get(field), str) or not config[field]:
+        raise ValueError(f"{field} must be a non-empty string")
+
+
+def _require_string_list(config: dict[str, Any], field: str) -> None:
+    if not isinstance(config.get(field), list) or not all(
+        isinstance(item, str) and item for item in config[field]
+    ):
+        raise ValueError(f"{field} must be a list of non-empty strings")
 
 
 def _write_run_evidence(
@@ -348,4 +465,14 @@ def _parser() -> argparse.ArgumentParser:
     arxiv.add_argument(
         "--api-base-url", default="https://export.arxiv.org/api/query"
     )
+
+    source_config = subparsers.add_parser(
+        "run-source-config",
+        help="Run one source from a source-config.v1 JSON file.",
+    )
+    source_config.add_argument("--runtime-root", required=True)
+    source_config.add_argument("--profile", required=True)
+    source_config.add_argument("--source-config", required=True)
+    source_config.add_argument("--run-id")
+    source_config.add_argument("--output-id")
     return parser

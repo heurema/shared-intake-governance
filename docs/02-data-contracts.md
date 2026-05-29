@@ -8,8 +8,9 @@ The first stable contracts should cover:
 2. clean normalized records;
 3. run manifests;
 4. source health;
-5. project profiles;
-6. tool intents passed into governance.
+5. source configs for one-source local runs;
+6. project profiles;
+7. tool intents passed into governance.
 
 ## Raw payload metadata
 
@@ -120,6 +121,22 @@ next_retry_after
 
 If a source is degraded or failed, downstream consumers should see that state
 explicitly. Do not silently widen to weaker fallback sources.
+
+## Source config
+
+See [../schemas/source-config.schema.json](../schemas/source-config.schema.json).
+
+A source config defines exactly one reusable source input for a local run.
+It exists so source definitions can live in files instead of only in CLI
+arguments.
+
+Supported Phase 1 source configs:
+
+- `github_repo`
+- `arxiv_rss_keywords`
+
+Source configs must not contain credentials, runtime state, scoring rules,
+profile logic, or publication semantics.
 
 ## Profile config
 

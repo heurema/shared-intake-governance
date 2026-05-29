@@ -166,6 +166,7 @@ class CliPipelineTests(unittest.TestCase):
                     "failed_sources": 1,
                 },
             )
+
             self.assertEqual(manifest["source_health"], [summary["source_health_path"]])
 
             source_health = json.loads(Path(summary["source_health_path"]).read_text())
@@ -354,6 +355,138 @@ class CliPipelineTests(unittest.TestCase):
                     "retryable": True,
                 },
             )
+
+    def test_run_source_config_dispatches_github_repo_config(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            runtime_root = root / "runtime"
+            profile_path = _write_profile(root)
+            source_config_path = _write_source_config(
+                root,
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_repo",
+                    "source_id": "github-signum",
+                    "owner": "heurema",
+                    "repo": "signum",
+                },
+            )
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "run-source-config",
+                    "--runtime-root",
+                    str(runtime_root),
+                    "--profile",
+                    str(profile_path),
+                    "--source-config",
+                    str(source_config_path),
+                    "--run-id",
+                    RUN_ID,
+                    "--output-id",
+                    RUN_ID,
+                ],
+                stdout=stdout,
+                collector_factory=SuccessfulCollector,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(summary["status"], "completed")
+            self.assertEqual(summary["source_id"], "github-signum")
+            self.assertTrue(Path(summary["clean_record_path"]).exists())
+            self.assertTrue(Path(summary["projection_path"]).exists())
+
+            manifest = json.loads(Path(summary["run_manifest_path"]).read_text())
+            self.assertEqual(manifest["sources"], ["github-signum"])
+            self.assertEqual(manifest["counts"]["clean_records_written"], 1)
+
+    def test_run_source_config_dispatches_arxiv_rss_keywords_config(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            runtime_root = root / "runtime"
+            profile_path = _write_profile(
+                root,
+                accepted_sources=["arxiv_rss_keywords"],
+                keywords=["coding agent"],
+            )
+            source_config_path = _write_source_config(
+                root,
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "arxiv_rss_keywords",
+                    "source_id": "arxiv-code-agents",
+                    "keywords": ["coding agent", "benchmark"],
+                    "max_results": 5,
+                },
+            )
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "run-source-config",
+                    "--runtime-root",
+                    str(runtime_root),
+                    "--profile",
+                    str(profile_path),
+                    "--source-config",
+                    str(source_config_path),
+                    "--run-id",
+                    RUN_ID,
+                    "--output-id",
+                    RUN_ID,
+                ],
+                stdout=stdout,
+                arxiv_collector_factory=SuccessfulArxivCollector,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(summary["status"], "completed")
+            self.assertEqual(summary["source_id"], "arxiv-code-agents")
+            self.assertEqual(len(summary["clean_record_paths"]), 2)
+
+            manifest = json.loads(Path(summary["run_manifest_path"]).read_text())
+            self.assertEqual(manifest["sources"], ["arxiv-code-agents"])
+            self.assertEqual(manifest["counts"]["clean_records_written"], 2)
+            self.assertEqual(manifest["counts"]["quarantined_records"], 1)
+
+    def test_run_source_config_rejects_invalid_config_before_runtime_writes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            runtime_root = root / "runtime"
+            profile_path = _write_profile(root)
+            source_config_path = _write_source_config(
+                root,
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_repo",
+                    "source_id": "github-signum",
+                    "repo": "signum",
+                },
+            )
+
+            with self.assertRaises(ValueError):
+                main(
+                    [
+                        "run-source-config",
+                        "--runtime-root",
+                        str(runtime_root),
+                        "--profile",
+                        str(profile_path),
+                        "--source-config",
+                        str(source_config_path),
+                        "--run-id",
+                        RUN_ID,
+                    ],
+                    stdout=io.StringIO(),
+                    collector_factory=SuccessfulCollector,
+                )
+
+            self.assertFalse(runtime_root.exists())
 
 
 class SuccessfulCollector:
@@ -577,6 +710,12 @@ def _write_profile(
         encoding="utf-8",
     )
     return profile_path
+
+
+def _write_source_config(root, payload):
+    source_config_path = root / "source-config.json"
+    source_config_path.write_text(json.dumps(payload), encoding="utf-8")
+    return source_config_path
 
 
 if __name__ == "__main__":
