@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import re
 import urllib.error
-import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -12,6 +11,7 @@ from pathlib import Path
 from typing import Callable, Mapping
 
 from shared_intake_governance.runtime import RawWriter, RuntimePaths
+from shared_intake_governance.validation import require_https_url
 
 
 COLLECTOR_VERSION = "rss-feed.v1"
@@ -34,9 +34,7 @@ class RssFeedSource:
 
     def __post_init__(self) -> None:
         _safe_segment(self.source_id, "source_id")
-        parsed = urllib.parse.urlparse(self.feed_url)
-        if parsed.scheme != "https" or not parsed.netloc:
-            raise ValueError("feed_url must be an https URL")
+        require_https_url(self.feed_url, "feed_url")
         if self.source_trust not in _SOURCE_TRUST:
             raise ValueError("source_trust must be a supported trust value")
 

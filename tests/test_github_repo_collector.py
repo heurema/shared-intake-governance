@@ -180,6 +180,12 @@ class GitHubRepoCollectorTests(unittest.TestCase):
             {"source_id": "github-signum", "owner": "../heurema", "repo": "signum"},
             {"source_id": "github-signum", "owner": "heurema", "repo": "sig/num"},
             {"source_id": "github signum", "owner": "heurema", "repo": "signum"},
+            {
+                "source_id": "github-signum",
+                "owner": "heurema",
+                "repo": "signum",
+                "api_base_url": "https:///api",
+            },
         ]
 
         for case in invalid_cases:

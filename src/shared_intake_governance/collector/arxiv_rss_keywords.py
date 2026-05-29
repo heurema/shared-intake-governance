@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Callable, Mapping
 
 from shared_intake_governance.runtime import RawWriter, RuntimePaths
+from shared_intake_governance.validation import require_https_url
 
 
 COLLECTOR_VERSION = "arxiv-rss-keywords.v1"
@@ -28,8 +29,7 @@ class ArxivRssKeywordsSource:
 
     def __post_init__(self) -> None:
         _safe_segment(self.source_id, "source_id")
-        if not self.api_base_url.startswith("https://"):
-            raise ValueError("api_base_url must be an https URL")
+        require_https_url(self.api_base_url, "api_base_url")
         if not 1 <= self.max_results <= 100:
             raise ValueError("max_results must be between 1 and 100")
         if not self.keywords:

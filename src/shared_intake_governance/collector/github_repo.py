@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Callable, Mapping
 
 from shared_intake_governance.runtime import RawWriter, RuntimePaths
+from shared_intake_governance.validation import require_https_url
 
 
 COLLECTOR_VERSION = "github-repo.v1"
@@ -30,8 +31,7 @@ class GitHubRepoSource:
         _safe_segment(self.source_id, "source_id")
         _github_path_segment(self.owner, "owner")
         _github_path_segment(self.repo, "repo")
-        if not self.api_base_url.startswith("https://"):
-            raise ValueError("api_base_url must be an https URL")
+        require_https_url(self.api_base_url, "api_base_url")
 
     @property
     def request_url(self) -> str:
