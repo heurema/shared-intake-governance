@@ -71,6 +71,7 @@ runtime paths consume them:
 - projection counts must match emitted and excluded records;
 - profile seen-state record ids must be sorted and unique;
 - denied provider requests are rejected before provider-request records;
+- embedded governance audit events reuse standalone audit id validation;
 - `profile_id`, source ids, clean record ids, profile projection ids, raw
   metadata ids, run-manifest ids, source-health ids, governance audit ids,
   approval record ids, dry-run result ids, execution mediation ids, tool

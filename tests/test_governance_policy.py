@@ -146,6 +146,13 @@ class GovernancePolicyTests(unittest.TestCase):
         ):
             validate_governance_decision(bad_audit_event)
 
+        unsafe_audit_run_id = dict(decision)
+        unsafe_audit_run_id["audit_event"] = dict(bad_audit_event["audit_event"])
+        unsafe_audit_run_id["audit_event"]["recorded_at"] = "2026-05-29T12:30:45Z"
+        unsafe_audit_run_id["audit_event"]["run_id"] = "../20260529T123045Z-deadbeef"
+        with self.assertRaisesRegex(ValueError, "run_id must be a safe path segment"):
+            validate_governance_decision(unsafe_audit_run_id)
+
 
 def _tool_intent(*, action_class, dry_run_supported):
     return {
