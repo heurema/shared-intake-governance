@@ -129,6 +129,7 @@ source_health
 
 The manifest is operational evidence. It should not contain credentials,
 private source payload text, or generated reports.
+`run_id` and `sources` entries must be safe runtime path segments.
 `started` manifests must not include `finished_at`; terminal manifests must
 include it. `completed` manifests must not report failed sources. Terminal
 manifests must carry one `source_health` ref per listed source.
