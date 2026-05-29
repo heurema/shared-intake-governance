@@ -79,7 +79,7 @@ What exists now:
 - isolated smoke CLI command for live one-source checks with runtime data
   outside git;
 - read-only CLI commands for listing and inspecting run manifests, clean
-  records, and source health;
+  records, profile reports, and source health;
 - run manifest and source health artifacts from the CLI pipeline.
 
 What does not exist yet:

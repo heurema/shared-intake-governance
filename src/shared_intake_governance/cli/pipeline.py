@@ -72,6 +72,10 @@ def main(
         return _list_clean_records(args, stdout)
     if args.command == "inspect-record":
         return _inspect_record(args, stdout)
+    if args.command == "list-profile-reports":
+        return _list_profile_reports(args, stdout)
+    if args.command == "inspect-profile-report":
+        return _inspect_profile_report(args, stdout)
     if args.command == "inspect-run":
         return _inspect_run(args, stdout)
     if args.command == "show-source-health":
@@ -416,6 +420,38 @@ def _inspect_record(args: argparse.Namespace, stdout: TextIO) -> int:
     return 0
 
 
+def _list_profile_reports(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    if args.profile_id:
+        report_paths = sorted(paths.profile_reports_dir(args.profile_id).glob("*.json"))
+    elif paths.profiles_root.exists():
+        report_paths = sorted(paths.profiles_root.glob("*/reports/*.json"))
+    else:
+        report_paths = []
+
+    reports = [_profile_report_summary(path) for path in report_paths]
+    reports.sort(key=lambda report: (report["profile_id"], report["output_id"]))
+    _print_json(
+        stdout,
+        {
+            "runtime_root": str(paths.root),
+            "profile_report_count": len(reports),
+            "profile_reports": reports,
+        },
+    )
+    return 0
+
+
+def _inspect_profile_report(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    report_path = paths.profile_report_path(args.profile_id, args.output_id)
+    report = _read_json(report_path)
+    report = dict(report)
+    report["profile_report_path"] = str(report_path)
+    _print_json(stdout, report)
+    return 0
+
+
 def _inspect_run(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     manifest_path = paths.run_manifest_path(args.run_id)
@@ -478,6 +514,19 @@ def _clean_record_summary(clean_record_path: Path) -> dict[str, Any]:
         "quarantined": record["quarantined"],
         "raw_hash": record["raw_hash"],
         "sanitizer_version": record["sanitizer_version"],
+    }
+
+
+def _profile_report_summary(profile_report_path: Path) -> dict[str, Any]:
+    report = _read_json(profile_report_path)
+    return {
+        "profile_id": report["profile_id"],
+        "output_id": profile_report_path.stem,
+        "profile_report_path": str(profile_report_path),
+        "output_mode": report["output_mode"],
+        "generated_at": report["generated_at"],
+        "clean_records_seen": report["counts"]["clean_records_seen"],
+        "items_written": report["counts"]["items_written"],
     }
 
 
@@ -768,6 +817,21 @@ def _parser() -> argparse.ArgumentParser:
     )
     inspect_record.add_argument("--runtime-root", required=True)
     inspect_record.add_argument("--record-id", required=True)
+
+    list_profile_reports = subparsers.add_parser(
+        "list-profile-reports",
+        help="List profile report artifacts under one runtime root.",
+    )
+    list_profile_reports.add_argument("--runtime-root", required=True)
+    list_profile_reports.add_argument("--profile-id")
+
+    inspect_profile_report = subparsers.add_parser(
+        "inspect-profile-report",
+        help="Read one profile report artifact.",
+    )
+    inspect_profile_report.add_argument("--runtime-root", required=True)
+    inspect_profile_report.add_argument("--profile-id", required=True)
+    inspect_profile_report.add_argument("--output-id", required=True)
 
     inspect_run = subparsers.add_parser(
         "inspect-run",

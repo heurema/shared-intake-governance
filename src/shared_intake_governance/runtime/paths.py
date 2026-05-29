@@ -85,6 +85,12 @@ class RuntimePaths:
     def profile_reports_dir(self, profile_id: str) -> Path:
         return self.profiles_root / _safe_segment(profile_id, "profile_id") / "reports"
 
+    def profile_report_path(self, profile_id: str, output_id: str) -> Path:
+        return (
+            self.profile_reports_dir(profile_id)
+            / f"{_safe_segment(output_id, 'output_id')}.json"
+        )
+
     def _raw_day_dir(self, source_id: str, fetched_at: str | datetime) -> Path:
         date_part = _coerce_datetime(fetched_at).date().isoformat()
         return self.raw_root / _safe_segment(source_id, "source_id") / date_part

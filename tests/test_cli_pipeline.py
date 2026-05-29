@@ -1088,6 +1088,153 @@ class CliPipelineTests(unittest.TestCase):
                 ["arxiv_rss_keywords-good"],
             )
 
+    def test_list_profile_reports_summarizes_reports_without_writes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            first_report_path = _write_profile_report(
+                paths,
+                profile_id="code-intel-kernel",
+                output_id="20260529T100000Z-first",
+                output_mode="research_digest",
+                items=["github_repo-good", "arxiv_rss_keywords-good"],
+            )
+            second_report_path = _write_profile_report(
+                paths,
+                profile_id="agent-bench-lab",
+                output_id="20260529T110000Z-second",
+                output_mode="benchmark_brief",
+                items=["arxiv_rss_keywords-good"],
+            )
+            before_paths = _all_files(paths.root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "list-profile-reports",
+                    "--runtime-root",
+                    str(paths.root),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(paths.root), before_paths)
+            self.assertEqual(summary["runtime_root"], str(paths.root))
+            self.assertEqual(summary["profile_report_count"], 2)
+            self.assertEqual(
+                summary["profile_reports"],
+                [
+                    {
+                        "profile_id": "agent-bench-lab",
+                        "output_id": "20260529T110000Z-second",
+                        "profile_report_path": str(second_report_path),
+                        "output_mode": "benchmark_brief",
+                        "generated_at": "2026-05-29T12:30:45Z",
+                        "clean_records_seen": 2,
+                        "items_written": 1,
+                    },
+                    {
+                        "profile_id": "code-intel-kernel",
+                        "output_id": "20260529T100000Z-first",
+                        "profile_report_path": str(first_report_path),
+                        "output_mode": "research_digest",
+                        "generated_at": "2026-05-29T12:30:45Z",
+                        "clean_records_seen": 2,
+                        "items_written": 2,
+                    },
+                ],
+            )
+
+    def test_list_profile_reports_can_filter_one_profile(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            _write_profile_report(
+                paths,
+                profile_id="code-intel-kernel",
+                output_id="20260529T100000Z-first",
+                output_mode="research_digest",
+                items=["github_repo-good"],
+            )
+            report_path = _write_profile_report(
+                paths,
+                profile_id="agent-bench-lab",
+                output_id="20260529T110000Z-second",
+                output_mode="benchmark_brief",
+                items=["arxiv_rss_keywords-good"],
+            )
+            before_paths = _all_files(paths.root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "list-profile-reports",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--profile-id",
+                    "agent-bench-lab",
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(paths.root), before_paths)
+            self.assertEqual(summary["profile_report_count"], 1)
+            self.assertEqual(
+                summary["profile_reports"],
+                [
+                    {
+                        "profile_id": "agent-bench-lab",
+                        "output_id": "20260529T110000Z-second",
+                        "profile_report_path": str(report_path),
+                        "output_mode": "benchmark_brief",
+                        "generated_at": "2026-05-29T12:30:45Z",
+                        "clean_records_seen": 2,
+                        "items_written": 1,
+                    }
+                ],
+            )
+
+    def test_inspect_profile_report_reads_one_report_without_writes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            report_path = _write_profile_report(
+                paths,
+                profile_id="code-intel-kernel",
+                output_id=RUN_ID,
+                output_mode="research_digest",
+                items=["github_repo-good"],
+            )
+            before_paths = _all_files(paths.root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "inspect-profile-report",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--profile-id",
+                    "code-intel-kernel",
+                    "--output-id",
+                    RUN_ID,
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(paths.root), before_paths)
+            self.assertEqual(summary["profile_report_path"], str(report_path))
+            self.assertEqual(summary["schema_version"], "profile-projection.v1")
+            self.assertEqual(summary["profile_id"], "code-intel-kernel")
+            self.assertEqual(summary["output_mode"], "research_digest")
+            self.assertEqual(summary["counts"]["items_written"], 1)
+            self.assertEqual(summary["items"][0]["record_id"], "github_repo-good")
+
 
 class SuccessfulCollector:
     def __init__(self, paths, **kwargs):
@@ -1392,6 +1539,42 @@ def _write_clean_record(paths, record):
     path = paths.clean_record_path(record["record_id"])
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(record, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
+def _write_profile_report(paths, *, profile_id, output_id, output_mode, items):
+    report_items = [
+        {
+            "record_id": record_id,
+            "source_id": "test-source",
+            "source_type": "github_repo",
+            "canonical_url": f"https://example.test/{record_id}",
+            "title": record_id,
+            "sanitized_summary": "Test summary.",
+            "source_trust": "platform",
+            "risk_flags": [],
+            "raw_hash": f"raw-{record_id}",
+        }
+        for record_id in items
+    ]
+    report = {
+        "schema_version": "profile-projection.v1",
+        "profile_id": profile_id,
+        "output_mode": output_mode,
+        "generated_at": "2026-05-29T12:30:45Z",
+        "counts": {
+            "clean_records_seen": 2,
+            "items_written": len(report_items),
+            "excluded_by_source": 0,
+            "excluded_by_keyword": 0,
+            "excluded_by_risk": 0,
+            "excluded_quarantined": 0,
+        },
+        "items": report_items,
+    }
+    path = paths.profile_report_path(profile_id, output_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(report, sort_keys=True) + "\n", encoding="utf-8")
     return path
 
 
