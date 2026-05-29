@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -12,6 +13,7 @@ from typing import Any
 from .paths import RuntimePaths
 
 
+_BODY_HASH = re.compile(r"^[a-f0-9]{64}$")
 _SOURCE_TYPES = {
     "github_repo",
     "github_search",
@@ -21,6 +23,28 @@ _SOURCE_TYPES = {
     "news",
     "custom",
 }
+_SOURCE_TRUST = {"official", "maintainer", "platform", "secondary", "social", "unknown"}
+_RAW_FETCH_STATUS = {"success", "degraded", "failed"}
+_RAW_METADATA_REQUIRED = {
+    "schema_version",
+    "run_id",
+    "source_id",
+    "source_type",
+    "fetch_status",
+    "fetched_at",
+    "request_url",
+    "canonical_url",
+    "http_status",
+    "etag",
+    "last_modified",
+    "content_type",
+    "body_hash",
+    "storage_path",
+    "collector_version",
+    "error",
+}
+_RAW_METADATA_OPTIONAL = {"source_trust"}
+_RAW_METADATA_ALLOWED = _RAW_METADATA_REQUIRED | _RAW_METADATA_OPTIONAL
 _RUN_MANIFEST_MODE = {"backfill", "daily_collection", "shadow", "governance"}
 _RUN_MANIFEST_STATUS = {
     "started",
@@ -97,6 +121,7 @@ class RawWriter:
     def write_metadata(
         self, metadata: dict[str, Any], *, failure_id: str | None = None
     ) -> Path:
+        validate_raw_metadata(metadata)
         source_id = str(metadata["source_id"])
         fetched_at = str(metadata["fetched_at"])
         body_hash = metadata.get("body_hash")
@@ -231,6 +256,49 @@ class ProviderResultWriter:
         return _write_json(path, result)
 
 
+def validate_raw_metadata(metadata: dict[str, Any]) -> None:
+    missing = sorted(_RAW_METADATA_REQUIRED - set(metadata))
+    if missing:
+        raise ValueError(f"raw metadata missing required fields: {', '.join(missing)}")
+    extra = sorted(set(metadata) - _RAW_METADATA_ALLOWED)
+    if extra:
+        raise ValueError(f"raw metadata has unknown fields: {', '.join(extra)}")
+
+    if metadata["schema_version"] != "raw-metadata.v1":
+        raise ValueError("raw metadata must use raw-metadata.v1")
+    for field in [
+        "run_id",
+        "source_id",
+        "fetched_at",
+        "request_url",
+        "collector_version",
+    ]:
+        _require_text(metadata, field)
+    if metadata["source_type"] not in _SOURCE_TYPES:
+        raise ValueError("raw metadata has unsupported source_type")
+    if metadata["fetch_status"] not in _RAW_FETCH_STATUS:
+        raise ValueError("raw metadata has unsupported fetch_status")
+    if metadata["canonical_url"] is not None:
+        _require_text(metadata, "canonical_url")
+    if metadata["http_status"] is not None:
+        if not isinstance(metadata["http_status"], int) or not (
+            100 <= metadata["http_status"] <= 599
+        ):
+            raise ValueError("raw metadata http_status must be an HTTP status")
+    for field in ["etag", "last_modified", "content_type", "storage_path"]:
+        if metadata[field] is not None:
+            _require_text(metadata, field)
+    if metadata["body_hash"] is not None:
+        if not isinstance(metadata["body_hash"], str) or not _BODY_HASH.fullmatch(
+            metadata["body_hash"]
+        ):
+            raise ValueError("raw metadata body_hash must be a sha256 hex digest")
+    if "source_trust" in metadata and metadata["source_trust"] not in _SOURCE_TRUST:
+        raise ValueError("raw metadata has unsupported source_trust")
+    if metadata["error"] is not None:
+        _validate_error_object(metadata["error"], "raw metadata error")
+
+
 def validate_run_manifest(manifest: dict[str, Any]) -> None:
     missing = sorted(_RUN_MANIFEST_REQUIRED - set(manifest))
     if missing:
@@ -317,30 +385,26 @@ def validate_source_health(source_health: dict[str, Any]) -> None:
 
     last_error = source_health["last_error"]
     if last_error is not None:
-        _validate_source_health_error(last_error)
+        _validate_error_object(last_error, "source health last_error")
     if source_health["next_retry_after"] is not None:
         _require_text(source_health, "next_retry_after")
 
 
-def _validate_source_health_error(error: Any) -> None:
+def _validate_error_object(error: Any, label: str) -> None:
     if not isinstance(error, dict):
-        raise ValueError("source health last_error must be an object or null")
+        raise ValueError(f"{label} must be an object")
     required = {"kind", "message"}
     allowed = required | {"retryable"}
     missing = sorted(required - set(error))
     if missing:
-        raise ValueError(
-            f"source health last_error missing required fields: {', '.join(missing)}"
-        )
+        raise ValueError(f"{label} missing required fields: {', '.join(missing)}")
     extra = sorted(set(error) - allowed)
     if extra:
-        raise ValueError(
-            f"source health last_error has unknown fields: {', '.join(extra)}"
-        )
+        raise ValueError(f"{label} has unknown fields: {', '.join(extra)}")
     _require_text(error, "kind")
     _require_text(error, "message")
     if "retryable" in error and not isinstance(error["retryable"], bool):
-        raise ValueError("source health last_error retryable must be boolean")
+        raise ValueError(f"{label} retryable must be boolean")
 
 
 def _require_text(payload: dict[str, Any], field: str) -> None:
