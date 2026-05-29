@@ -228,6 +228,8 @@ provider prompts, model outputs, or consumer-specific editorial decisions.
 Runtime code validates projection reports before writing them and before using
 them to update profile-local seen state.
 `generated_at` must follow the shared `date-time` validation rule.
+`items_written` must match the number of emitted `items`, and
+`clean_records_seen` must equal `items_written` plus all exclusion counts.
 
 ## Profile state
 

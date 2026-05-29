@@ -210,6 +210,20 @@ def validate_profile_projection(report: dict[str, Any]) -> None:
     for item in items:
         _validate_projection_item(item)
 
+    if counts["items_written"] != len(items):
+        raise ValueError("profile projection items_written must match item count")
+    counted_records = (
+        counts["items_written"]
+        + counts["excluded_by_source"]
+        + counts["excluded_by_keyword"]
+        + counts["excluded_by_risk"]
+        + counts["excluded_quarantined"]
+    )
+    if counts["clean_records_seen"] != counted_records:
+        raise ValueError(
+            "profile projection clean_records_seen must equal items_written plus exclusions"
+        )
+
 
 def _validate_projection_item(item: Any) -> None:
     if not isinstance(item, dict):
