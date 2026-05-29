@@ -63,6 +63,8 @@ The canonical contract files for these runtime artifacts are:
 - [../schemas/source-health.schema.json](../schemas/source-health.schema.json)
 - [../schemas/profile.schema.json](../schemas/profile.schema.json)
 - [../schemas/profile-state.schema.json](../schemas/profile-state.schema.json)
+- [../schemas/tool-intent.schema.json](../schemas/tool-intent.schema.json)
+- [../schemas/governance-decision.schema.json](../schemas/governance-decision.schema.json)
 
 ## Modes of operation
 
@@ -148,6 +150,9 @@ Current CLI behavior:
 - `inspect-run` reads one run manifest and summarizes linked source health
   artifacts without writing runtime data;
 - `show-source-health` reads one source health artifact without writing
+  runtime data;
+- `evaluate-tool-intent` reads one `tool-intent.v1` JSON file and returns a
+  `governance-decision.v1` JSON decision without executing tools or writing
   runtime data;
 - all current run commands write one source health artifact under
   `source-health/`.

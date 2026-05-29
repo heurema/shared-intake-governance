@@ -82,6 +82,8 @@ What exists now:
 - read-only CLI commands for listing and inspecting run manifests, clean
   records, profile state, profile reports, and source health;
 - run manifest and source health artifacts from the CLI pipeline.
+- tool-intent and governance-decision contracts with a read-only default
+  governance evaluator CLI.
 
 What does not exist yet:
 
@@ -89,7 +91,8 @@ What does not exist yet:
 - sanitizer source mappings beyond `github_repo` and `arxiv_rss_keywords`;
 - multi-profile report shaping beyond deterministic per-profile JSON;
 - automatic profile-state updates or dedupe behavior;
-- governance broker runtime;
+- governance broker audit log, approval records, dry-run sidecar, and tool
+  execution mediation beyond the default evaluator;
 - provider adapter runtime;
 - SQLite;
 - daemon;

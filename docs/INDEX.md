@@ -73,6 +73,7 @@ Use this file as the main navigation layer.
 - [../schemas/profile.schema.json](../schemas/profile.schema.json)
 - [../schemas/profile-state.schema.json](../schemas/profile-state.schema.json)
 - [../schemas/tool-intent.schema.json](../schemas/tool-intent.schema.json)
+- [../schemas/governance-decision.schema.json](../schemas/governance-decision.schema.json)
 - [../profiles/examples/code-intel-kernel.json](../profiles/examples/code-intel-kernel.json)
 - [../profiles/examples/agent-bench-lab.json](../profiles/examples/agent-bench-lab.json)
 - [../profiles/examples/pulse.json](../profiles/examples/pulse.json)

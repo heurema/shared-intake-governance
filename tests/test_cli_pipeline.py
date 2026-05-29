@@ -1378,6 +1378,36 @@ class CliPipelineTests(unittest.TestCase):
             self.assertEqual(summary["state_kind"], "seen_records")
             self.assertEqual(summary["record_ids"], ["github_repo-good"])
 
+    def test_evaluate_tool_intent_reads_intent_without_writes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            intent_path = _write_tool_intent(
+                root / "intent.json",
+                action_class="external_side_effect",
+                dry_run_supported=True,
+            )
+            before_paths = _all_files(root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "evaluate-tool-intent",
+                    "--intent",
+                    str(intent_path),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(root), before_paths)
+            self.assertEqual(summary["tool_intent_path"], str(intent_path))
+            self.assertEqual(summary["schema_version"], "governance-decision.v1")
+            self.assertEqual(summary["intent_id"], "intent-1")
+            self.assertEqual(summary["action_class"], "external_side_effect")
+            self.assertEqual(summary["decision"], "denied")
+
 
 class SuccessfulCollector:
     def __init__(self, paths, **kwargs):
@@ -1733,6 +1763,21 @@ def _write_profile_state(paths, *, profile_id, state_id, state_kind, record_ids)
     path = paths.profile_state_path(profile_id, state_id)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(state, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
+def _write_tool_intent(path, *, action_class, dry_run_supported):
+    intent = {
+        "intent_id": "intent-1",
+        "profile_id": "code-intel-kernel",
+        "action_class": action_class,
+        "tool_name": "publish-report",
+        "arguments": {"report_id": "20260529T123045Z-deadbeef"},
+        "dry_run_supported": dry_run_supported,
+        "justification": "Publish one generated report.",
+        "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
+    }
+    path.write_text(json.dumps(intent, sort_keys=True) + "\n", encoding="utf-8")
     return path
 
 

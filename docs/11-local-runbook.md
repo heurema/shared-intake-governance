@@ -138,6 +138,20 @@ write runtime files. `inspect-profile-state` requires an existing
 `profile-state.v1` artifact under `profiles/<profile-id>/state/`; current
 projector commands do not create or update profile state.
 
+## Evaluate a tool intent
+
+Use this for a local policy decision only. It does not execute the requested
+tool and does not write audit or approval records.
+
+```sh
+PYTHONPATH=src python3 -m shared_intake_governance.cli evaluate-tool-intent \
+  --intent path/to/tool-intent.json
+```
+
+Expected output is one `governance-decision.v1` JSON object. Current default
+policy allows `read_only`, gates `edit_local`, and denies destructive, external,
+or credentialed actions.
+
 ## Reset local runtime data
 
 Only remove runtime data outside the repository:

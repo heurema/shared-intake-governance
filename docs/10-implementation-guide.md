@@ -112,6 +112,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli inspect-profile-state`
 - `python -m shared_intake_governance.cli list-profile-reports`
 - `python -m shared_intake_governance.cli inspect-profile-report`
+- `python -m shared_intake_governance.cli evaluate-tool-intent`
 - `python -m shared_intake_governance.cli inspect-run`
 - `python -m shared_intake_governance.cli show-source-health`
 - `sources/examples/github-signum.json`
@@ -133,6 +134,9 @@ The `project-profiles` command reads the shared clean cache and writes one
 deterministic report per explicit profile path.
 The profile-state inspection commands read existing `profile-state.v1`
 artifacts only; they do not update seen state or change projection behavior.
+The governance evaluator reads one `tool-intent.v1` file and prints one
+`governance-decision.v1` decision; it does not execute tools, write audit logs,
+or create approvals.
 
 For current manual invocation examples, see [11-local-runbook.md](11-local-runbook.md).
 
@@ -159,6 +163,7 @@ Current Phase 1 contract anchors:
 - profile state shape: `schemas/profile-state.schema.json`
 - source health output shape: `schemas/source-health.schema.json`
 - run manifest shape: `schemas/run-manifest.schema.json`
+- governance decision shape: `schemas/governance-decision.schema.json`
 
 If these anchors drift, update the docs or schemas before adding runtime code.
 
@@ -285,6 +290,19 @@ Only after Phase 1 is solid:
 - add per-profile state and report shaping;
 - then add governance broker contracts and runtime;
 - only then add provider adapters.
+
+Current governance runtime:
+
+- `src/shared_intake_governance/governance/policy.py`
+- `tests/test_governance_policy.py`
+- `evaluate-tool-intent` implements only the default policy evaluator.
+
+Still missing:
+
+- audit log writes;
+- approval records;
+- dry-run sidecar;
+- tool execution mediation.
 
 ## Handoff rule for the next session
 
