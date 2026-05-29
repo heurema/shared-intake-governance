@@ -26,6 +26,7 @@ from shared_intake_governance.projector import ProfileProjector, load_profile
 from shared_intake_governance.runtime import (
     AuditWriter,
     ApprovalWriter,
+    DryRunWriter,
     RunWriter,
     RuntimePaths,
     SourceHealthWriter,
@@ -87,6 +88,8 @@ def main(
         return _evaluate_tool_intent(args, stdout)
     if args.command == "record-approval":
         return _record_approval(args, stdout)
+    if args.command == "record-dry-run":
+        return _record_dry_run(args, stdout)
     if args.command == "inspect-run":
         return _inspect_run(args, stdout)
     if args.command == "show-source-health":
@@ -594,6 +597,63 @@ def _approval_record(
     }
 
 
+def _record_dry_run(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    intent_path = Path(args.intent)
+    intent = _read_json(intent_path)
+    result = _dry_run_result(
+        run_id=args.run_id,
+        dry_run_id=args.dry_run_id,
+        intent=intent,
+        dry_run_kind=args.dry_run_kind,
+        result_status=args.result_status,
+        recorded_by=args.recorded_by,
+        summary=args.summary,
+        artifact_refs=args.artifact_refs or [],
+        tool_intent_path=str(intent_path),
+    )
+    dry_run_result_path = DryRunWriter(paths).write_result(result)
+    _print_json(
+        stdout,
+        {
+            "dry_run_result_path": str(dry_run_result_path),
+            "dry_run_result": result,
+        },
+    )
+    return 0
+
+
+def _dry_run_result(
+    *,
+    run_id: str,
+    dry_run_id: str,
+    intent: dict[str, Any],
+    dry_run_kind: str,
+    result_status: str,
+    recorded_by: str,
+    summary: str,
+    artifact_refs: list[str],
+    tool_intent_path: str,
+) -> dict[str, Any]:
+    return {
+        "schema_version": "dry-run-result.v1",
+        "run_id": run_id,
+        "dry_run_id": dry_run_id,
+        "intent_id": intent["intent_id"],
+        "profile_id": intent["profile_id"],
+        "action_class": intent["action_class"],
+        "tool_name": intent["tool_name"],
+        "dry_run_kind": dry_run_kind,
+        "result_status": result_status,
+        "recorded_by": recorded_by,
+        "recorded_at": _format_utc(datetime.now(timezone.utc)),
+        "summary": summary,
+        "artifact_refs": artifact_refs,
+        "evidence_refs": intent["evidence_refs"],
+        "tool_intent_path": tool_intent_path,
+    }
+
+
 def _inspect_run(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     manifest_path = paths.run_manifest_path(args.run_id)
@@ -1027,6 +1087,32 @@ def _parser() -> argparse.ArgumentParser:
     approval.add_argument("--approved-by", required=True)
     approval.add_argument("--justification", required=True)
     approval.add_argument("--dry-run-ref")
+
+    dry_run = subparsers.add_parser(
+        "record-dry-run",
+        help="Record one dry-run result without executing tools.",
+    )
+    dry_run.add_argument("--runtime-root", required=True)
+    dry_run.add_argument("--run-id", required=True)
+    dry_run.add_argument("--dry-run-id", required=True)
+    dry_run.add_argument("--intent", required=True)
+    dry_run.add_argument(
+        "--dry-run-kind",
+        choices=[
+            "disposable_worktree",
+            "sandboxed_container",
+            "read_only_simulation",
+            "test_only_execution",
+            "custom",
+        ],
+        required=True,
+    )
+    dry_run.add_argument(
+        "--result-status", choices=["passed", "failed", "blocked"], required=True
+    )
+    dry_run.add_argument("--recorded-by", required=True)
+    dry_run.add_argument("--summary", required=True)
+    dry_run.add_argument("--artifact-ref", dest="artifact_refs", action="append")
 
     inspect_run = subparsers.add_parser(
         "inspect-run",

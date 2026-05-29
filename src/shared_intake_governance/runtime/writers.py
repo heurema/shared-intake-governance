@@ -107,6 +107,19 @@ class ApprovalWriter:
         return _write_json(path, record)
 
 
+class DryRunWriter:
+    """Write one recorded dry-run result."""
+
+    def __init__(self, paths: RuntimePaths):
+        self.paths = paths
+
+    def write_result(self, result: dict[str, Any]) -> Path:
+        path = self.paths.dry_run_result_path(
+            str(result["run_id"]), str(result["dry_run_id"])
+        )
+        return _write_json(path, result)
+
+
 def _write_json(path: Path, payload: dict[str, Any]) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(

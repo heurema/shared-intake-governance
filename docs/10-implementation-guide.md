@@ -114,6 +114,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli inspect-profile-report`
 - `python -m shared_intake_governance.cli evaluate-tool-intent`
 - `python -m shared_intake_governance.cli record-approval`
+- `python -m shared_intake_governance.cli record-dry-run`
 - `python -m shared_intake_governance.cli inspect-run`
 - `python -m shared_intake_governance.cli show-source-health`
 - `sources/examples/github-signum.json`
@@ -142,6 +143,9 @@ It does not execute tools or create approvals.
 The approval recorder reads one `tool-intent.v1` file and writes one
 `approval-record.v1` file. It does not execute tools or satisfy the future
 dry-run sidecar requirement by itself.
+The dry-run recorder reads one `tool-intent.v1` file and writes one
+`dry-run-result.v1` file. It records dry-run evidence only; it does not execute
+the requested tool or mediate side effects.
 
 For current manual invocation examples, see [11-local-runbook.md](11-local-runbook.md).
 
@@ -171,6 +175,7 @@ Current Phase 1 contract anchors:
 - governance decision shape: `schemas/governance-decision.schema.json`
 - governance audit event shape: `schemas/governance-audit-event.schema.json`
 - approval record shape: `schemas/approval-record.schema.json`
+- dry-run result shape: `schemas/dry-run-result.schema.json`
 
 If these anchors drift, update the docs or schemas before adding runtime code.
 
@@ -306,10 +311,10 @@ Current governance runtime:
 - `evaluate-tool-intent --runtime-root ... --run-id ...` appends audit
   evidence for evaluated intents.
 - `record-approval` writes explicit local approval or rejection records.
+- `record-dry-run` writes recorded dry-run evidence for a tool intent.
 
 Still missing:
 
-- dry-run sidecar;
 - tool execution mediation.
 
 ## Handoff rule for the next session

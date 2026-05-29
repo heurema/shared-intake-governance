@@ -88,6 +88,8 @@ What exists now:
   evaluated tool intents.
 - approval-record contract and local `record-approval` CLI for explicit
   approval or rejection records without tool execution.
+- dry-run-result contract and local `record-dry-run` CLI for recorded dry-run
+  evidence without tool execution mediation.
 
 What does not exist yet:
 
@@ -95,8 +97,8 @@ What does not exist yet:
 - sanitizer source mappings beyond `github_repo` and `arxiv_rss_keywords`;
 - multi-profile report shaping beyond deterministic per-profile JSON;
 - automatic profile-state updates or dedupe behavior;
-- governance broker dry-run sidecar and tool execution mediation beyond the
-  default evaluator, audit log, and approval records;
+- governance broker tool execution mediation beyond the default evaluator,
+  audit log, dry-run records, and approval records;
 - provider adapter runtime;
 - SQLite;
 - daemon;

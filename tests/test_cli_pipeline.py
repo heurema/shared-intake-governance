@@ -1530,6 +1530,73 @@ class CliPipelineTests(unittest.TestCase):
             )
             self.assertNotIn("arguments", approval)
 
+    def test_record_dry_run_writes_result_without_tool_arguments(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            paths = RuntimePaths(root / "runtime")
+            intent_path = _write_tool_intent(
+                root / "intent.json",
+                action_class="edit_local",
+                dry_run_supported=True,
+            )
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "record-dry-run",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--run-id",
+                    RUN_ID,
+                    "--dry-run-id",
+                    "dry-run-1",
+                    "--intent",
+                    str(intent_path),
+                    "--dry-run-kind",
+                    "read_only_simulation",
+                    "--result-status",
+                    "passed",
+                    "--recorded-by",
+                    "local-operator",
+                    "--summary",
+                    "Simulated local write.",
+                    "--artifact-ref",
+                    "dry-runs/dry-run-1.json",
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            dry_run_path = paths.dry_run_result_path(RUN_ID, "dry-run-1")
+            dry_run = json.loads(dry_run_path.read_text(encoding="utf-8"))
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(summary["dry_run_result_path"], str(dry_run_path))
+            self.assertEqual(summary["dry_run_result"], dry_run)
+            self.assertEqual(
+                dry_run,
+                {
+                    "schema_version": "dry-run-result.v1",
+                    "run_id": RUN_ID,
+                    "dry_run_id": "dry-run-1",
+                    "intent_id": "intent-1",
+                    "profile_id": "code-intel-kernel",
+                    "action_class": "edit_local",
+                    "tool_name": "publish-report",
+                    "dry_run_kind": "read_only_simulation",
+                    "result_status": "passed",
+                    "recorded_by": "local-operator",
+                    "recorded_at": summary["dry_run_result"]["recorded_at"],
+                    "summary": "Simulated local write.",
+                    "artifact_refs": ["dry-runs/dry-run-1.json"],
+                    "evidence_refs": [
+                        "profiles/code-intel-kernel/reports/report.json"
+                    ],
+                    "tool_intent_path": str(intent_path),
+                },
+            )
+            self.assertNotIn("arguments", dry_run)
+
 
 class SuccessfulCollector:
     def __init__(self, paths, **kwargs):
