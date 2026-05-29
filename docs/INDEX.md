@@ -95,6 +95,7 @@ Use this file as the main navigation layer.
 
 - [../src/shared_intake_governance/runtime/paths.py](../src/shared_intake_governance/runtime/paths.py)
 - [../src/shared_intake_governance/runtime/writers.py](../src/shared_intake_governance/runtime/writers.py)
+- [../src/shared_intake_governance/validation.py](../src/shared_intake_governance/validation.py)
 - [../src/shared_intake_governance/source_config.py](../src/shared_intake_governance/source_config.py)
 - [../src/shared_intake_governance/collector/github_repo.py](../src/shared_intake_governance/collector/github_repo.py)
 - [../src/shared_intake_governance/collector/github_search.py](../src/shared_intake_governance/collector/github_search.py)

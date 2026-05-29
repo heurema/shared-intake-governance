@@ -10,6 +10,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from shared_intake_governance.validation import require_absolute_uri
+
 from .paths import RuntimePaths
 
 
@@ -773,12 +775,14 @@ def validate_raw_metadata(metadata: dict[str, Any]) -> None:
     ]:
         _require_text(metadata, field)
     _require_datetime_text(metadata, "fetched_at")
+    require_absolute_uri(metadata["request_url"], "request_url")
     if metadata["source_type"] not in _SOURCE_TYPES:
         raise ValueError("raw metadata has unsupported source_type")
     if metadata["fetch_status"] not in _RAW_FETCH_STATUS:
         raise ValueError("raw metadata has unsupported fetch_status")
     if metadata["canonical_url"] is not None:
         _require_text(metadata, "canonical_url")
+        require_absolute_uri(metadata["canonical_url"], "canonical_url")
     if metadata["http_status"] is not None:
         if not isinstance(metadata["http_status"], int) or not (
             100 <= metadata["http_status"] <= 599

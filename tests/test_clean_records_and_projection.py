@@ -476,6 +476,13 @@ class CleanRecordEmitterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_clean_record(invalid_record)
 
+        invalid_canonical_url = dict(valid_record)
+        invalid_canonical_url["canonical_url"] = "not a uri"
+        with self.assertRaisesRegex(
+            ValueError, "canonical_url must be an absolute URI"
+        ):
+            validate_clean_record(invalid_canonical_url)
+
         invalid_published_at = dict(valid_record)
         invalid_published_at["published_at"] = "Fri, 29 May 2026 12:00:00 GMT"
         with self.assertRaisesRegex(
@@ -596,6 +603,14 @@ class ProfileProjectorTests(unittest.TestCase):
         malformed_item["items"][0].pop("raw_hash")
         with self.assertRaises(ValueError):
             validate_profile_projection(malformed_item)
+
+        invalid_item_url = dict(valid_report)
+        invalid_item_url["items"] = [dict(valid_report["items"][0])]
+        invalid_item_url["items"][0]["canonical_url"] = "not a uri"
+        with self.assertRaisesRegex(
+            ValueError, "canonical_url must be an absolute URI"
+        ):
+            validate_profile_projection(invalid_item_url)
 
         invalid_generated_at = dict(valid_report)
         invalid_generated_at["generated_at"] = "not-a-date-time"

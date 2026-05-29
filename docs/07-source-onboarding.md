@@ -146,6 +146,7 @@ At minimum, define:
 - when `quarantined` becomes `true`.
 
 If one upstream page contains many logical items, split them before projection.
+Clean record `canonical_url` values must be absolute URI strings.
 If a source exposes publish dates outside the clean-record date-time format,
 normalize parseable values and omit unparseable values.
 

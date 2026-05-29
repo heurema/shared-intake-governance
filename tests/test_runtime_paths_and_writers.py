@@ -353,6 +353,18 @@ class RuntimeWriterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_raw_metadata(bad_error)
 
+        bad_request_url = dict(valid_metadata)
+        bad_request_url["request_url"] = "not a uri"
+        with self.assertRaisesRegex(ValueError, "request_url must be an absolute URI"):
+            validate_raw_metadata(bad_request_url)
+
+        bad_canonical_url = dict(valid_metadata)
+        bad_canonical_url["canonical_url"] = "not a uri"
+        with self.assertRaisesRegex(
+            ValueError, "canonical_url must be an absolute URI"
+        ):
+            validate_raw_metadata(bad_canonical_url)
+
     def test_run_writer_writes_manifest_deterministically(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             paths = RuntimePaths(Path(tmp_dir) / "runtime")

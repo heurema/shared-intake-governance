@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from shared_intake_governance.runtime import RuntimePaths, validate_raw_metadata
+from shared_intake_governance.validation import require_absolute_uri
 
 
 SANITIZER_VERSION = "clean-record.v1"
@@ -144,6 +145,7 @@ def validate_clean_record(record: dict[str, Any]) -> None:
     _require_text(record, "record_id")
     _require_text(record, "source_id")
     _require_text(record, "canonical_url")
+    require_absolute_uri(record["canonical_url"], "canonical_url")
     _require_text(record, "title")
     _require_text(record, "raw_hash")
     _require_text(record, "sanitizer_version")
