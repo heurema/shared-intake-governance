@@ -1051,6 +1051,18 @@ class RuntimeWriterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_tool_execution_result(bad_status)
 
+        bad_run_id = dict(valid_result)
+        bad_run_id["run_id"] = "../20260529T123045Z-deadbeef"
+        with self.assertRaisesRegex(ValueError, "run_id must be a safe path segment"):
+            validate_tool_execution_result(bad_run_id)
+
+        bad_execution_id = dict(valid_result)
+        bad_execution_id["execution_id"] = "../execution-1"
+        with self.assertRaisesRegex(
+            ValueError, "execution_id must be a safe path segment"
+        ):
+            validate_tool_execution_result(bad_execution_id)
+
         bad_metadata = dict(valid_result)
         bad_metadata["execution_metadata"] = {"exit_code": 0}
         with self.assertRaises(ValueError):
@@ -1060,6 +1072,18 @@ class RuntimeWriterTests(unittest.TestCase):
         bad_error["error"] = {"kind": "timeout"}
         with self.assertRaises(ValueError):
             validate_tool_execution_result(bad_error)
+
+    def test_tool_execution_result_schema_tracks_runtime_id_constraints(self):
+        schema = _read_schema("tool-execution-result.schema.json")
+
+        self.assertEqual(
+            schema["properties"]["run_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["execution_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
 
     def test_tool_execution_result_validation_rejects_error_status_drift(self):
         succeeded_with_error = _tool_execution_result()
