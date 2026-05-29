@@ -164,6 +164,11 @@ The collector should:
 
 It should not sanitize or score inline.
 
+Current implementation:
+
+- `src/shared_intake_governance/collector/github_repo.py`
+- `tests/test_github_repo_collector.py`
+
 ### Step 5: implement sanitizer and clean-record emission
 
 The sanitizer should:
