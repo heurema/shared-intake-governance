@@ -163,6 +163,7 @@ Supported Phase 1 source configs:
 
 Source configs must not contain credentials, runtime state, scoring rules,
 profile logic, or publication semantics.
+URL fields such as `api_base_url` and `feed_url` must use HTTPS.
 Runtime code validates source configs before dispatching a source run.
 
 ## Profile config
