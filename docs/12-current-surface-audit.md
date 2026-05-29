@@ -73,8 +73,8 @@ runtime paths consume them:
 - denied provider requests are rejected before provider-request records;
 - `profile_id`, source ids, raw metadata ids, run-manifest ids,
   source-health ids, governance audit ids, approval record ids, dry-run result
-  ids, and profile-state ids use safe path segments at their relevant contract
-  boundaries.
+  ids, execution mediation ids, and profile-state ids use safe path segments at
+  their relevant contract boundaries.
 
 ## Explicitly deferred scope
 

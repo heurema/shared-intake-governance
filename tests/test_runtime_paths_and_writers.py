@@ -897,6 +897,18 @@ class RuntimeWriterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_execution_mediation(bad_decision)
 
+        bad_run_id = dict(valid_record)
+        bad_run_id["run_id"] = "../20260529T123045Z-deadbeef"
+        with self.assertRaisesRegex(ValueError, "run_id must be a safe path segment"):
+            validate_execution_mediation(bad_run_id)
+
+        bad_mediation_id = dict(valid_record)
+        bad_mediation_id["mediation_id"] = "../mediation-1"
+        with self.assertRaisesRegex(
+            ValueError, "mediation_id must be a safe path segment"
+        ):
+            validate_execution_mediation(bad_mediation_id)
+
         ready_denied = dict(valid_record)
         ready_denied["policy_decision"] = "denied"
         ready_denied["mediation_decision"] = "ready"
@@ -914,6 +926,18 @@ class RuntimeWriterTests(unittest.TestCase):
         bad_refs["evidence_refs"] = ["profiles/report.json", 1]
         with self.assertRaises(ValueError):
             validate_execution_mediation(bad_refs)
+
+    def test_execution_mediation_schema_tracks_runtime_id_constraints(self):
+        schema = _read_schema("execution-mediation.schema.json")
+
+        self.assertEqual(
+            schema["properties"]["run_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["mediation_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
 
     def test_provider_request_writer_writes_request_deterministically(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
