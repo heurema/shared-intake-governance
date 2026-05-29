@@ -93,6 +93,8 @@ What exists now:
   evidence without tool execution.
 - execution-mediation contract and local `mediate-tool-intent` CLI for
   pre-execution readiness checks without tool execution.
+- provider-request contract and local `prepare-provider-request` CLI for
+  provider-neutral adapter request records without provider invocation.
 
 What does not exist yet:
 
@@ -101,7 +103,7 @@ What does not exist yet:
 - multi-profile report shaping beyond deterministic per-profile JSON;
 - automatic profile-state updates or dedupe behavior;
 - actual governed tool execution beyond pre-execution mediation records;
-- provider adapter runtime;
+- provider invocation and result capture runtime beyond provider request records;
 - SQLite;
 - daemon;
 - web UI.

@@ -21,6 +21,7 @@ from shared_intake_governance.collector.github_repo import (
     GitHubRepoCollector,
     GitHubRepoSource,
 )
+from shared_intake_governance.adapters import prepare_provider_request
 from shared_intake_governance.governance import (
     evaluate_tool_intent,
     mediate_tool_intent,
@@ -31,6 +32,7 @@ from shared_intake_governance.runtime import (
     ApprovalWriter,
     DryRunWriter,
     MediationWriter,
+    ProviderRequestWriter,
     RunWriter,
     RuntimePaths,
     SourceHealthWriter,
@@ -100,6 +102,8 @@ def main(
         return _list_mediation_records(args, stdout)
     if args.command == "inspect-mediation-record":
         return _inspect_mediation_record(args, stdout)
+    if args.command == "prepare-provider-request":
+        return _prepare_provider_request(args, stdout)
     if args.command == "inspect-run":
         return _inspect_run(args, stdout)
     if args.command == "show-source-health":
@@ -706,6 +710,30 @@ def _inspect_mediation_record(args: argparse.Namespace, stdout: TextIO) -> int:
     return 0
 
 
+def _prepare_provider_request(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    mediation_record_path = Path(args.mediation_record)
+    mediation_record = _read_json(mediation_record_path)
+    request = prepare_provider_request(
+        run_id=args.run_id,
+        request_id=args.request_id,
+        provider=args.provider,
+        mediation_record=mediation_record,
+        mediation_record_path=str(mediation_record_path),
+        context_refs=args.context_refs or [],
+        prepared_at=_format_utc(datetime.now(timezone.utc)),
+    )
+    provider_request_path = ProviderRequestWriter(paths).write_request(request)
+    _print_json(
+        stdout,
+        {
+            "provider_request_path": str(provider_request_path),
+            "provider_request": request,
+        },
+    )
+    return 0
+
+
 def _dry_run_result(
     *,
     run_id: str,
@@ -1242,6 +1270,21 @@ def _parser() -> argparse.ArgumentParser:
     inspect_mediation.add_argument("--runtime-root", required=True)
     inspect_mediation.add_argument("--run-id", required=True)
     inspect_mediation.add_argument("--mediation-id", required=True)
+
+    provider_request = subparsers.add_parser(
+        "prepare-provider-request",
+        help="Prepare one provider-request.v1 record without invoking providers.",
+    )
+    provider_request.add_argument("--runtime-root", required=True)
+    provider_request.add_argument("--run-id", required=True)
+    provider_request.add_argument("--request-id", required=True)
+    provider_request.add_argument("--mediation-record", required=True)
+    provider_request.add_argument(
+        "--provider", choices=["claude", "gemini", "vibe"], required=True
+    )
+    provider_request.add_argument(
+        "--context-ref", dest="context_refs", action="append"
+    )
 
     inspect_run = subparsers.add_parser(
         "inspect-run",

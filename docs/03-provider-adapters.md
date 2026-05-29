@@ -87,6 +87,11 @@ Where:
 - `capabilities` comes from governance, not the adapter;
 - `context` points to clean records and profile outputs only.
 
+The first runtime boundary for this interface is the local
+`provider-request.v1` artifact. It is prepared from a ready mediation record and
+contains provider, capability, context, and evidence references only. It does
+not invoke the provider.
+
 ## Hard rules
 
 Adapters must not:
