@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import json
-import urllib.parse
 from pathlib import Path
 from typing import Any
+
+from shared_intake_governance.validation import require_https_url
 
 
 _SOURCE_TRUST = {"official", "maintainer", "platform", "secondary", "social", "unknown"}
@@ -176,10 +177,7 @@ def _require_string_list(config: dict[str, Any], field: str) -> None:
 
 
 def _require_https_url(config: dict[str, Any], field: str) -> None:
-    _require_text(config, field)
-    parsed = urllib.parse.urlparse(config[field])
-    if parsed.scheme != "https" or not parsed.netloc:
-        raise ValueError(f"{field} must be an https URL")
+    require_https_url(config.get(field), field)
 
 
 def _read_json(path: Path) -> dict[str, Any]:

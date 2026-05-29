@@ -191,6 +191,12 @@ class ArxivRssKeywordsCollectorTests(unittest.TestCase):
                 "max_results": 5,
                 "api_base_url": "http://export.arxiv.org/api/query",
             },
+            {
+                "source_id": "arxiv-code",
+                "keywords": ["coding agent"],
+                "max_results": 5,
+                "api_base_url": "https:///api",
+            },
         ]
 
         for case in invalid_cases:

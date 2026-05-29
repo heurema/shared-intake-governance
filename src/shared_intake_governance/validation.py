@@ -18,6 +18,15 @@ def require_absolute_uri(value: object, field: str) -> None:
         raise ValueError(f"{field} must be an absolute URI")
 
 
+def require_https_url(value: object, field: str) -> None:
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"{field} must be an https URL")
+
+    parsed = urlparse(value)
+    if parsed.scheme != "https" or not parsed.netloc:
+        raise ValueError(f"{field} must be an https URL")
+
+
 def parse_date_time(value: object) -> datetime | None:
     if not isinstance(value, str) or not value:
         return None
