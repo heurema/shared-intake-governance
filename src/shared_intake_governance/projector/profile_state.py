@@ -11,6 +11,17 @@ from shared_intake_governance.projector.profile import validate_profile_projecti
 from shared_intake_governance.runtime import RuntimePaths
 
 
+_PROFILE_STATE_REQUIRED = {
+    "schema_version",
+    "profile_id",
+    "state_id",
+    "state_kind",
+    "updated_at",
+    "record_ids",
+}
+_PROFILE_STATE_KINDS = {"seen_records", "cursor", "custom"}
+
+
 @dataclass(frozen=True)
 class ProfileStateWrite:
     state: dict[str, Any]
@@ -34,6 +45,7 @@ def update_seen_records_state(
     existing_record_ids: list[str] = []
     if path.exists():
         existing = _read_json(path)
+        validate_profile_state(existing)
         if existing["profile_id"] != profile_id:
             raise ValueError("existing profile state does not match profile_id")
         if existing["state_id"] != state_id:
@@ -53,8 +65,26 @@ def update_seen_records_state(
         "updated_at": updated_at,
         "record_ids": sorted(set(existing_record_ids) | set(report_record_ids)),
     }
+    validate_profile_state(state)
     _write_json(path, state)
     return ProfileStateWrite(state=state, path=path)
+
+
+def validate_profile_state(state: dict[str, Any]) -> None:
+    missing = sorted(_PROFILE_STATE_REQUIRED - set(state))
+    if missing:
+        raise ValueError(f"profile state missing required fields: {', '.join(missing)}")
+    extra = sorted(set(state) - _PROFILE_STATE_REQUIRED)
+    if extra:
+        raise ValueError(f"profile state has unknown fields: {', '.join(extra)}")
+
+    if state["schema_version"] != "profile-state.v1":
+        raise ValueError("profile state must use profile-state.v1")
+    for field in ["profile_id", "state_id", "updated_at"]:
+        _require_text(state, field)
+    if state["state_kind"] not in _PROFILE_STATE_KINDS:
+        raise ValueError("profile state has unsupported state_kind")
+    _record_ids(state)
 
 
 def _record_ids(state: dict[str, Any]) -> list[str]:
@@ -64,6 +94,11 @@ def _record_ids(state: dict[str, Any]) -> list[str]:
     ):
         raise ValueError("profile state record_ids must be non-empty strings")
     return record_ids
+
+
+def _require_text(payload: dict[str, Any], field: str) -> None:
+    if not isinstance(payload[field], str) or not payload[field]:
+        raise ValueError(f"{field} must be a non-empty string")
 
 
 def _read_json(path: Path) -> dict[str, Any]:

@@ -224,6 +224,8 @@ record_ids
 The first `profile-state.v1` shape is intentionally small. It is suitable for
 state inventories such as seen record ids or cursors, but it must not be used
 to encode project-specific ranking or editorial decisions.
+Runtime code validates profile state before consuming existing state and before
+writing updated state.
 
 The current `seen_records` update paths are explicit: `update-profile-seen-state`
 merges record ids from one `profile-projection.v1` report into one

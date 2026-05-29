@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from shared_intake_governance.projector.profile_state import (  # noqa: E402
     update_seen_records_state,
+    validate_profile_state,
 )
 from shared_intake_governance.runtime import RuntimePaths  # noqa: E402
 
@@ -60,6 +61,7 @@ class ProfileStateUpdateTests(unittest.TestCase):
                 },
             )
             self.assertEqual(json.loads(existing_path.read_text()), result.state)
+            validate_profile_state(result.state)
 
     def test_update_seen_records_state_rejects_mismatched_profile_report(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -88,6 +90,55 @@ class ProfileStateUpdateTests(unittest.TestCase):
                     state_id="seen-records",
                     updated_at="2026-05-29T12:30:45Z",
                 )
+
+    def test_update_seen_records_state_rejects_malformed_existing_state(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            existing_path = paths.profile_state_path("code-intel-kernel", "seen-records")
+            existing_path.parent.mkdir(parents=True, exist_ok=True)
+            existing_state = _profile_state()
+            existing_state["score"] = 1
+            existing_path.write_text(
+                json.dumps(existing_state, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaises(ValueError):
+                update_seen_records_state(
+                    paths=paths,
+                    profile_id="code-intel-kernel",
+                    profile_report=_profile_report("code-intel-kernel"),
+                    state_id="seen-records",
+                    updated_at="2026-05-29T12:30:45Z",
+                )
+
+    def test_profile_state_validation_rejects_contract_drift(self):
+        valid_state = _profile_state()
+
+        missing_required = dict(valid_state)
+        missing_required.pop("state_kind")
+        with self.assertRaises(ValueError):
+            validate_profile_state(missing_required)
+
+        unknown_field = dict(valid_state)
+        unknown_field["score"] = 1
+        with self.assertRaises(ValueError):
+            validate_profile_state(unknown_field)
+
+        bad_schema = dict(valid_state)
+        bad_schema["schema_version"] = "profile-state.v0"
+        with self.assertRaises(ValueError):
+            validate_profile_state(bad_schema)
+
+        bad_kind = dict(valid_state)
+        bad_kind["state_kind"] = "seen"
+        with self.assertRaises(ValueError):
+            validate_profile_state(bad_kind)
+
+        bad_record_ids = dict(valid_state)
+        bad_record_ids["record_ids"] = ["github_repo-good", ""]
+        with self.assertRaises(ValueError):
+            validate_profile_state(bad_record_ids)
 
 
 def _profile_report(profile_id):
@@ -130,6 +181,17 @@ def _projection_item(record_id, *, source_type, source_trust):
         "source_trust": source_trust,
         "risk_flags": [],
         "raw_hash": f"raw-{record_id}",
+    }
+
+
+def _profile_state():
+    return {
+        "schema_version": "profile-state.v1",
+        "profile_id": "code-intel-kernel",
+        "state_id": "seen-records",
+        "state_kind": "seen_records",
+        "updated_at": "2026-05-28T12:30:45Z",
+        "record_ids": ["github_repo-old", "github_repo-good"],
     }
 
 
