@@ -344,6 +344,16 @@ class RuntimeWriterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_raw_metadata(bad_status)
 
+        bad_run_id = dict(valid_metadata)
+        bad_run_id["run_id"] = "../20260529T123045Z-deadbeef"
+        with self.assertRaisesRegex(ValueError, "run_id must be a safe path segment"):
+            validate_raw_metadata(bad_run_id)
+
+        bad_source_id = dict(valid_metadata)
+        bad_source_id["source_id"] = "../github-main"
+        with self.assertRaisesRegex(ValueError, "source_id must be a safe path segment"):
+            validate_raw_metadata(bad_source_id)
+
         bad_hash = dict(valid_metadata)
         bad_hash["body_hash"] = "abc"
         with self.assertRaises(ValueError):
@@ -412,6 +422,18 @@ class RuntimeWriterTests(unittest.TestCase):
             "raw metadata body_hash and storage_path must be present together",
         ):
             validate_raw_metadata(partial_body_refs)
+
+    def test_raw_metadata_schema_tracks_runtime_id_constraints(self):
+        schema = _read_schema("raw-metadata.schema.json")
+
+        self.assertEqual(
+            schema["properties"]["run_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["source_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
 
     def test_run_writer_writes_manifest_deterministically(self):
         with tempfile.TemporaryDirectory() as tmp_dir:

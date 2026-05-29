@@ -782,6 +782,8 @@ def validate_raw_metadata(metadata: dict[str, Any]) -> None:
         "collector_version",
     ]:
         _require_text(metadata, field)
+    _require_safe_segment(metadata, "run_id")
+    _require_safe_segment(metadata, "source_id")
     require_date_time(metadata["fetched_at"], "fetched_at")
     require_absolute_uri(metadata["request_url"], "request_url")
     if metadata["source_type"] not in _SOURCE_TYPES:
