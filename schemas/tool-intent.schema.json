@@ -17,6 +17,7 @@
   "properties": {
     "intent_id": {
       "type": "string",
+      "description": "Tool intent logical correlation id. It is not a runtime path segment in the current contracts.",
       "minLength": 1
     },
     "profile_id": {

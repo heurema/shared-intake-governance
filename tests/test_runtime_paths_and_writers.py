@@ -1429,6 +1429,28 @@ class RuntimeWriterTests(unittest.TestCase):
                     rules,
                 )
 
+    def test_intent_id_schemas_document_logical_boundary(self):
+        schema_names = [
+            "tool-intent.schema.json",
+            "governance-decision.schema.json",
+            "governance-audit-event.schema.json",
+            "approval-record.schema.json",
+            "dry-run-result.schema.json",
+            "execution-mediation.schema.json",
+            "tool-execution-result.schema.json",
+            "provider-request.schema.json",
+            "provider-result.schema.json",
+        ]
+
+        for schema_name in schema_names:
+            with self.subTest(schema_name=schema_name):
+                intent_id = _read_schema(schema_name)["properties"]["intent_id"]
+                self.assertNotIn("pattern", intent_id)
+                self.assertIn(
+                    "logical correlation id",
+                    intent_id.get("description", ""),
+                )
+
 
 def _raw_metadata(raw_body):
     body_hash = "a" * 64 if raw_body is None else raw_body.body_hash

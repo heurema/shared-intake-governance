@@ -75,6 +75,8 @@ runtime paths consume them:
   policy, mediation, execution, or provider boundaries;
 - provider request and result artifacts preserve safe `mediation_id` values
   from execution mediation records;
+- `intent_id` remains a logical correlation id for matching tool intent scope;
+  it is not a runtime path segment in the current contracts;
 - denied provider requests are rejected before provider-request records;
 - embedded governance audit events reuse standalone audit id validation;
 - `profile_id`, source ids, clean record ids, profile projection ids, raw
