@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from shared_intake_governance.validation import require_absolute_uri
+from shared_intake_governance.validation import require_absolute_uri, require_date_time
 
 from .paths import RuntimePaths
 
@@ -442,7 +442,7 @@ def validate_governance_audit_event(event: dict[str, Any]) -> None:
         "tool_intent_path",
     ]:
         _require_text(event, field)
-    _require_datetime_text(event, "recorded_at")
+    require_date_time(event["recorded_at"], "recorded_at")
     if event["action_class"] not in _ACTION_CLASSES:
         raise ValueError("governance audit event has unsupported action_class")
     if event["decision"] not in _GOVERNANCE_DECISIONS:
@@ -480,7 +480,7 @@ def validate_approval_record(record: dict[str, Any]) -> None:
         "tool_intent_path",
     ]:
         _require_text(record, field)
-    _require_datetime_text(record, "approved_at")
+    require_date_time(record["approved_at"], "approved_at")
     if record["action_class"] not in _ACTION_CLASSES:
         raise ValueError("approval record has unsupported action_class")
     if record["approval_decision"] not in _APPROVAL_DECISIONS:
@@ -517,7 +517,7 @@ def validate_dry_run_result(result: dict[str, Any]) -> None:
         "tool_intent_path",
     ]:
         _require_text(result, field)
-    _require_datetime_text(result, "recorded_at")
+    require_date_time(result["recorded_at"], "recorded_at")
     if result["action_class"] not in _ACTION_CLASSES:
         raise ValueError("dry-run result has unsupported action_class")
     if result["dry_run_kind"] not in _DRY_RUN_KINDS:
@@ -561,7 +561,7 @@ def validate_execution_mediation(record: dict[str, Any]) -> None:
         "tool_intent_path",
     ]:
         _require_text(record, field)
-    _require_datetime_text(record, "mediated_at")
+    require_date_time(record["mediated_at"], "mediated_at")
     if record["action_class"] not in _ACTION_CLASSES:
         raise ValueError("execution mediation has unsupported action_class")
     if record["policy_decision"] not in _GOVERNANCE_DECISIONS:
@@ -612,7 +612,7 @@ def validate_tool_execution_result(result: dict[str, Any]) -> None:
         "mediation_record_path",
     ]:
         _require_text(result, field)
-    _require_datetime_text(result, "executed_at")
+    require_date_time(result["executed_at"], "executed_at")
     if result["action_class"] not in _ACTION_CLASSES:
         raise ValueError("tool execution result has unsupported action_class")
     if result["execution_status"] not in _TOOL_EXECUTION_STATUS:
@@ -669,7 +669,7 @@ def validate_provider_request(request: dict[str, Any]) -> None:
         "tool_name",
     ]:
         _require_text(request, field)
-    _require_datetime_text(request, "prepared_at")
+    require_date_time(request["prepared_at"], "prepared_at")
     if request["provider"] not in _PROVIDERS:
         raise ValueError("provider request has unsupported provider")
     if request["action_class"] not in _ACTION_CLASSES:
@@ -722,7 +722,7 @@ def validate_provider_result(result: dict[str, Any]) -> None:
         "tool_name",
     ]:
         _require_text(result, field)
-    _require_datetime_text(result, "recorded_at")
+    require_date_time(result["recorded_at"], "recorded_at")
     if result["provider"] not in _PROVIDERS:
         raise ValueError("provider result has unsupported provider")
     if result["action_class"] not in _ACTION_CLASSES:
@@ -774,7 +774,7 @@ def validate_raw_metadata(metadata: dict[str, Any]) -> None:
         "collector_version",
     ]:
         _require_text(metadata, field)
-    _require_datetime_text(metadata, "fetched_at")
+    require_date_time(metadata["fetched_at"], "fetched_at")
     require_absolute_uri(metadata["request_url"], "request_url")
     if metadata["source_type"] not in _SOURCE_TYPES:
         raise ValueError("raw metadata has unsupported source_type")
@@ -821,14 +821,14 @@ def validate_run_manifest(manifest: dict[str, Any]) -> None:
         "profiles_root",
     ]:
         _require_text(manifest, field)
-    _require_datetime_text(manifest, "started_at")
+    require_date_time(manifest["started_at"], "started_at")
     if manifest["mode"] not in _RUN_MANIFEST_MODE:
         raise ValueError("run manifest has unsupported mode")
     if manifest["status"] not in _RUN_MANIFEST_STATUS:
         raise ValueError("run manifest has unsupported status")
     if manifest["finished_at"] is not None:
         _require_text(manifest, "finished_at")
-        _require_datetime_text(manifest, "finished_at")
+        require_date_time(manifest["finished_at"], "finished_at")
     _require_string_list(manifest, "sources", "run manifest sources")
     _require_string_list(
         manifest,
@@ -868,7 +868,7 @@ def validate_source_health(source_health: dict[str, Any]) -> None:
     _require_text(source_health, "run_id")
     _require_text(source_health, "source_id")
     _require_text(source_health, "checked_at")
-    _require_datetime_text(source_health, "checked_at")
+    require_date_time(source_health["checked_at"], "checked_at")
     if source_health["source_type"] not in _SOURCE_TYPES:
         raise ValueError("source health has unsupported source_type")
     if source_health["status"] not in _SOURCE_HEALTH_STATUS:
@@ -894,7 +894,7 @@ def validate_source_health(source_health: dict[str, Any]) -> None:
         _validate_error_object(last_error, "source health last_error")
     if source_health["next_retry_after"] is not None:
         _require_text(source_health, "next_retry_after")
-        _require_datetime_text(source_health, "next_retry_after")
+        require_date_time(source_health["next_retry_after"], "next_retry_after")
 
 
 def _validate_error_object(
@@ -922,19 +922,6 @@ def _validate_error_object(
 def _require_text(payload: dict[str, Any], field: str) -> None:
     if not isinstance(payload[field], str) or not payload[field]:
         raise ValueError(f"{field} must be a non-empty string")
-
-
-def _require_datetime_text(payload: dict[str, Any], field: str) -> None:
-    value = payload[field]
-    if not isinstance(value, str) or not value:
-        raise ValueError(f"{field} must be a date-time string")
-    parsed_value = value[:-1] + "+00:00" if value.endswith("Z") else value
-    try:
-        parsed = datetime.fromisoformat(parsed_value)
-    except ValueError as exc:
-        raise ValueError(f"{field} must be a date-time string") from exc
-    if parsed.tzinfo is None:
-        raise ValueError(f"{field} must be a date-time string")
 
 
 def _require_string_list(payload: dict[str, Any], field: str, label: str) -> None:

@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from shared_intake_governance.projector.profile import validate_profile_projection
 from shared_intake_governance.runtime import RuntimePaths
+from shared_intake_governance.validation import require_date_time
 
 
 _PROFILE_STATE_REQUIRED = {
@@ -83,7 +83,7 @@ def validate_profile_state(state: dict[str, Any]) -> None:
         raise ValueError("profile state must use profile-state.v1")
     for field in ["profile_id", "state_id", "updated_at"]:
         _require_text(state, field)
-    _require_datetime_text(state, "updated_at")
+    require_date_time(state["updated_at"], "updated_at")
     if state["state_kind"] not in _PROFILE_STATE_KINDS:
         raise ValueError("profile state has unsupported state_kind")
     _record_ids(state)
@@ -101,19 +101,6 @@ def _record_ids(state: dict[str, Any]) -> list[str]:
 def _require_text(payload: dict[str, Any], field: str) -> None:
     if not isinstance(payload[field], str) or not payload[field]:
         raise ValueError(f"{field} must be a non-empty string")
-
-
-def _require_datetime_text(payload: dict[str, Any], field: str) -> None:
-    value = payload[field]
-    if not isinstance(value, str) or not value:
-        raise ValueError(f"{field} must be a date-time string")
-    parsed_value = value[:-1] + "+00:00" if value.endswith("Z") else value
-    try:
-        parsed = datetime.fromisoformat(parsed_value)
-    except ValueError as exc:
-        raise ValueError(f"{field} must be a date-time string") from exc
-    if parsed.tzinfo is None:
-        raise ValueError(f"{field} must be a date-time string")
 
 
 def _read_json(path: Path) -> dict[str, Any]:

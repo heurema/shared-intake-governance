@@ -8,13 +8,15 @@ import json
 import re
 import xml.etree.ElementTree as ElementTree
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any
 
 from shared_intake_governance.runtime import RuntimePaths, validate_raw_metadata
-from shared_intake_governance.validation import require_absolute_uri
+from shared_intake_governance.validation import (
+    normalize_external_date_time,
+    require_absolute_uri,
+    require_date_time,
+)
 
 
 SANITIZER_VERSION = "clean-record.v1"
@@ -163,7 +165,7 @@ def validate_clean_record(record: dict[str, Any]) -> None:
     if not isinstance(record["quarantined"], bool):
         raise ValueError("quarantined must be a boolean")
     if "published_at" in record and record["published_at"] is not None:
-        _require_datetime_text(record, "published_at")
+        require_date_time(record["published_at"], "published_at")
     if "license_or_terms_note" in record and record["license_or_terms_note"] is not None:
         _require_text(record, "license_or_terms_note")
 
@@ -415,49 +417,12 @@ def _normalize_optional_source_date_time(value: Any) -> str | None:
     cleaned = _optional_text(value)
     if cleaned is None:
         return None
-
-    parsed = _parse_schema_date_time(cleaned)
-    if parsed is None:
-        try:
-            parsed = parsedate_to_datetime(cleaned)
-        except (TypeError, ValueError, IndexError, OverflowError):
-            return None
-        if parsed.tzinfo is None:
-            return None
-
-    return _format_utc(parsed)
-
-
-def _parse_schema_date_time(value: str) -> datetime | None:
-    parsed_value = value[:-1] + "+00:00" if value.endswith("Z") else value
-    try:
-        parsed = datetime.fromisoformat(parsed_value)
-    except ValueError:
-        return None
-    if parsed.tzinfo is None:
-        return None
-    return parsed
-
-
-def _format_utc(value: datetime) -> str:
-    return (
-        value.astimezone(timezone.utc)
-        .isoformat(timespec="seconds")
-        .replace("+00:00", "Z")
-    )
+    return normalize_external_date_time(cleaned)
 
 
 def _require_text(record: dict[str, Any], field: str) -> None:
     if not isinstance(record[field], str) or not record[field]:
         raise ValueError(f"{field} must be a non-empty string")
-
-
-def _require_datetime_text(record: dict[str, Any], field: str) -> None:
-    if (
-        not isinstance(record[field], str)
-        or _parse_schema_date_time(record[field]) is None
-    ):
-        raise ValueError(f"{field} must be a date-time string")
 
 
 def _raw_body_path(paths: RuntimePaths, storage_path: str) -> Path:
