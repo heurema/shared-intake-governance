@@ -1597,6 +1597,55 @@ class CliPipelineTests(unittest.TestCase):
             )
             self.assertNotIn("arguments", dry_run)
 
+    def test_mediate_tool_intent_writes_record_without_tool_arguments(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            paths = RuntimePaths(root / "runtime")
+            intent_path = _write_tool_intent(
+                root / "intent.json",
+                action_class="edit_local",
+                dry_run_supported=True,
+            )
+            dry_run_path = _write_dry_run_result(paths, "dry-run-1")
+            approval_path = _write_approval_record(paths, "approval-1")
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "mediate-tool-intent",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--run-id",
+                    RUN_ID,
+                    "--mediation-id",
+                    "mediation-1",
+                    "--intent",
+                    str(intent_path),
+                    "--dry-run-result",
+                    str(dry_run_path),
+                    "--approval-record",
+                    str(approval_path),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            mediation_path = paths.mediation_record_path(RUN_ID, "mediation-1")
+            mediation = json.loads(mediation_path.read_text(encoding="utf-8"))
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(summary["mediation_record_path"], str(mediation_path))
+            self.assertEqual(summary["mediation_record"], mediation)
+            self.assertEqual(mediation["schema_version"], "execution-mediation.v1")
+            self.assertEqual(mediation["run_id"], RUN_ID)
+            self.assertEqual(mediation["mediation_id"], "mediation-1")
+            self.assertEqual(mediation["policy_decision"], "gated")
+            self.assertEqual(mediation["mediation_decision"], "ready")
+            self.assertEqual(mediation["dry_run_result_path"], str(dry_run_path))
+            self.assertEqual(mediation["approval_record_path"], str(approval_path))
+            self.assertEqual(mediation["tool_intent_path"], str(intent_path))
+            self.assertNotIn("arguments", mediation)
+
 
 class SuccessfulCollector:
     def __init__(self, paths, **kwargs):
@@ -1967,6 +2016,53 @@ def _write_tool_intent(path, *, action_class, dry_run_supported):
         "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
     }
     path.write_text(json.dumps(intent, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
+def _write_dry_run_result(paths, dry_run_id):
+    result = {
+        "schema_version": "dry-run-result.v1",
+        "run_id": RUN_ID,
+        "dry_run_id": dry_run_id,
+        "intent_id": "intent-1",
+        "profile_id": "code-intel-kernel",
+        "action_class": "edit_local",
+        "tool_name": "publish-report",
+        "dry_run_kind": "read_only_simulation",
+        "result_status": "passed",
+        "recorded_by": "local-operator",
+        "recorded_at": "2026-05-29T12:30:45Z",
+        "summary": "Simulated local write.",
+        "artifact_refs": ["dry-runs/dry-run-1.json"],
+        "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
+        "tool_intent_path": "intent.json",
+    }
+    path = paths.dry_run_result_path(RUN_ID, dry_run_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(result, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
+def _write_approval_record(paths, approval_id):
+    record = {
+        "schema_version": "approval-record.v1",
+        "run_id": RUN_ID,
+        "approval_id": approval_id,
+        "intent_id": "intent-1",
+        "profile_id": "code-intel-kernel",
+        "action_class": "edit_local",
+        "tool_name": "publish-report",
+        "approval_decision": "approved",
+        "approved_by": "local-operator",
+        "approved_at": "2026-05-29T12:30:45Z",
+        "justification": "Dry run reviewed.",
+        "dry_run_ref": "dry-runs/dry-run-1.json",
+        "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
+        "tool_intent_path": "intent.json",
+    }
+    path = paths.approval_record_path(RUN_ID, approval_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(record, sort_keys=True) + "\n", encoding="utf-8")
     return path
 
 

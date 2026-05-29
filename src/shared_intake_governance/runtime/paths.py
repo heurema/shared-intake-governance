@@ -55,6 +55,10 @@ class RuntimePaths:
         return self.root / "dry-runs"
 
     @property
+    def mediation_root(self) -> Path:
+        return self.root / "mediation"
+
+    @property
     def profiles_root(self) -> Path:
         return self.root / "profiles"
 
@@ -95,6 +99,13 @@ class RuntimePaths:
             self.dry_runs_root
             / _safe_segment(run_id, "run_id")
             / f"{_safe_segment(dry_run_id, 'dry_run_id')}.json"
+        )
+
+    def mediation_record_path(self, run_id: str, mediation_id: str) -> Path:
+        return (
+            self.mediation_root
+            / _safe_segment(run_id, "run_id")
+            / f"{_safe_segment(mediation_id, 'mediation_id')}.json"
         )
 
     def source_health_path(self, run_id: str, source_id: str) -> Path:

@@ -210,6 +210,26 @@ Expected output is one summary containing `approval_record_path` and the
 written `approval-record.v1` object. Approval records intentionally omit tool
 intent `arguments`.
 
+## Mediate a tool intent
+
+Use this after recording dry-run and approval evidence. It writes a local
+readiness record only; it does not execute the requested tool.
+
+```sh
+PYTHONPATH=src python3 -m shared_intake_governance.cli mediate-tool-intent \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --run-id "$SIG_RUN_ID" \
+  --mediation-id mediation-1 \
+  --intent path/to/tool-intent.json \
+  --dry-run-result "$SIG_RUNTIME_ROOT/dry-runs/$SIG_RUN_ID/dry-run-1.json" \
+  --approval-record "$SIG_RUNTIME_ROOT/approvals/$SIG_RUN_ID/approval-1.json"
+```
+
+Expected output is one summary containing `mediation_record_path` and the
+written `execution-mediation.v1` object. `read_only` intents can be `ready`
+without dry-run or approval records. Side-effect classes require a matching
+`passed` dry-run result and a matching `approved` approval record.
+
 ## Reset local runtime data
 
 Only remove runtime data outside the repository:

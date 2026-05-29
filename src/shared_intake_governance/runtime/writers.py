@@ -120,6 +120,19 @@ class DryRunWriter:
         return _write_json(path, result)
 
 
+class MediationWriter:
+    """Write one pre-execution mediation record."""
+
+    def __init__(self, paths: RuntimePaths):
+        self.paths = paths
+
+    def write_record(self, record: dict[str, Any]) -> Path:
+        path = self.paths.mediation_record_path(
+            str(record["run_id"]), str(record["mediation_id"])
+        )
+        return _write_json(path, record)
+
+
 def _write_json(path: Path, payload: dict[str, Any]) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
