@@ -180,6 +180,7 @@ def validate_profile_projection(report: dict[str, Any]) -> None:
     if report["schema_version"] != "profile-projection.v1":
         raise ValueError("profile projection must use profile-projection.v1")
     _require_text(report, "profile_id")
+    _safe_segment(report["profile_id"], "profile_id")
     if report["output_mode"] not in _OUTPUT_MODES:
         raise ValueError("profile projection has unsupported output_mode")
     _require_text(report, "generated_at")
@@ -241,6 +242,8 @@ def _validate_projection_item(item: Any) -> None:
 
     _require_text(item, "record_id")
     _require_text(item, "source_id")
+    _safe_segment(item["record_id"], "record_id")
+    _safe_segment(item["source_id"], "source_id")
     _require_text(item, "canonical_url")
     require_absolute_uri(item["canonical_url"], "canonical_url")
     _require_text(item, "title")
