@@ -22,6 +22,11 @@ The first stable contracts should cover:
 16. provider request records;
 17. provider result records.
 
+Runtime writers validate artifacts before writing them. Read-only CLI
+inspection surfaces also validate runtime artifacts before summarizing or
+returning them, because runtime roots may contain hand-edited or corrupted
+JSON outside the repository.
+
 ## Raw payload metadata
 
 See [../schemas/raw-metadata.schema.json](../schemas/raw-metadata.schema.json).

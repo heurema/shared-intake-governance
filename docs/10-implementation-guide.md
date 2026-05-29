@@ -146,7 +146,8 @@ commands also write:
 - `runs/<run-id>.manifest.json`
 - `source-health/<run-id>/<source-id>.json`
 
-The inspection commands are read-only and should not create runtime files.
+The inspection commands are read-only and should not create runtime files. They
+validate runtime artifacts before returning summaries or full objects.
 The `project-profiles` command reads the shared clean cache and writes one
 deterministic report per explicit profile path. With `--update-seen-state`, it
 also merges each generated report into that profile's local `seen_records`
@@ -393,6 +394,8 @@ Current governance runtime:
   intent plus optional dry-run and approval records.
 - `list-mediation-records` and `inspect-mediation-record` provide read-only
   mediation inventory and inspection.
+- read-only runtime inventory and inspection commands validate artifacts before
+  returning summaries or full objects.
 - `execute-tool-intent` writes one `tool-execution-result.v1` artifact after
   checking ready mediation and running only an explicit local command.
 - tool intents and governance decisions are validated before the governance

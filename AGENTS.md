@@ -36,7 +36,8 @@ validated dry-run, validated execution mediation, validated provider request,
 validated provider result, explicit governed tool execution with validated
 result writes, explicit provider command invocation runtime slices, validated
 tool-intent and governance-decision boundary checks, and validated provider
-adapter input boundaries.
+adapter input boundaries. Read-only runtime inspection commands validate
+artifacts before returning summaries or full objects.
 
 No source collector family beyond `github_repo`, `github_search`,
 `arxiv_rss_keywords`, `arxiv_query`, and `rss`, sanitizer source mapping beyond

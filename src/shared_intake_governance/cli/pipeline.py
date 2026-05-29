@@ -52,6 +52,8 @@ from shared_intake_governance.projector import (
     ProfileProjector,
     load_profile,
     update_seen_records_state,
+    validate_profile_projection,
+    validate_profile_state,
 )
 from shared_intake_governance.runtime import (
     AuditWriter,
@@ -65,8 +67,11 @@ from shared_intake_governance.runtime import (
     SourceHealthWriter,
     ToolExecutionWriter,
     generate_run_id,
+    validate_execution_mediation,
+    validate_run_manifest,
+    validate_source_health,
 )
-from shared_intake_governance.sanitizer import CleanRecordEmitter
+from shared_intake_governance.sanitizer import CleanRecordEmitter, validate_clean_record
 
 
 _SMOKE_BOUNDARY_FILENAME = "SMOKE_RUNTIME_DO_NOT_COMMIT.txt"
@@ -838,6 +843,7 @@ def _inspect_record(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     clean_record_path = paths.clean_record_path(args.record_id)
     record = _read_json(clean_record_path)
+    validate_clean_record(record)
     record = dict(record)
     record["clean_record_path"] = str(clean_record_path)
     _print_json(stdout, record)
@@ -870,6 +876,7 @@ def _inspect_profile_state(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     state_path = paths.profile_state_path(args.profile_id, args.state_id)
     state = _read_json(state_path)
+    validate_profile_state(state)
     state = dict(state)
     state["profile_state_path"] = str(state_path)
     _print_json(stdout, state)
@@ -923,6 +930,7 @@ def _inspect_profile_report(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     report_path = paths.profile_report_path(args.profile_id, args.output_id)
     report = _read_json(report_path)
+    validate_profile_projection(report)
     report = dict(report)
     report["profile_report_path"] = str(report_path)
     _print_json(stdout, report)
@@ -1124,6 +1132,7 @@ def _inspect_mediation_record(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     record_path = paths.mediation_record_path(args.run_id, args.mediation_id)
     record = _read_json(record_path)
+    validate_execution_mediation(record)
     record = dict(record)
     record["mediation_record_path"] = str(record_path)
     _print_json(stdout, record)
@@ -1276,6 +1285,7 @@ def _inspect_run(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     manifest_path = paths.run_manifest_path(args.run_id)
     manifest = _read_json(manifest_path)
+    validate_run_manifest(manifest)
     source_health = [
         _source_health_summary(Path(path)) for path in manifest["source_health"]
     ]
@@ -1298,6 +1308,7 @@ def _show_source_health(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     source_health_path = paths.source_health_path(args.run_id, args.source_id)
     source_health = _read_json(source_health_path)
+    validate_source_health(source_health)
     source_health = dict(source_health)
     source_health["source_health_path"] = str(source_health_path)
     _print_json(stdout, source_health)
@@ -1306,6 +1317,7 @@ def _show_source_health(args: argparse.Namespace, stdout: TextIO) -> int:
 
 def _run_manifest_summary(manifest_path: Path) -> dict[str, Any]:
     manifest = _read_json(manifest_path)
+    validate_run_manifest(manifest)
     return {
         "run_id": manifest["run_id"],
         "run_manifest_path": str(manifest_path),
@@ -1321,6 +1333,7 @@ def _run_manifest_summary(manifest_path: Path) -> dict[str, Any]:
 
 def _clean_record_summary(clean_record_path: Path) -> dict[str, Any]:
     record = _read_json(clean_record_path)
+    validate_clean_record(record)
     return {
         "clean_record_path": str(clean_record_path),
         "record_id": record["record_id"],
@@ -1339,6 +1352,7 @@ def _clean_record_summary(clean_record_path: Path) -> dict[str, Any]:
 
 def _profile_report_summary(profile_report_path: Path) -> dict[str, Any]:
     report = _read_json(profile_report_path)
+    validate_profile_projection(report)
     return {
         "profile_id": report["profile_id"],
         "output_id": profile_report_path.stem,
@@ -1352,6 +1366,7 @@ def _profile_report_summary(profile_report_path: Path) -> dict[str, Any]:
 
 def _profile_state_summary(profile_state_path: Path) -> dict[str, Any]:
     state = _read_json(profile_state_path)
+    validate_profile_state(state)
     record_ids = state["record_ids"]
     if not isinstance(record_ids, list):
         raise ValueError("profile state record_ids must be a list")
@@ -1367,6 +1382,7 @@ def _profile_state_summary(profile_state_path: Path) -> dict[str, Any]:
 
 def _source_health_summary(source_health_path: Path) -> dict[str, Any]:
     source_health = _read_json(source_health_path)
+    validate_source_health(source_health)
     return {
         "source_health_path": str(source_health_path),
         "source_id": source_health["source_id"],
@@ -1379,6 +1395,7 @@ def _source_health_summary(source_health_path: Path) -> dict[str, Any]:
 
 def _mediation_record_summary(record_path: Path) -> dict[str, Any]:
     record = _read_json(record_path)
+    validate_execution_mediation(record)
     return {
         "mediation_record_path": str(record_path),
         "run_id": record["run_id"],

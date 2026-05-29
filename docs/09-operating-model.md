@@ -203,6 +203,8 @@ Current CLI behavior:
   and returns a deterministic inventory without writing runtime data;
 - `inspect-mediation-record` reads one `execution-mediation.v1` artifact
   without writing runtime data;
+- all current read-only inventory and inspection commands validate runtime
+  artifacts before returning summaries or full objects;
 - `execute-tool-intent` reads one `tool-intent.v1` artifact plus one matching
   `execution-mediation.v1` artifact, refuses blocked or mismatched mediation
   without invoking the command, and otherwise runs only the explicit local
