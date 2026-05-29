@@ -59,6 +59,10 @@ class RuntimePaths:
         return self.root / "mediation"
 
     @property
+    def tool_executions_root(self) -> Path:
+        return self.root / "tool-executions"
+
+    @property
     def provider_requests_root(self) -> Path:
         return self.root / "provider-requests"
 
@@ -114,6 +118,25 @@ class RuntimePaths:
             self.mediation_root
             / _safe_segment(run_id, "run_id")
             / f"{_safe_segment(mediation_id, 'mediation_id')}.json"
+        )
+
+    def tool_execution_result_path(self, run_id: str, execution_id: str) -> Path:
+        return (
+            self.tool_executions_root
+            / _safe_segment(run_id, "run_id")
+            / f"{_safe_segment(execution_id, 'execution_id')}.json"
+        )
+
+    def tool_execution_artifact_path(
+        self, run_id: str, execution_id: str, artifact_id: str
+    ) -> Path:
+        return (
+            self.tool_executions_root
+            / _safe_segment(run_id, "run_id")
+            / (
+                f"{_safe_segment(execution_id, 'execution_id')}."
+                f"{_safe_segment(artifact_id, 'artifact_id')}"
+            )
         )
 
     def provider_request_path(self, run_id: str, request_id: str) -> Path:

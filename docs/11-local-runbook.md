@@ -136,7 +136,21 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli show-source-health \
 These commands are read-only. They do not fetch upstream sources and do not
 write runtime files. `inspect-profile-state` requires an existing
 `profile-state.v1` artifact under `profiles/<profile-id>/state/`; current
-projector commands do not create or update profile state.
+projector commands do not implicitly create or update profile state.
+
+To explicitly update a profile-local seen-records state from one generated
+profile report:
+
+```sh
+PYTHONPATH=src python3 -m shared_intake_governance.cli update-profile-seen-state \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --profile-id code-intel-kernel \
+  --profile-report "$SIG_RUNTIME_ROOT/profiles/code-intel-kernel/reports/$SIG_RUN_ID.json"
+```
+
+Expected output is one summary containing `profile_state_path` and the written
+`profile-state.v1` object. The command merges report item `record_id` values
+with existing state and keeps the resulting `record_ids` deterministic.
 
 ## Evaluate a tool intent
 
@@ -244,6 +258,31 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-mediation-record 
 ```
 
 Both commands are read-only and should not create runtime files.
+
+## Execute a tool intent
+
+Use this only after mediation is `ready` and an operator has chosen the exact
+local command. If mediation is blocked or does not match the intent scope, the
+command is not invoked and a `blocked` execution result is written.
+
+```sh
+PYTHONPATH=src python3 -m shared_intake_governance.cli execute-tool-intent \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --run-id "$SIG_RUN_ID" \
+  --execution-id execution-1 \
+  --intent path/to/tool-intent.json \
+  --mediation-record "$SIG_RUNTIME_ROOT/mediation/$SIG_RUN_ID/mediation-1.json" \
+  --executed-by local-operator \
+  --command path/to/tool-wrapper \
+  --arg=--safe-mode \
+  --timeout-seconds 30 \
+  --metadata-key invocation_mode=explicit
+```
+
+The command receives the `tool-intent.v1` JSON on stdin. The execution result
+omits full tool arguments and points at stdout/stderr artifacts under
+`tool-executions/<run-id>/`. A zero exit code records `succeeded`; a nonzero
+exit or timeout records `failed` with a compact error object.
 
 ## Prepare a provider request
 

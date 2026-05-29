@@ -72,6 +72,8 @@ What exists now:
 - minimal clean-record emitter for `github_repo` and `arxiv_rss_keywords` raw evidence;
 - minimal explicit-profile projector that writes deterministic JSON reports;
 - profile-state contract for profile-local runtime state artifacts;
+- explicit `update-profile-seen-state` CLI that merges one profile report into
+  a profile-local `seen_records` state artifact;
 - narrow local CLI commands for `github_repo` and `arxiv_rss_keywords` collect,
   sanitize, and project paths;
 - multi-profile CLI command that projects existing clean cache into multiple
@@ -93,6 +95,8 @@ What exists now:
   evidence without tool execution.
 - execution-mediation contract and local `mediate-tool-intent` CLI for
   pre-execution readiness checks without tool execution.
+- tool-execution-result contract and local `execute-tool-intent` CLI for
+  explicit governed local command execution after ready mediation.
 - provider-request contract and local `prepare-provider-request` CLI for
   provider-neutral adapter request records without provider invocation.
 - provider-result contract and local `record-provider-result` CLI for provider
@@ -106,9 +110,9 @@ What does not exist yet:
 - source collector families beyond `github_repo` and `arxiv_rss_keywords`;
 - sanitizer source mappings beyond `github_repo` and `arxiv_rss_keywords`;
 - multi-profile report shaping beyond deterministic per-profile JSON;
-- automatic profile-state updates or dedupe behavior;
-- actual governed tool execution beyond pre-execution mediation records;
-- provider-specific command discovery, credential mapping, or default provider
+- automatic profile-state updates from `project-profiles` or consumer-specific
+  dedupe behavior;
+- automatic command discovery, credential mapping, or default provider/tool
   presets;
 - SQLite;
 - daemon;
@@ -188,13 +192,14 @@ This repository should own only the shared substrate:
 
 ## Next implementation step
 
-The next useful runtime slice is an explicit governed tool execution boundary:
+The next useful step is a source-of-truth audit before widening runtime scope:
 
-- consume ready mediation evidence;
-- run only explicit local commands;
-- write compact execution artifacts outside git;
-- keep destructive and external side effects denied unless the governance
-  record proves they are ready.
+- verify docs, schemas, `AGENTS.md`, and CLI help describe the same current
+  surface;
+- keep any next runtime expansion to one explicit source, profile-state, or
+  command boundary;
+- do not add automatic command discovery, credentials, daemon, SQLite, or UI
+  without a new explicit scope decision.
 
 See [docs/10-implementation-guide.md](docs/10-implementation-guide.md) for the exact order.
 

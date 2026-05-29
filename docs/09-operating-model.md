@@ -56,6 +56,11 @@ dry-runs/
 mediation/
   <run-id>/
     <mediation-id>.json
+tool-executions/
+  <run-id>/
+    <execution-id>.json
+    <execution-id>.stdout.txt
+    <execution-id>.stderr.txt
 provider-requests/
   <run-id>/
     <request-id>.json
@@ -86,6 +91,7 @@ The canonical contract files for these runtime artifacts are:
 - [../schemas/approval-record.schema.json](../schemas/approval-record.schema.json)
 - [../schemas/dry-run-result.schema.json](../schemas/dry-run-result.schema.json)
 - [../schemas/execution-mediation.schema.json](../schemas/execution-mediation.schema.json)
+- [../schemas/tool-execution-result.schema.json](../schemas/tool-execution-result.schema.json)
 - [../schemas/provider-request.schema.json](../schemas/provider-request.schema.json)
 - [../schemas/provider-result.schema.json](../schemas/provider-result.schema.json)
 
@@ -166,6 +172,9 @@ Current CLI behavior:
   a deterministic inventory without writing runtime data;
 - `inspect-profile-state` reads one profile state artifact by profile id and
   state id without writing runtime data;
+- `update-profile-seen-state` reads one `profile-projection.v1` artifact and
+  explicitly merges its item record ids into a profile-local `seen_records`
+  state artifact;
 - `list-profile-reports` reads generated profile reports and returns a
   deterministic inventory without writing runtime data;
 - `inspect-profile-report` reads one profile report by profile id and output id
@@ -189,6 +198,10 @@ Current CLI behavior:
   and returns a deterministic inventory without writing runtime data;
 - `inspect-mediation-record` reads one `execution-mediation.v1` artifact
   without writing runtime data;
+- `execute-tool-intent` reads one `tool-intent.v1` artifact plus one matching
+  `execution-mediation.v1` artifact, refuses blocked or mismatched mediation
+  without invoking the command, and otherwise runs only the explicit local
+  command supplied by the operator;
 - `prepare-provider-request` reads one ready `execution-mediation.v1` artifact
   and writes one `provider-request.v1` artifact without invoking providers;
 - `record-provider-result` reads one `provider-request.v1` artifact and writes
@@ -221,7 +234,8 @@ Operationally, assume:
 - raw cache is evidence, not model input;
 - clean records are safer, not "trusted";
 - risky items can still be quarantined and excluded;
-- no action may cross into side effects without governance mediation.
+- no action may cross into side effects without governance mediation and an
+  explicit local command.
 
 ## Failure handling
 

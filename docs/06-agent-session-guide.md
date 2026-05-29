@@ -119,7 +119,7 @@ If runtime work starts, keep the initial path strict:
 - file-based only;
 - read-only intake first;
 - no LLM required for Phase 1;
-- no side effects until governance exists.
+- no side effects without ready mediation and an explicit local command.
 
 That means the first runtime cut should prove:
 

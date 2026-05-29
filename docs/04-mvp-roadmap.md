@@ -47,6 +47,7 @@ Scope:
 - per-profile scoring;
 - per-profile state;
 - per-profile reports.
+- explicit seen-record updates from generated reports.
 
 Do not add:
 
@@ -66,6 +67,8 @@ Scope:
 - audit log;
 - dry-run path;
 - approval records.
+- execution mediation;
+- explicit local command execution records.
 
 ## Phase 4 — Provider adapters
 
@@ -78,6 +81,7 @@ Scope:
 - thin adapters only;
 - no provider-owned policy truth;
 - no adapter-specific project logic.
+- explicit local provider command invocation records.
 
 ## Deferred
 

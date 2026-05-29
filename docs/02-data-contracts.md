@@ -15,10 +15,11 @@ The first stable contracts should cover:
 9. governance decisions returned by policy evaluation;
 10. governance audit events;
 11. approval records;
-12. dry-run results.
+12. dry-run results;
 13. execution mediation records;
-14. provider request records;
-15. provider result records.
+14. tool execution result records;
+15. provider request records;
+16. provider result records.
 
 ## Raw payload metadata
 
@@ -187,6 +188,11 @@ record_ids
 The first `profile-state.v1` shape is intentionally small. It is suitable for
 state inventories such as seen record ids or cursors, but it must not be used
 to encode project-specific ranking or editorial decisions.
+
+The current `seen_records` update path is explicit: it merges record ids from
+one `profile-projection.v1` report into one profile-local state file. It does
+not update state implicitly during projection and does not define consumer
+publication or dedupe policy.
 
 ## Profile loading rules
 
@@ -393,6 +399,50 @@ Default mediation behavior:
 - mismatched or missing evidence blocks mediation;
 - mediation records should store refs and decision fields only, not full tool
   arguments, credentials, or private payloads.
+
+## Tool execution result
+
+See [../schemas/tool-execution-result.schema.json](../schemas/tool-execution-result.schema.json).
+
+Tool execution results record one explicit local command attempt after
+`execution-mediation.v1` is `ready`. They do not discover commands, load
+credentials, choose default tools, parse shell strings, or store full tool
+intent arguments in the result.
+
+Tool execution results are written under:
+
+```text
+tool-executions/<run-id>/<execution-id>.json
+tool-executions/<run-id>/<execution-id>.stdout.txt
+tool-executions/<run-id>/<execution-id>.stderr.txt
+```
+
+Minimum properties:
+
+```text
+schema_version
+run_id
+execution_id
+intent_id
+profile_id
+action_class
+tool_name
+executed_by
+executed_at
+execution_status
+summary
+tool_intent_path
+mediation_record_path
+output_refs
+execution_metadata
+error
+evidence_refs
+```
+
+If mediation is blocked or mismatched, the executor must write a `blocked`
+result and must not invoke the supplied command. Successful and failed
+executions should point at output artifacts instead of embedding command output
+or tool arguments.
 
 ## Provider request
 

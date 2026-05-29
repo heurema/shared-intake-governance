@@ -1378,6 +1378,75 @@ class CliPipelineTests(unittest.TestCase):
             self.assertEqual(summary["state_kind"], "seen_records")
             self.assertEqual(summary["record_ids"], ["github_repo-good"])
 
+    def test_update_profile_seen_state_merges_report_items(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            report_path = _write_profile_report(
+                paths,
+                profile_id="code-intel-kernel",
+                output_id=RUN_ID,
+                output_mode="research_digest",
+                items=["github_repo-good", "arxiv_rss_keywords-good"],
+            )
+            _write_profile_state(
+                paths,
+                profile_id="code-intel-kernel",
+                state_id="seen-records",
+                state_kind="seen_records",
+                record_ids=["github_repo-old", "github_repo-good"],
+            )
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "update-profile-seen-state",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--profile-id",
+                    "code-intel-kernel",
+                    "--profile-report",
+                    str(report_path),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            state_path = paths.profile_state_path("code-intel-kernel", "seen-records")
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(summary["profile_state_path"], str(state_path))
+            self.assertEqual(summary["profile_state"], state)
+            self.assertEqual(state["schema_version"], "profile-state.v1")
+            self.assertEqual(state["profile_id"], "code-intel-kernel")
+            self.assertEqual(state["state_kind"], "seen_records")
+            self.assertEqual(
+                state["record_ids"],
+                [
+                    "arxiv_rss_keywords-good",
+                    "github_repo-good",
+                    "github_repo-old",
+                ],
+            )
+
+            second_stdout = io.StringIO()
+            second_exit_code = main(
+                [
+                    "update-profile-seen-state",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--profile-id",
+                    "code-intel-kernel",
+                    "--profile-report",
+                    str(report_path),
+                ],
+                stdout=second_stdout,
+            )
+            second_state = json.loads(state_path.read_text(encoding="utf-8"))
+
+            self.assertEqual(second_exit_code, 0)
+            self.assertEqual(second_state["record_ids"], state["record_ids"])
+
     def test_evaluate_tool_intent_reads_intent_without_writes(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
@@ -2097,6 +2166,134 @@ class CliPipelineTests(unittest.TestCase):
                 },
             )
             self.assertEqual(stderr_path.read_text(encoding="utf-8"), "provider failed\n")
+
+    def test_execute_tool_intent_runs_explicit_command_and_records_result(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            paths = RuntimePaths(root / "runtime")
+            intent_path = _write_tool_intent(
+                root / "intent.json",
+                action_class="edit_local",
+                dry_run_supported=True,
+            )
+            mediation_path = _write_mediation_record(
+                paths,
+                run_id=RUN_ID,
+                mediation_id="mediation-1",
+            )
+            script_path = _write_fake_provider_script(
+                root,
+                "import json, sys\n"
+                "intent = json.load(sys.stdin)\n"
+                "print('executed ' + intent['tool_name'])\n",
+            )
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "execute-tool-intent",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--run-id",
+                    RUN_ID,
+                    "--execution-id",
+                    "execution-1",
+                    "--intent",
+                    str(intent_path),
+                    "--mediation-record",
+                    str(mediation_path),
+                    "--executed-by",
+                    "local-operator",
+                    "--command",
+                    sys.executable,
+                    "--arg",
+                    str(script_path),
+                    "--metadata-key",
+                    "test_run=true",
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            result_path = paths.tool_execution_result_path(RUN_ID, "execution-1")
+            stdout_path = paths.tool_execution_artifact_path(
+                RUN_ID, "execution-1", "stdout.txt"
+            )
+            result = json.loads(result_path.read_text(encoding="utf-8"))
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(summary["tool_execution_result_path"], str(result_path))
+            self.assertEqual(summary["tool_execution_result"], result)
+            self.assertEqual(result["execution_status"], "succeeded")
+            self.assertEqual(result["output_refs"], [str(stdout_path)])
+            self.assertEqual(result["execution_metadata"]["exit_code"], "0")
+            self.assertEqual(result["execution_metadata"]["test_run"], "true")
+            self.assertEqual(
+                stdout_path.read_text(encoding="utf-8"), "executed publish-report\n"
+            )
+            self.assertNotIn("arguments", result)
+
+    def test_execute_tool_intent_blocks_when_mediation_is_not_ready(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            paths = RuntimePaths(root / "runtime")
+            intent_path = _write_tool_intent(
+                root / "intent.json",
+                action_class="edit_local",
+                dry_run_supported=True,
+            )
+            mediation_path = _write_mediation_record(
+                paths,
+                run_id=RUN_ID,
+                mediation_id="mediation-1",
+                mediation_decision="blocked",
+            )
+            script_path = _write_fake_provider_script(
+                root,
+                "raise SystemExit(99)\n",
+            )
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "execute-tool-intent",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--run-id",
+                    RUN_ID,
+                    "--execution-id",
+                    "execution-1",
+                    "--intent",
+                    str(intent_path),
+                    "--mediation-record",
+                    str(mediation_path),
+                    "--executed-by",
+                    "local-operator",
+                    "--command",
+                    sys.executable,
+                    "--arg",
+                    str(script_path),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            result = summary["tool_execution_result"]
+            stdout_path = paths.tool_execution_artifact_path(
+                RUN_ID, "execution-1", "stdout.txt"
+            )
+
+            self.assertEqual(exit_code, 1)
+            self.assertEqual(result["execution_status"], "blocked")
+            self.assertEqual(result["output_refs"], [])
+            self.assertEqual(
+                result["error"],
+                {
+                    "kind": "mediation_not_ready",
+                    "message": "execution mediation is blocked",
+                },
+            )
+            self.assertFalse(stdout_path.exists())
 
 
 class SuccessfulCollector:
