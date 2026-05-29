@@ -95,6 +95,8 @@ What exists now:
   pre-execution readiness checks without tool execution.
 - provider-request contract and local `prepare-provider-request` CLI for
   provider-neutral adapter request records without provider invocation.
+- provider-result contract and local `record-provider-result` CLI for provider
+  response refs and usage metadata without provider invocation.
 
 What does not exist yet:
 
@@ -103,7 +105,7 @@ What does not exist yet:
 - multi-profile report shaping beyond deterministic per-profile JSON;
 - automatic profile-state updates or dedupe behavior;
 - actual governed tool execution beyond pre-execution mediation records;
-- provider invocation and result capture runtime beyond provider request records;
+- provider invocation runtime beyond request and result records;
 - SQLite;
 - daemon;
 - web UI.

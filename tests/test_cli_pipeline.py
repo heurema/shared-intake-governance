@@ -1908,6 +1908,90 @@ class CliPipelineTests(unittest.TestCase):
                     stdout=io.StringIO(),
                 )
 
+    def test_record_provider_result_writes_result_without_private_payloads(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            request_path = _write_provider_request(paths, "provider-request-1")
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "record-provider-result",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--run-id",
+                    RUN_ID,
+                    "--result-id",
+                    "provider-result-1",
+                    "--provider-request",
+                    str(request_path),
+                    "--result-status",
+                    "succeeded",
+                    "--recorded-by",
+                    "local-operator",
+                    "--summary",
+                    "Provider completed the request.",
+                    "--response-ref",
+                    "provider-results/provider-result-1.summary.json",
+                    "--usage-key",
+                    "input_tokens=120",
+                    "--usage-key",
+                    "output_tokens=30",
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            result_path = paths.provider_result_path(RUN_ID, "provider-result-1")
+            result = json.loads(result_path.read_text(encoding="utf-8"))
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(summary["provider_result_path"], str(result_path))
+            self.assertEqual(summary["provider_result"], result)
+            self.assertEqual(result["schema_version"], "provider-result.v1")
+            self.assertEqual(result["provider"], "claude")
+            self.assertEqual(result["request_id"], "provider-request-1")
+            self.assertEqual(result["result_status"], "succeeded")
+            self.assertEqual(result["provider_request_path"], str(request_path))
+            self.assertEqual(
+                result["response_refs"],
+                ["provider-results/provider-result-1.summary.json"],
+            )
+            self.assertEqual(
+                result["usage_metadata"],
+                {"input_tokens": "120", "output_tokens": "30"},
+            )
+            self.assertNotIn("arguments", result)
+            self.assertNotIn("credentials", result)
+            self.assertNotIn("provider_response", result)
+
+    def test_record_provider_result_rejects_failed_result_without_error(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            request_path = _write_provider_request(paths, "provider-request-1")
+
+            with self.assertRaises(ValueError):
+                main(
+                    [
+                        "record-provider-result",
+                        "--runtime-root",
+                        str(paths.root),
+                        "--run-id",
+                        RUN_ID,
+                        "--result-id",
+                        "provider-result-1",
+                        "--provider-request",
+                        str(request_path),
+                        "--result-status",
+                        "failed",
+                        "--recorded-by",
+                        "local-operator",
+                        "--summary",
+                        "Provider failed.",
+                    ],
+                    stdout=io.StringIO(),
+                )
+
 
 class SuccessfulCollector:
     def __init__(self, paths, **kwargs):
@@ -2357,6 +2441,31 @@ def _write_mediation_record(
     path = paths.mediation_record_path(run_id, mediation_id)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(record, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
+def _write_provider_request(paths, request_id):
+    request = {
+        "schema_version": "provider-request.v1",
+        "run_id": RUN_ID,
+        "request_id": request_id,
+        "prepared_at": "2026-05-29T12:30:45Z",
+        "provider": "claude",
+        "mediation_record_path": "mediation/20260529T123045Z-deadbeef/mediation-1.json",
+        "mediation_id": "mediation-1",
+        "intent_id": "intent-1",
+        "profile_id": "code-intel-kernel",
+        "action_class": "edit_local",
+        "tool_name": "publish-report",
+        "policy_decision": "gated",
+        "mediation_decision": "ready",
+        "capabilities": ["edit_local"],
+        "context_refs": ["profiles/code-intel-kernel/reports/report.json"],
+        "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
+    }
+    path = paths.provider_request_path(RUN_ID, request_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(request, sort_keys=True) + "\n", encoding="utf-8")
     return path
 
 
