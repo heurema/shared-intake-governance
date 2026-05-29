@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import sys
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, TextIO
@@ -29,6 +31,9 @@ from shared_intake_governance.runtime import (
 from shared_intake_governance.sanitizer import CleanRecordEmitter
 
 
+_SMOKE_BOUNDARY_FILENAME = "SMOKE_RUNTIME_DO_NOT_COMMIT.txt"
+
+
 def main(
     argv: list[str] | None = None,
     *,
@@ -47,6 +52,13 @@ def main(
         return _run_arxiv_rss_keywords(args, stdout, arxiv_collector_factory)
     if args.command == "run-source-config":
         return _run_source_config(
+            args,
+            stdout,
+            collector_factory,
+            arxiv_collector_factory,
+        )
+    if args.command == "smoke-source-config":
+        return _smoke_source_config(
             args,
             stdout,
             collector_factory,
@@ -273,6 +285,40 @@ def _run_source_config(
     raise ValueError(f"unsupported source_type: {source_type}")
 
 
+def _smoke_source_config(
+    args: argparse.Namespace,
+    stdout: TextIO,
+    github_collector_factory: type[GitHubRepoCollector],
+    arxiv_collector_factory: type[ArxivRssKeywordsCollector],
+) -> int:
+    runtime_root = _prepare_smoke_runtime_root(args.runtime_root)
+    captured_stdout = io.StringIO()
+    exit_code = _run_source_config(
+        argparse.Namespace(
+            runtime_root=str(runtime_root),
+            profile=args.profile,
+            source_config=args.source_config,
+            run_id=args.run_id,
+            output_id=args.output_id,
+        ),
+        captured_stdout,
+        github_collector_factory,
+        arxiv_collector_factory,
+    )
+    summary = json.loads(captured_stdout.getvalue())
+    summary.update(
+        {
+            "smoke_runtime_root": str(runtime_root),
+            "smoke_runtime_policy": "do_not_commit",
+            "runtime_boundary_path": str(
+                runtime_root / _SMOKE_BOUNDARY_FILENAME
+            ),
+        }
+    )
+    _print_json(stdout, summary)
+    return exit_code
+
+
 def _collection_summary(
     run_id: str,
     collection: GitHubRepoCollectionResult | ArxivRssKeywordsCollectionResult,
@@ -336,6 +382,37 @@ def _load_source_config(path: str | Path) -> dict[str, Any]:
         return config
 
     raise ValueError(f"unsupported source_type: {source_type}")
+
+
+def _prepare_smoke_runtime_root(runtime_root: str | None) -> Path:
+    if runtime_root is None:
+        path = Path(
+            tempfile.mkdtemp(prefix="shared-intake-governance-smoke-")
+        ).resolve()
+    else:
+        path = Path(runtime_root).expanduser().resolve()
+        if _is_relative_to(path, _repo_root()):
+            raise ValueError("smoke runtime root must be outside the repository")
+        path.mkdir(parents=True, exist_ok=True)
+
+    boundary_path = path / _SMOKE_BOUNDARY_FILENAME
+    boundary_path.write_text(
+        "Smoke runtime data only. Do not commit this directory.\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[3]
+
+
+def _is_relative_to(path: Path, parent: Path) -> bool:
+    try:
+        path.relative_to(parent.resolve())
+    except ValueError:
+        return False
+    return True
 
 
 def _reject_unknown(config: dict[str, Any], allowed: set[str]) -> None:
@@ -475,4 +552,17 @@ def _parser() -> argparse.ArgumentParser:
     source_config.add_argument("--source-config", required=True)
     source_config.add_argument("--run-id")
     source_config.add_argument("--output-id")
+
+    smoke = subparsers.add_parser(
+        "smoke-source-config",
+        help=(
+            "Run one source-config.v1 smoke with runtime data outside the "
+            "repository."
+        ),
+    )
+    smoke.add_argument("--runtime-root")
+    smoke.add_argument("--profile", required=True)
+    smoke.add_argument("--source-config", required=True)
+    smoke.add_argument("--run-id")
+    smoke.add_argument("--output-id")
     return parser

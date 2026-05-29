@@ -103,6 +103,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli run-github-repo`
 - `python -m shared_intake_governance.cli run-arxiv-rss-keywords`
 - `python -m shared_intake_governance.cli run-source-config`
+- `python -m shared_intake_governance.cli smoke-source-config`
 - `sources/examples/github-signum.json`
 - `sources/examples/arxiv-code-agents.json`
 - `src/shared_intake_governance/cli/pipeline.py`
@@ -111,7 +112,8 @@ Current CLI implementation:
 These commands intentionally cover only the implemented `github_repo` and
 `arxiv_rss_keywords` paths. They require explicit runtime root, profile path,
 source-specific inputs or one `source-config.v1` file, and run/output
-identifiers. They also write:
+identifiers. The smoke command may allocate an isolated temporary runtime root
+when none is provided. These commands also write:
 
 - `runs/<run-id>.manifest.json`
 - `source-health/<run-id>/<source-id>.json`

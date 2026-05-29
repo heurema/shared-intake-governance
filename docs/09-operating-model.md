@@ -126,6 +126,8 @@ Current CLI behavior:
 - `run-arxiv-rss-keywords` writes one run manifest under `runs/`;
 - `run-source-config` reads one `source-config.v1` JSON file and writes one
   run manifest under `runs/`;
+- `smoke-source-config` runs one `source-config.v1` JSON file with a smoke
+  runtime root outside the repository and writes a do-not-commit marker;
 - all current run commands write one source health artifact under
   `source-health/`.
 
