@@ -4,6 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from shared_intake_governance.runtime import (
+    validate_provider_request,
+    validate_provider_result,
+)
+
 
 _RESULT_STATUSES = {"succeeded", "failed", "blocked"}
 
@@ -23,6 +28,7 @@ def record_provider_result(
     recorded_at: str,
 ) -> dict[str, Any]:
     """Return a provider result record without storing provider payloads."""
+    validate_provider_request(provider_request)
     if result_status not in _RESULT_STATUSES:
         raise ValueError(f"unsupported result_status: {result_status}")
     if result_status == "succeeded" and error is not None:
@@ -30,7 +36,7 @@ def record_provider_result(
     if result_status in {"failed", "blocked"} and error is None:
         raise ValueError("failed or blocked provider results require an error")
 
-    return {
+    result = {
         "schema_version": "provider-result.v1",
         "run_id": run_id,
         "result_id": result_id,
@@ -51,3 +57,5 @@ def record_provider_result(
         "error": error,
         "evidence_refs": provider_request["evidence_refs"],
     }
+    validate_provider_result(result)
+    return result

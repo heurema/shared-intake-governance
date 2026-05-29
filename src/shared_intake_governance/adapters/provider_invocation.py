@@ -6,7 +6,7 @@ import json
 import subprocess
 from typing import Any, Sequence
 
-from shared_intake_governance.runtime import RuntimePaths
+from shared_intake_governance.runtime import RuntimePaths, validate_provider_request
 
 from .provider_result import record_provider_result
 
@@ -25,6 +25,7 @@ def invoke_provider_request(
     recorded_at: str,
 ) -> dict[str, Any]:
     """Run an explicit command with provider-request JSON on stdin."""
+    validate_provider_request(provider_request)
     if not command:
         raise ValueError("provider command must not be empty")
 

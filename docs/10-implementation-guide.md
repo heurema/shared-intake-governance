@@ -180,17 +180,19 @@ local command supplied by the operator, passes the tool intent JSON on stdin,
 stores stdout/stderr as runtime artifacts, and writes one
 validated `tool-execution-result.v1` artifact.
 The provider request command reads one ready `execution-mediation.v1` artifact
-and validates and writes one provider-neutral `provider-request.v1` artifact. It
-does not invoke providers, discover credentials, or execute tools.
+and validates and writes one provider-neutral `provider-request.v1` artifact.
+It validates the input mediation record and does not invoke providers, discover
+credentials, or execute tools.
 The provider result command reads one `provider-request.v1` artifact and
 validates and writes one `provider-result.v1` artifact with response refs and
-usage metadata. It does not invoke providers or store full provider responses.
+usage metadata. It validates the input provider request and does not invoke
+providers or store full provider responses.
 The provider invocation command reads one `provider-request.v1` artifact, runs
-only the explicit local command supplied by the operator, passes the provider
-request JSON on stdin, stores stdout/stderr as runtime artifacts, and writes
-one `provider-result.v1` artifact. It does not discover provider CLIs, load
-credentials, choose default provider commands, or execute the requested tool
-directly.
+only the explicit local command supplied by the operator, validates the request
+before passing provider request JSON on stdin, stores stdout/stderr as runtime
+artifacts, and writes one `provider-result.v1` artifact. It does not discover
+provider CLIs, load credentials, choose default provider commands, or execute
+the requested tool directly.
 
 For current manual invocation examples, see [11-local-runbook.md](11-local-runbook.md).
 
@@ -409,8 +411,8 @@ Current provider adapter boundary:
 - `record-provider-result` writes provider response refs and usage metadata
   from one provider request without invoking providers.
 - `invoke-provider-request` runs one explicit local command with the provider
-  request JSON on stdin, stores stdout/stderr as response refs, and records a
-  provider result.
+  request JSON on stdin after validating the request, stores stdout/stderr as
+  response refs, and records a provider result.
 
 Still missing:
 

@@ -4,6 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from shared_intake_governance.runtime import (
+    validate_execution_mediation,
+    validate_provider_request,
+)
+
 
 _PROVIDERS = {"claude", "gemini", "vibe"}
 
@@ -19,13 +24,14 @@ def prepare_provider_request(
     prepared_at: str,
 ) -> dict[str, Any]:
     """Return a provider request record without invoking the provider."""
+    validate_execution_mediation(mediation_record)
     if provider not in _PROVIDERS:
         raise ValueError(f"unsupported provider: {provider}")
     if mediation_record["mediation_decision"] != "ready":
         raise ValueError("provider request requires ready mediation")
 
     action_class = str(mediation_record["action_class"])
-    return {
+    request = {
         "schema_version": "provider-request.v1",
         "run_id": run_id,
         "request_id": request_id,
@@ -43,3 +49,5 @@ def prepare_provider_request(
         "context_refs": context_refs,
         "evidence_refs": mediation_record["evidence_refs"],
     }
+    validate_provider_request(request)
+    return request
