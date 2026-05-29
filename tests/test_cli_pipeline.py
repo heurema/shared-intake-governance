@@ -972,6 +972,25 @@ class CliPipelineTests(unittest.TestCase):
                 ],
             )
 
+    def test_inspect_run_rejects_malformed_source_health_artifact(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            source_health_path = _write_source_health(paths)
+            _write_run_manifest(paths, source_health_path)
+            _add_unknown_field(source_health_path)
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
+                main(
+                    [
+                        "inspect-run",
+                        "--runtime-root",
+                        str(paths.root),
+                        "--run-id",
+                        RUN_ID,
+                    ],
+                    stdout=io.StringIO(),
+                )
+
     def test_show_source_health_reads_one_artifact_without_writes(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             paths = RuntimePaths(Path(tmp_dir) / "runtime")
@@ -1003,6 +1022,26 @@ class CliPipelineTests(unittest.TestCase):
             self.assertEqual(summary["status"], "healthy")
             self.assertEqual(summary["degraded_reasons"], [])
             self.assertIsNone(summary["last_error"])
+
+    def test_show_source_health_rejects_malformed_artifact(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            source_health_path = _write_source_health(paths)
+            _add_unknown_field(source_health_path)
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
+                main(
+                    [
+                        "show-source-health",
+                        "--runtime-root",
+                        str(paths.root),
+                        "--run-id",
+                        RUN_ID,
+                        "--source-id",
+                        "github-signum",
+                    ],
+                    stdout=io.StringIO(),
+                )
 
     def test_list_runs_summarizes_manifests_without_writes(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -1105,6 +1144,23 @@ class CliPipelineTests(unittest.TestCase):
                     },
                 ],
             )
+
+    def test_list_runs_rejects_malformed_manifest(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            source_health_path = _write_source_health(paths)
+            manifest_path = _write_run_manifest(paths, source_health_path)
+            _add_unknown_field(manifest_path)
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
+                main(
+                    [
+                        "list-runs",
+                        "--runtime-root",
+                        str(paths.root),
+                    ],
+                    stdout=io.StringIO(),
+                )
 
     def test_list_runs_handles_missing_runtime_without_creating_it(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -1251,6 +1307,39 @@ class CliPipelineTests(unittest.TestCase):
                 },
             )
 
+    def test_list_clean_records_rejects_malformed_record(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            clean_record_path = _write_clean_record(
+                paths,
+                {
+                    "record_id": "github_repo-good",
+                    "source_id": "github-signum",
+                    "source_type": "github_repo",
+                    "canonical_url": "https://github.com/heurema/signum",
+                    "title": "heurema/signum",
+                    "sanitized_summary": "Coding agent benchmark toolkit.",
+                    "published_at": "2025-01-02T03:04:05Z",
+                    "license_or_terms_note": "license: Apache-2.0",
+                    "source_trust": "platform",
+                    "risk_flags": [],
+                    "quarantined": False,
+                    "raw_hash": "raw-github",
+                    "sanitizer_version": "clean-record.v1",
+                },
+            )
+            _add_unknown_field(clean_record_path)
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
+                main(
+                    [
+                        "list-clean-records",
+                        "--runtime-root",
+                        str(paths.root),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
     def test_inspect_record_reads_one_clean_record_without_writes(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             paths = RuntimePaths(Path(tmp_dir) / "runtime")
@@ -1295,6 +1384,41 @@ class CliPipelineTests(unittest.TestCase):
                     "clean_record_path": str(clean_record_path),
                 },
             )
+
+    def test_inspect_record_rejects_malformed_record(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            clean_record_path = _write_clean_record(
+                paths,
+                {
+                    "record_id": "github_repo-good",
+                    "source_id": "github-signum",
+                    "source_type": "github_repo",
+                    "canonical_url": "https://github.com/heurema/signum",
+                    "title": "heurema/signum",
+                    "sanitized_summary": "Coding agent benchmark toolkit.",
+                    "published_at": "2025-01-02T03:04:05Z",
+                    "license_or_terms_note": "license: Apache-2.0",
+                    "source_trust": "platform",
+                    "risk_flags": [],
+                    "quarantined": False,
+                    "raw_hash": "raw-github",
+                    "sanitizer_version": "clean-record.v1",
+                },
+            )
+            _add_unknown_field(clean_record_path)
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
+                main(
+                    [
+                        "inspect-record",
+                        "--runtime-root",
+                        str(paths.root),
+                        "--record-id",
+                        "github_repo-good",
+                    ],
+                    stdout=io.StringIO(),
+                )
 
     def test_project_profiles_projects_multiple_profiles_from_same_clean_cache(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -1699,6 +1823,28 @@ class CliPipelineTests(unittest.TestCase):
                 ],
             )
 
+    def test_list_profile_reports_rejects_malformed_report(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            report_path = _write_profile_report(
+                paths,
+                profile_id="code-intel-kernel",
+                output_id=RUN_ID,
+                output_mode="research_digest",
+                items=["github_repo-good"],
+            )
+            _add_unknown_field(report_path)
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
+                main(
+                    [
+                        "list-profile-reports",
+                        "--runtime-root",
+                        str(paths.root),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
     def test_inspect_profile_report_reads_one_report_without_writes(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             paths = RuntimePaths(Path(tmp_dir) / "runtime")
@@ -1735,6 +1881,32 @@ class CliPipelineTests(unittest.TestCase):
             self.assertEqual(summary["output_mode"], "research_digest")
             self.assertEqual(summary["counts"]["items_written"], 1)
             self.assertEqual(summary["items"][0]["record_id"], "github_repo-good")
+
+    def test_inspect_profile_report_rejects_malformed_report(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            report_path = _write_profile_report(
+                paths,
+                profile_id="code-intel-kernel",
+                output_id=RUN_ID,
+                output_mode="research_digest",
+                items=["github_repo-good"],
+            )
+            _add_unknown_field(report_path)
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
+                main(
+                    [
+                        "inspect-profile-report",
+                        "--runtime-root",
+                        str(paths.root),
+                        "--profile-id",
+                        "code-intel-kernel",
+                        "--output-id",
+                        RUN_ID,
+                    ],
+                    stdout=io.StringIO(),
+                )
 
     def test_list_profile_state_summarizes_state_without_writes(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -1792,6 +1964,28 @@ class CliPipelineTests(unittest.TestCase):
                     },
                 ],
             )
+
+    def test_list_profile_state_rejects_malformed_state(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            state_path = _write_profile_state(
+                paths,
+                profile_id="code-intel-kernel",
+                state_id="seen-records",
+                state_kind="seen_records",
+                record_ids=["github_repo-good"],
+            )
+            _add_unknown_field(state_path)
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
+                main(
+                    [
+                        "list-profile-state",
+                        "--runtime-root",
+                        str(paths.root),
+                    ],
+                    stdout=io.StringIO(),
+                )
 
     def test_list_profile_state_can_filter_one_profile(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -1878,6 +2072,32 @@ class CliPipelineTests(unittest.TestCase):
             self.assertEqual(summary["profile_id"], "code-intel-kernel")
             self.assertEqual(summary["state_kind"], "seen_records")
             self.assertEqual(summary["record_ids"], ["github_repo-good"])
+
+    def test_inspect_profile_state_rejects_malformed_state(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            state_path = _write_profile_state(
+                paths,
+                profile_id="code-intel-kernel",
+                state_id="seen-records",
+                state_kind="seen_records",
+                record_ids=["github_repo-good"],
+            )
+            _add_unknown_field(state_path)
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
+                main(
+                    [
+                        "inspect-profile-state",
+                        "--runtime-root",
+                        str(paths.root),
+                        "--profile-id",
+                        "code-intel-kernel",
+                        "--state-id",
+                        "seen-records",
+                    ],
+                    stdout=io.StringIO(),
+                )
 
     def test_update_profile_seen_state_merges_report_items(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -2332,6 +2552,26 @@ class CliPipelineTests(unittest.TestCase):
                 "20260529T110000Z-second",
             )
 
+    def test_list_mediation_records_rejects_malformed_record(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            record_path = _write_mediation_record(
+                paths,
+                run_id=RUN_ID,
+                mediation_id="mediation-1",
+            )
+            _add_unknown_field(record_path)
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
+                main(
+                    [
+                        "list-mediation-records",
+                        "--runtime-root",
+                        str(paths.root),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
     def test_list_mediation_records_handles_missing_runtime_without_creating_it(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             runtime_root = Path(tmp_dir) / "runtime"
@@ -2395,6 +2635,30 @@ class CliPipelineTests(unittest.TestCase):
                     "mediation_record_path": str(record_path),
                 },
             )
+
+    def test_inspect_mediation_record_rejects_malformed_record(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            record_path = _write_mediation_record(
+                paths,
+                run_id=RUN_ID,
+                mediation_id="mediation-1",
+            )
+            _add_unknown_field(record_path)
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
+                main(
+                    [
+                        "inspect-mediation-record",
+                        "--runtime-root",
+                        str(paths.root),
+                        "--run-id",
+                        RUN_ID,
+                        "--mediation-id",
+                        "mediation-1",
+                    ],
+                    stdout=io.StringIO(),
+                )
 
     def test_prepare_provider_request_writes_request_without_private_payloads(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -3220,6 +3484,12 @@ def _write_source_config(root, payload):
     source_config_path = root / "source-config.json"
     source_config_path.write_text(json.dumps(payload), encoding="utf-8")
     return source_config_path
+
+
+def _add_unknown_field(path, *, field="unexpected_field"):
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload[field] = "unexpected"
+    path.write_text(json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def _write_run_manifest(
