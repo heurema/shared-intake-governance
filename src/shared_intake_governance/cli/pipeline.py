@@ -30,6 +30,7 @@ from shared_intake_governance.governance import (
     evaluate_tool_intent,
     mediate_tool_intent,
 )
+from shared_intake_governance.executor import execute_tool_intent
 from shared_intake_governance.projector import ProfileProjector, load_profile
 from shared_intake_governance.runtime import (
     AuditWriter,
@@ -41,6 +42,7 @@ from shared_intake_governance.runtime import (
     RunWriter,
     RuntimePaths,
     SourceHealthWriter,
+    ToolExecutionWriter,
     generate_run_id,
 )
 from shared_intake_governance.sanitizer import CleanRecordEmitter
@@ -107,6 +109,8 @@ def main(
         return _list_mediation_records(args, stdout)
     if args.command == "inspect-mediation-record":
         return _inspect_mediation_record(args, stdout)
+    if args.command == "execute-tool-intent":
+        return _execute_tool_intent(args, stdout)
     if args.command == "prepare-provider-request":
         return _prepare_provider_request(args, stdout)
     if args.command == "record-provider-result":
@@ -719,6 +723,37 @@ def _inspect_mediation_record(args: argparse.Namespace, stdout: TextIO) -> int:
     return 0
 
 
+def _execute_tool_intent(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    tool_intent_path = Path(args.intent)
+    mediation_record_path = Path(args.mediation_record)
+    intent = _read_json(tool_intent_path)
+    mediation_record = _read_json(mediation_record_path)
+    result = execute_tool_intent(
+        paths=paths,
+        run_id=args.run_id,
+        execution_id=args.execution_id,
+        intent=intent,
+        tool_intent_path=str(tool_intent_path),
+        mediation_record=mediation_record,
+        mediation_record_path=str(mediation_record_path),
+        command=[args.tool_command] + (args.tool_args or []),
+        executed_by=args.executed_by,
+        timeout_seconds=args.timeout_seconds,
+        execution_metadata=_execution_metadata(args.metadata_keys or []),
+        executed_at=_format_utc(datetime.now(timezone.utc)),
+    )
+    result_path = ToolExecutionWriter(paths).write_result(result)
+    _print_json(
+        stdout,
+        {
+            "tool_execution_result_path": str(result_path),
+            "tool_execution_result": result,
+        },
+    )
+    return 0 if result["execution_status"] == "succeeded" else 1
+
+
 def _prepare_provider_request(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     mediation_record_path = Path(args.mediation_record)
@@ -1079,6 +1114,16 @@ def _usage_metadata(items: list[str]) -> dict[str, str]:
     return metadata
 
 
+def _execution_metadata(items: list[str]) -> dict[str, str]:
+    metadata: dict[str, str] = {}
+    for item in items:
+        key, separator, value = item.partition("=")
+        if not separator or not key or not value:
+            raise ValueError("metadata-key must use key=value")
+        metadata[key] = value
+    return metadata
+
+
 def _provider_error(kind: str | None, message: str | None) -> dict[str, str] | None:
     if kind is None and message is None:
         return None
@@ -1353,6 +1398,21 @@ def _parser() -> argparse.ArgumentParser:
     inspect_mediation.add_argument("--runtime-root", required=True)
     inspect_mediation.add_argument("--run-id", required=True)
     inspect_mediation.add_argument("--mediation-id", required=True)
+
+    tool_execution = subparsers.add_parser(
+        "execute-tool-intent",
+        help="Execute one explicit local command after ready mediation.",
+    )
+    tool_execution.add_argument("--runtime-root", required=True)
+    tool_execution.add_argument("--run-id", required=True)
+    tool_execution.add_argument("--execution-id", required=True)
+    tool_execution.add_argument("--intent", required=True)
+    tool_execution.add_argument("--mediation-record", required=True)
+    tool_execution.add_argument("--executed-by", required=True)
+    tool_execution.add_argument("--command", dest="tool_command", required=True)
+    tool_execution.add_argument("--arg", dest="tool_args", action="append")
+    tool_execution.add_argument("--timeout-seconds", type=float, default=30.0)
+    tool_execution.add_argument("--metadata-key", dest="metadata_keys", action="append")
 
     provider_request = subparsers.add_parser(
         "prepare-provider-request",

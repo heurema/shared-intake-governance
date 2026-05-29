@@ -118,6 +118,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli mediate-tool-intent`
 - `python -m shared_intake_governance.cli list-mediation-records`
 - `python -m shared_intake_governance.cli inspect-mediation-record`
+- `python -m shared_intake_governance.cli execute-tool-intent`
 - `python -m shared_intake_governance.cli prepare-provider-request`
 - `python -m shared_intake_governance.cli record-provider-result`
 - `python -m shared_intake_governance.cli invoke-provider-request`
@@ -157,6 +158,12 @@ and approval records, then writes one `execution-mediation.v1` readiness record.
 It does not execute the requested tool or call provider adapters.
 The mediation inspection commands read existing `execution-mediation.v1`
 artifacts only and do not write runtime data.
+The tool execution command reads one `tool-intent.v1` artifact plus one matching
+`execution-mediation.v1` artifact. It refuses blocked or mismatched mediation
+without invoking the command. When mediation is ready, it runs only the explicit
+local command supplied by the operator, passes the tool intent JSON on stdin,
+stores stdout/stderr as runtime artifacts, and writes one
+`tool-execution-result.v1` artifact.
 The provider request command reads one ready `execution-mediation.v1` artifact
 and writes one provider-neutral `provider-request.v1` artifact. It does not
 invoke providers, discover credentials, or execute tools.
@@ -200,6 +207,7 @@ Current Phase 1 contract anchors:
 - approval record shape: `schemas/approval-record.schema.json`
 - dry-run result shape: `schemas/dry-run-result.schema.json`
 - execution mediation shape: `schemas/execution-mediation.schema.json`
+- tool execution result shape: `schemas/tool-execution-result.schema.json`
 - provider request shape: `schemas/provider-request.schema.json`
 - provider result shape: `schemas/provider-result.schema.json`
 
@@ -333,8 +341,10 @@ Current governance runtime:
 
 - `src/shared_intake_governance/governance/policy.py`
 - `src/shared_intake_governance/governance/mediation.py`
+- `src/shared_intake_governance/executor/tool_execution.py`
 - `tests/test_governance_policy.py`
 - `tests/test_governance_mediation.py`
+- `tests/test_tool_execution.py`
 - `evaluate-tool-intent` implements only the default policy evaluator.
 - `evaluate-tool-intent --runtime-root ... --run-id ...` appends audit
   evidence for evaluated intents.
@@ -344,6 +354,8 @@ Current governance runtime:
   intent plus optional dry-run and approval records.
 - `list-mediation-records` and `inspect-mediation-record` provide read-only
   mediation inventory and inspection.
+- `execute-tool-intent` writes one `tool-execution-result.v1` artifact after
+  checking ready mediation and running only an explicit local command.
 
 Current provider adapter boundary:
 
@@ -363,7 +375,10 @@ Current provider adapter boundary:
 
 Still missing:
 
-- actual governed tool execution.
+- automatic profile-state updates or dedupe behavior;
+- source collector families beyond `github_repo` and `arxiv_rss_keywords`;
+- sanitizer source mappings beyond `github_repo` and `arxiv_rss_keywords`;
+- provider/tool command discovery, credential mapping, or default presets.
 
 ## Handoff rule for the next session
 

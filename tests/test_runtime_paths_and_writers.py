@@ -19,6 +19,7 @@ from shared_intake_governance.runtime import (  # noqa: E402
     RawWriter,
     RunWriter,
     RuntimePaths,
+    ToolExecutionWriter,
     generate_run_id,
 )
 
@@ -42,6 +43,7 @@ class RuntimePathTests(unittest.TestCase):
             self.assertEqual(paths.approvals_root, root / "approvals")
             self.assertEqual(paths.dry_runs_root, root / "dry-runs")
             self.assertEqual(paths.mediation_root, root / "mediation")
+            self.assertEqual(paths.tool_executions_root, root / "tool-executions")
             self.assertEqual(paths.provider_requests_root, root / "provider-requests")
             self.assertEqual(paths.provider_results_root, root / "provider-results")
             self.assertEqual(paths.profiles_root, root / "profiles")
@@ -102,6 +104,24 @@ class RuntimePathTests(unittest.TestCase):
                 / "mediation"
                 / "20260529T123045Z-deadbeef"
                 / "mediation-1.json",
+            )
+            self.assertEqual(
+                paths.tool_execution_result_path(
+                    "20260529T123045Z-deadbeef", "execution-1"
+                ),
+                root
+                / "tool-executions"
+                / "20260529T123045Z-deadbeef"
+                / "execution-1.json",
+            )
+            self.assertEqual(
+                paths.tool_execution_artifact_path(
+                    "20260529T123045Z-deadbeef", "execution-1", "stdout.txt"
+                ),
+                root
+                / "tool-executions"
+                / "20260529T123045Z-deadbeef"
+                / "execution-1.stdout.txt",
             )
             self.assertEqual(
                 paths.provider_request_path(
@@ -178,6 +198,14 @@ class RuntimePathTests(unittest.TestCase):
                 paths.dry_run_result_path("20260529T123045Z-deadbeef", "../dry-run")
             with self.assertRaises(ValueError):
                 paths.mediation_record_path("20260529T123045Z-deadbeef", "../record")
+            with self.assertRaises(ValueError):
+                paths.tool_execution_result_path(
+                    "20260529T123045Z-deadbeef", "../execution"
+                )
+            with self.assertRaises(ValueError):
+                paths.tool_execution_artifact_path(
+                    "20260529T123045Z-deadbeef", "execution-1", "../stdout"
+                )
             with self.assertRaises(ValueError):
                 paths.provider_request_path("20260529T123045Z-deadbeef", "../request")
             with self.assertRaises(ValueError):
@@ -406,6 +434,27 @@ class RuntimeWriterTests(unittest.TestCase):
             writer.write_request(request)
             self.assertEqual(request_path.read_text(encoding="utf-8"), first_write)
 
+    def test_tool_execution_writer_writes_result_deterministically(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            writer = ToolExecutionWriter(paths)
+            result = _tool_execution_result()
+
+            result_path = writer.write_result(result)
+            first_write = result_path.read_text(encoding="utf-8")
+
+            self.assertEqual(
+                result_path,
+                paths.tool_execution_result_path(
+                    "20260529T123045Z-deadbeef", "execution-1"
+                ),
+            )
+            self.assertEqual(json.loads(first_write), result)
+            self.assertTrue(first_write.endswith("\n"))
+
+            writer.write_result(result)
+            self.assertEqual(result_path.read_text(encoding="utf-8"), first_write)
+
     def test_provider_result_writer_writes_result_deterministically(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             paths = RuntimePaths(Path(tmp_dir) / "runtime")
@@ -543,6 +592,28 @@ def _provider_request():
         "mediation_decision": "ready",
         "capabilities": ["edit_local"],
         "context_refs": ["profiles/code-intel-kernel/reports/report.json"],
+        "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
+    }
+
+
+def _tool_execution_result():
+    return {
+        "schema_version": "tool-execution-result.v1",
+        "run_id": "20260529T123045Z-deadbeef",
+        "execution_id": "execution-1",
+        "intent_id": "intent-1",
+        "profile_id": "code-intel-kernel",
+        "action_class": "edit_local",
+        "tool_name": "write-report",
+        "executed_by": "local-operator",
+        "executed_at": "2026-05-29T12:30:45Z",
+        "execution_status": "succeeded",
+        "summary": "Tool command exited 0.",
+        "tool_intent_path": "intent.json",
+        "mediation_record_path": "mediation/20260529T123045Z-deadbeef/mediation-1.json",
+        "output_refs": ["tool-executions/execution-1.stdout.txt"],
+        "execution_metadata": {"exit_code": "0"},
+        "error": None,
         "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
     }
 

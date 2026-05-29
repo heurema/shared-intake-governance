@@ -29,6 +29,7 @@ Mitigations:
 - deny destructive classes by default;
 - explicit approval gate;
 - tool intents instead of direct side effects.
+- execution runner refuses blocked or scope-mismatched mediation records.
 
 ### 3. Credential blast radius
 
@@ -73,6 +74,7 @@ Mitigations:
 
 Before later phases, the system should still be safe if:
 
+- no tool execution commands are explicitly invoked;
 - no provider commands are explicitly invoked;
 - no LLM summarizer is used;
 - only collection, sanitization, and projection run.

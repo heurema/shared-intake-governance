@@ -28,12 +28,13 @@ one explicit-profile JSON projector, and narrow local CLI commands for the
 current `github_repo`, `arxiv_rss_keywords`, and `source-config.v1` paths with
 run manifest and source health output. It also includes governance decision,
 audit, approval, dry-run, execution mediation, provider request, provider
-result, and explicit provider command invocation runtime slices.
+result, explicit governed tool execution, and explicit provider command
+invocation runtime slices.
 
-No actual governed tool executor, source collector family beyond `github_repo`
-and `arxiv_rss_keywords`, sanitizer source mapping beyond those two source
-types, provider-specific command discovery, credential mapping, default
-provider presets, or multi-profile report shaping exists yet.
+No source collector family beyond `github_repo` and `arxiv_rss_keywords`,
+sanitizer source mapping beyond those two source types, automatic command
+discovery, credential mapping, default provider/tool presets, or multi-profile
+report shaping exists yet.
 
 ## Core rules
 
