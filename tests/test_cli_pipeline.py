@@ -1992,6 +1992,112 @@ class CliPipelineTests(unittest.TestCase):
                     stdout=io.StringIO(),
                 )
 
+    def test_invoke_provider_request_runs_explicit_command_and_records_result(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            paths = RuntimePaths(root / "runtime")
+            request_path = _write_provider_request(paths, "provider-request-1")
+            script_path = _write_fake_provider_script(
+                root,
+                "import json, sys\n"
+                "request = json.load(sys.stdin)\n"
+                "print('handled ' + request['provider'])\n",
+            )
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "invoke-provider-request",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--run-id",
+                    RUN_ID,
+                    "--result-id",
+                    "provider-result-1",
+                    "--provider-request",
+                    str(request_path),
+                    "--recorded-by",
+                    "local-operator",
+                    "--command",
+                    sys.executable,
+                    "--arg",
+                    str(script_path),
+                    "--usage-key",
+                    "test_run=true",
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            result_path = paths.provider_result_path(RUN_ID, "provider-result-1")
+            stdout_path = paths.provider_result_artifact_path(
+                RUN_ID, "provider-result-1", "stdout.txt"
+            )
+            result = json.loads(result_path.read_text(encoding="utf-8"))
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(summary["provider_result_path"], str(result_path))
+            self.assertEqual(summary["provider_result"], result)
+            self.assertEqual(result["result_status"], "succeeded")
+            self.assertEqual(result["response_refs"], [str(stdout_path)])
+            self.assertEqual(result["usage_metadata"]["exit_code"], "0")
+            self.assertEqual(result["usage_metadata"]["test_run"], "true")
+            self.assertEqual(stdout_path.read_text(encoding="utf-8"), "handled claude\n")
+            self.assertNotIn("provider_response", result)
+
+    def test_invoke_provider_request_records_failed_result_for_nonzero_exit(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            paths = RuntimePaths(root / "runtime")
+            request_path = _write_provider_request(paths, "provider-request-1")
+            script_path = _write_fake_provider_script(
+                root,
+                "import sys\n"
+                "print('partial response')\n"
+                "print('provider failed', file=sys.stderr)\n"
+                "sys.exit(7)\n",
+            )
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "invoke-provider-request",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--run-id",
+                    RUN_ID,
+                    "--result-id",
+                    "provider-result-1",
+                    "--provider-request",
+                    str(request_path),
+                    "--recorded-by",
+                    "local-operator",
+                    "--command",
+                    sys.executable,
+                    "--arg",
+                    str(script_path),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            result = summary["provider_result"]
+            stderr_path = paths.provider_result_artifact_path(
+                RUN_ID, "provider-result-1", "stderr.txt"
+            )
+
+            self.assertEqual(exit_code, 1)
+            self.assertEqual(result["result_status"], "failed")
+            self.assertEqual(result["usage_metadata"]["exit_code"], "7")
+            self.assertEqual(
+                result["error"],
+                {
+                    "kind": "provider_command_failed",
+                    "message": "provider command exited 7",
+                },
+            )
+            self.assertEqual(stderr_path.read_text(encoding="utf-8"), "provider failed\n")
+
 
 class SuccessfulCollector:
     def __init__(self, paths, **kwargs):
@@ -2466,6 +2572,12 @@ def _write_provider_request(paths, request_id):
     path = paths.provider_request_path(RUN_ID, request_id)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(request, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
+def _write_fake_provider_script(root, source):
+    path = root / "fake_provider.py"
+    path.write_text(source, encoding="utf-8")
     return path
 
 

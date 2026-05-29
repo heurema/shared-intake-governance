@@ -73,7 +73,7 @@ Mitigations:
 
 Before later phases, the system should still be safe if:
 
-- no provider adapters are enabled;
+- no provider commands are explicitly invoked;
 - no LLM summarizer is used;
 - only collection, sanitization, and projection run.
 
