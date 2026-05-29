@@ -81,6 +81,45 @@
           "format": "uri"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "source_type",
+        "source_id",
+        "feed_url"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "string",
+          "const": "source-config.v1"
+        },
+        "source_type": {
+          "type": "string",
+          "const": "rss"
+        },
+        "source_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "feed_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "source_trust": {
+          "type": "string",
+          "enum": [
+            "official",
+            "maintainer",
+            "platform",
+            "secondary",
+            "social",
+            "unknown"
+          ]
+        }
+      }
     }
   ]
 }

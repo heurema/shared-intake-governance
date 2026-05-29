@@ -12,6 +12,11 @@ from .github_repo import (
     HttpRequest,
     HttpResponse,
 )
+from .rss_feed import (
+    RssFeedCollectionResult,
+    RssFeedCollector,
+    RssFeedSource,
+)
 
 __all__ = [
     "ArxivRssKeywordsCollectionResult",
@@ -22,4 +27,7 @@ __all__ = [
     "GitHubRepoSource",
     "HttpRequest",
     "HttpResponse",
+    "RssFeedCollectionResult",
+    "RssFeedCollector",
+    "RssFeedSource",
 ]

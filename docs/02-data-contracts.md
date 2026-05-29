@@ -46,6 +46,9 @@ collector_version
 error
 ```
 
+Source-specific metadata may add bounded contract fields such as
+`source_trust` for `rss` feeds when that value is needed by the sanitizer.
+
 The raw payload body remains outside the clean-record contract.
 For failed fetches, `body_hash`, `storage_path`, `canonical_url`, and
 `http_status` may be `null`, but the metadata file should still record the
@@ -143,6 +146,7 @@ Supported Phase 1 source configs:
 
 - `github_repo`
 - `arxiv_rss_keywords`
+- `rss`
 
 Source configs must not contain credentials, runtime state, scoring rules,
 profile logic, or publication semantics.

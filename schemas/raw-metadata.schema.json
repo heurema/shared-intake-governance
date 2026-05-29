@@ -114,6 +114,17 @@
       "type": "string",
       "minLength": 1
     },
+    "source_trust": {
+      "type": "string",
+      "enum": [
+        "official",
+        "maintainer",
+        "platform",
+        "secondary",
+        "social",
+        "unknown"
+      ]
+    },
     "error": {
       "type": [
         "object",
