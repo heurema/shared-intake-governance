@@ -44,6 +44,8 @@ from shared_intake_governance.adapters import (
 from shared_intake_governance.governance import (
     evaluate_tool_intent,
     mediate_tool_intent,
+    validate_governance_decision,
+    validate_tool_intent,
 )
 from shared_intake_governance.executor import execute_tool_intent
 from shared_intake_governance.projector import (
@@ -945,6 +947,7 @@ def _evaluate_tool_intent(args: argparse.Namespace, stdout: TextIO) -> int:
         audit_log_path = AuditWriter(paths).write_event(event)
         decision["audit_log_path"] = str(audit_log_path)
         decision["audit_event"] = event
+    validate_governance_decision(decision)
     _print_json(stdout, decision)
     return 0
 
@@ -976,6 +979,7 @@ def _record_approval(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     intent_path = Path(args.intent)
     intent = _read_json(intent_path)
+    validate_tool_intent(intent)
     record = _approval_record(
         run_id=args.run_id,
         approval_id=args.approval_id,
@@ -1030,6 +1034,7 @@ def _record_dry_run(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     intent_path = Path(args.intent)
     intent = _read_json(intent_path)
+    validate_tool_intent(intent)
     result = _dry_run_result(
         run_id=args.run_id,
         dry_run_id=args.dry_run_id,

@@ -96,8 +96,8 @@ What exists now:
   records, profile state, profile reports, mediation records, and source
   health;
 - validated run manifest and source health artifacts from the CLI pipeline.
-- tool-intent and governance-decision contracts with a read-only default
-  governance evaluator CLI.
+- validated tool-intent and governance-decision contracts with a read-only
+  default governance evaluator CLI.
 - governance audit event contract and optional validated append-only audit
   logging for evaluated tool intents.
 - approval-record contract and local `record-approval` CLI for validated

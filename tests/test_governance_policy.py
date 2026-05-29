@@ -5,7 +5,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from shared_intake_governance.governance import evaluate_tool_intent  # noqa: E402
+from shared_intake_governance.governance import (  # noqa: E402
+    evaluate_tool_intent,
+    validate_governance_decision,
+    validate_tool_intent,
+)
 
 
 class GovernancePolicyTests(unittest.TestCase):
@@ -58,6 +62,68 @@ class GovernancePolicyTests(unittest.TestCase):
             evaluate_tool_intent(
                 _tool_intent(action_class="unknown", dry_run_supported=False)
             )
+
+    def test_tool_intent_validation_rejects_contract_drift(self):
+        valid = _tool_intent(action_class="read_only", dry_run_supported=False)
+        validate_tool_intent(valid)
+
+        missing_required = dict(valid)
+        del missing_required["intent_id"]
+        with self.assertRaises(ValueError):
+            validate_tool_intent(missing_required)
+
+        unknown_field = dict(valid)
+        unknown_field["schema_version"] = "tool-intent.v1"
+        with self.assertRaises(ValueError):
+            validate_tool_intent(unknown_field)
+
+        bad_dry_run = dict(valid)
+        bad_dry_run["dry_run_supported"] = "false"
+        with self.assertRaises(ValueError):
+            validate_tool_intent(bad_dry_run)
+
+        bad_arguments = dict(valid)
+        bad_arguments["arguments"] = []
+        with self.assertRaises(ValueError):
+            validate_tool_intent(bad_arguments)
+
+        bad_evidence_refs = dict(valid)
+        bad_evidence_refs["evidence_refs"] = [123]
+        with self.assertRaises(ValueError):
+            validate_tool_intent(bad_evidence_refs)
+
+    def test_evaluate_tool_intent_validates_input_before_policy(self):
+        invalid = _tool_intent(action_class="read_only", dry_run_supported=False)
+        del invalid["dry_run_supported"]
+
+        with self.assertRaisesRegex(ValueError, "missing required field"):
+            evaluate_tool_intent(invalid)
+
+    def test_governance_decision_validation_rejects_contract_drift(self):
+        decision = evaluate_tool_intent(
+            _tool_intent(action_class="read_only", dry_run_supported=False)
+        )
+        validate_governance_decision(decision)
+
+        missing_required = dict(decision)
+        del missing_required["reason"]
+        with self.assertRaises(ValueError):
+            validate_governance_decision(missing_required)
+
+        unknown_field = dict(decision)
+        unknown_field["arguments"] = {}
+        with self.assertRaises(ValueError):
+            validate_governance_decision(unknown_field)
+
+        bad_schema = dict(decision)
+        bad_schema["schema_version"] = "governance-decision.v0"
+        with self.assertRaises(ValueError):
+            validate_governance_decision(bad_schema)
+
+        bad_decision = dict(decision)
+        bad_decision["decision"] = "approved"
+        with self.assertRaises(ValueError):
+            validate_governance_decision(bad_decision)
 
 
 def _tool_intent(*, action_class, dry_run_supported):

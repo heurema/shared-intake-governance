@@ -186,6 +186,39 @@ class ToolExecutionTests(unittest.TestCase):
                 stdout_path.read_text(encoding="utf-8"), "before timeout\n"
             )
 
+    def test_invalid_tool_intent_is_rejected_before_command_execution(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            intent = _tool_intent()
+            intent["credentials"] = {"token": "do-not-forward"}
+            stdout_path = paths.tool_execution_artifact_path(
+                RUN_ID, "execution-1", "stdout.txt"
+            )
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
+                execute_tool_intent(
+                    paths=paths,
+                    run_id=RUN_ID,
+                    execution_id="execution-1",
+                    intent=intent,
+                    tool_intent_path="intent.json",
+                    mediation_record=_mediation_record(mediation_decision="ready"),
+                    mediation_record_path=(
+                        "mediation/20260529T123045Z-deadbeef/mediation-1.json"
+                    ),
+                    command=[
+                        sys.executable,
+                        "-c",
+                        "print('should not run')",
+                    ],
+                    executed_by="local-operator",
+                    timeout_seconds=5.0,
+                    execution_metadata={},
+                    executed_at="2026-05-29T12:30:45Z",
+                )
+
+            self.assertFalse(stdout_path.exists())
+
 
 def _tool_intent():
     return {

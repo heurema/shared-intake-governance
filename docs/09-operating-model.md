@@ -189,8 +189,8 @@ Current CLI behavior:
 - `show-source-health` reads one source health artifact without writing
   runtime data;
 - `evaluate-tool-intent` reads one `tool-intent.v1` JSON file and returns a
-  `governance-decision.v1` JSON decision without executing tools; when
-  `--runtime-root` and `--run-id` are provided together, it appends one
+  validated `governance-decision.v1` JSON decision without executing tools;
+  when `--runtime-root` and `--run-id` are provided together, it appends one
   `governance-audit-event.v1` JSONL record under `audit/<run-id>.jsonl`;
 - `record-approval` reads one `tool-intent.v1` JSON file and writes one
   `approval-record.v1` JSON file without executing tools;
