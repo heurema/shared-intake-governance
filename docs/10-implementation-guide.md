@@ -102,12 +102,14 @@ Current CLI implementation:
 
 - `python -m shared_intake_governance.cli run-github-repo`
 - `python -m shared_intake_governance.cli run-arxiv-rss-keywords`
+- `python -m shared_intake_governance.cli run-source-config`
 - `src/shared_intake_governance/cli/pipeline.py`
 - `tests/test_cli_pipeline.py`
 
 These commands intentionally cover only the implemented `github_repo` and
 `arxiv_rss_keywords` paths. They require explicit runtime root, profile path,
-source id, source-specific inputs, and run/output identifiers. They also write:
+source-specific inputs or one `source-config.v1` file, and run/output
+identifiers. They also write:
 
 - `runs/<run-id>.manifest.json`
 - `source-health/<run-id>/<source-id>.json`

@@ -64,6 +64,7 @@ What exists now:
 - operating model;
 - implementation staging guide;
 - example consumer profiles;
+- source config contract for one-source local runs;
 - minimal runtime path helpers and raw payload/metadata/run manifest writers;
 - minimal read-only `github_repo` collector that writes raw evidence only;
 - minimal read-only `arxiv_rss_keywords` collector that writes raw evidence only;
@@ -71,6 +72,7 @@ What exists now:
 - minimal one-profile projector that writes deterministic JSON reports;
 - narrow local CLI commands for `github_repo` and `arxiv_rss_keywords` collect,
   sanitize, and project paths;
+- config-driven one-source CLI command for source definitions stored in JSON;
 - run manifest and source health artifacts from the CLI pipeline.
 
 What does not exist yet:
