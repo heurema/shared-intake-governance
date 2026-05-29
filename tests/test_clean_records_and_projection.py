@@ -677,11 +677,28 @@ class ProfileProjectorTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_profile_projection(unknown_field)
 
+        bad_profile_id = dict(valid_report)
+        bad_profile_id["profile_id"] = "../code-intel-kernel"
+        with self.assertRaisesRegex(ValueError, "profile_id must be a safe path segment"):
+            validate_profile_projection(bad_profile_id)
+
         malformed_item = dict(valid_report)
         malformed_item["items"] = [dict(valid_report["items"][0])]
         malformed_item["items"][0].pop("raw_hash")
         with self.assertRaises(ValueError):
             validate_profile_projection(malformed_item)
+
+        bad_item_record_id = dict(valid_report)
+        bad_item_record_id["items"] = [dict(valid_report["items"][0])]
+        bad_item_record_id["items"][0]["record_id"] = "../github_repo-good"
+        with self.assertRaisesRegex(ValueError, "record_id must be a safe path segment"):
+            validate_profile_projection(bad_item_record_id)
+
+        bad_item_source_id = dict(valid_report)
+        bad_item_source_id["items"] = [dict(valid_report["items"][0])]
+        bad_item_source_id["items"][0]["source_id"] = "../github-signum"
+        with self.assertRaisesRegex(ValueError, "source_id must be a safe path segment"):
+            validate_profile_projection(bad_item_source_id)
 
         invalid_item_url = dict(valid_report)
         invalid_item_url["items"] = [dict(valid_report["items"][0])]
@@ -714,6 +731,23 @@ class ProfileProjectorTests(unittest.TestCase):
             "profile projection clean_records_seen must equal items_written plus exclusions",
         ):
             validate_profile_projection(mismatched_seen_total)
+
+    def test_profile_projection_schema_tracks_runtime_id_constraints(self):
+        schema = _read_schema("profile-projection.schema.json")
+        item_schema = schema["properties"]["items"]["items"]
+
+        self.assertEqual(
+            schema["properties"]["profile_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            item_schema["properties"]["record_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            item_schema["properties"]["source_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
 
     def test_profile_loader_defaults_required_risk_flags_absent(self):
         with tempfile.TemporaryDirectory() as tmp_dir:

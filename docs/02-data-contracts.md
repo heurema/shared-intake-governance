@@ -237,6 +237,8 @@ source trust, canonical URL, and raw hash. They must not include credentials,
 provider prompts, model outputs, or consumer-specific editorial decisions.
 Runtime code validates projection reports before writing them and before using
 them to update profile-local seen state.
+`profile_id` and projection item `record_id` and `source_id` values must be
+safe runtime path segments.
 `generated_at` must follow the shared `date-time` validation rule.
 `items_written` must match the number of emitted `items`, and
 `clean_records_seen` must equal `items_written` plus all exclusion counts.

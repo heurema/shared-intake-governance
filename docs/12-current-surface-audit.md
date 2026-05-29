@@ -71,11 +71,12 @@ runtime paths consume them:
 - projection counts must match emitted and excluded records;
 - profile seen-state record ids must be sorted and unique;
 - denied provider requests are rejected before provider-request records;
-- `profile_id`, source ids, clean record ids, raw metadata ids, run-manifest ids,
-  source-health ids, governance audit ids, approval record ids, dry-run result
-  ids, execution mediation ids, tool execution result ids, provider request
-  ids, provider result ids, and profile-state ids use safe path segments at
-  their relevant contract boundaries.
+- `profile_id`, source ids, clean record ids, profile projection ids, raw
+  metadata ids, run-manifest ids, source-health ids, governance audit ids,
+  approval record ids, dry-run result ids, execution mediation ids, tool
+  execution result ids, provider request ids, provider result ids, and
+  profile-state ids use safe path segments at their relevant contract
+  boundaries.
 
 ## Explicitly deferred scope
 
