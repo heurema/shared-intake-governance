@@ -79,6 +79,9 @@ Expected output is one JSON summary printed to stdout. The summary includes
 PYTHONPATH=src python3 -m shared_intake_governance.cli list-runs \
   --runtime-root "$SIG_RUNTIME_ROOT"
 
+PYTHONPATH=src python3 -m shared_intake_governance.cli list-clean-records \
+  --runtime-root "$SIG_RUNTIME_ROOT"
+
 PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-run \
   --runtime-root "$SIG_RUNTIME_ROOT" \
   --run-id "$SIG_RUN_ID"
