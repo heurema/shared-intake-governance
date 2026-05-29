@@ -128,6 +128,8 @@ Current CLI behavior:
   run manifest under `runs/`;
 - `smoke-source-config` runs one `source-config.v1` JSON file with a smoke
   runtime root outside the repository and writes a do-not-commit marker;
+- `project-profiles` reads existing clean records and writes one deterministic
+  report per explicit profile path;
 - `list-runs` reads existing run manifests and returns a deterministic
   inventory without writing runtime data;
 - `list-clean-records` reads existing clean records and returns a deterministic

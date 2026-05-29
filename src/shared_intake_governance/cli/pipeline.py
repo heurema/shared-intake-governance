@@ -21,7 +21,7 @@ from shared_intake_governance.collector.github_repo import (
     GitHubRepoCollector,
     GitHubRepoSource,
 )
-from shared_intake_governance.projector import ProfileProjector
+from shared_intake_governance.projector import ProfileProjector, load_profile
 from shared_intake_governance.runtime import (
     RunWriter,
     RuntimePaths,
@@ -64,6 +64,8 @@ def main(
             collector_factory,
             arxiv_collector_factory,
         )
+    if args.command == "project-profiles":
+        return _project_profiles(args, stdout)
     if args.command == "list-runs":
         return _list_runs(args, stdout)
     if args.command == "list-clean-records":
@@ -327,6 +329,41 @@ def _smoke_source_config(
     )
     _print_json(stdout, summary)
     return exit_code
+
+
+def _project_profiles(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    output_id = args.output_id or generate_run_id()
+    profile_paths = [Path(path) for path in args.profiles]
+    for profile_path in profile_paths:
+        load_profile(profile_path)
+
+    projections = []
+    projector = ProfileProjector(paths)
+    for profile_path in profile_paths:
+        projection = projector.project(profile_path, output_id=output_id)
+        projections.append(
+            {
+                "profile_id": projection.report["profile_id"],
+                "output_mode": projection.report["output_mode"],
+                "projection_path": str(projection.path),
+                "clean_records_seen": projection.report["counts"][
+                    "clean_records_seen"
+                ],
+                "items_written": projection.report["counts"]["items_written"],
+            }
+        )
+
+    _print_json(
+        stdout,
+        {
+            "runtime_root": str(paths.root),
+            "output_id": output_id,
+            "profile_count": len(projections),
+            "projections": projections,
+        },
+    )
+    return 0
 
 
 def _list_runs(args: argparse.Namespace, stdout: TextIO) -> int:
@@ -702,6 +739,16 @@ def _parser() -> argparse.ArgumentParser:
     smoke.add_argument("--source-config", required=True)
     smoke.add_argument("--run-id")
     smoke.add_argument("--output-id")
+
+    project_profiles = subparsers.add_parser(
+        "project-profiles",
+        help="Project multiple profiles from the existing clean cache.",
+    )
+    project_profiles.add_argument("--runtime-root", required=True)
+    project_profiles.add_argument(
+        "--profile", dest="profiles", action="append", required=True
+    )
+    project_profiles.add_argument("--output-id")
 
     list_runs = subparsers.add_parser(
         "list-runs",

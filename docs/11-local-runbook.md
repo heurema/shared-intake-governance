@@ -54,6 +54,23 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli run-source-config \
 Expected output is one JSON summary printed to stdout. The summary includes
 all clean record paths emitted from the Atom feed.
 
+## Project multiple profiles
+
+Use this after one or more runs have written clean records:
+
+```sh
+PYTHONPATH=src python3 -m shared_intake_governance.cli project-profiles \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --profile profiles/examples/code-intel-kernel.json \
+  --profile profiles/examples/agent-bench-lab.json \
+  --profile profiles/examples/pulse.json \
+  --output-id "$SIG_RUN_ID"
+```
+
+Expected output is one JSON summary with one projection path per profile.
+Reports are written under `profiles/<profile-id>/reports/` inside the runtime
+root.
+
 ## Isolated smoke run
 
 Use this when you want a live one-source check without choosing a persistent
