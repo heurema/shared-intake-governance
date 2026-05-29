@@ -210,7 +210,10 @@ This repository should own only the shared substrate:
 
 ## Next implementation step
 
-The next useful step is a source-of-truth audit before widening runtime scope:
+The latest source-of-truth audit is
+[docs/12-current-surface-audit.md](docs/12-current-surface-audit.md).
+
+Before widening runtime scope again:
 
 - verify docs, schemas, `AGENTS.md`, and CLI help describe the same current
   surface;
