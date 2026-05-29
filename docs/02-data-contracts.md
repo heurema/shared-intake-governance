@@ -11,7 +11,8 @@ The first stable contracts should cover:
 5. source configs for one-source local runs;
 6. project profiles;
 7. profile-local runtime state;
-8. tool intents passed into governance.
+8. tool intents passed into governance;
+9. governance decisions returned by policy evaluation.
 
 ## Raw payload metadata
 
@@ -210,6 +211,28 @@ tool_name
 arguments
 dry_run_supported
 justification
+evidence_refs
+```
+
+## Governance decision
+
+See [../schemas/governance-decision.schema.json](../schemas/governance-decision.schema.json).
+
+The first governance runtime slice evaluates one intent and returns a decision.
+It does not execute tools, write audit logs, create approvals, call providers,
+or mutate runtime state.
+
+Minimum properties:
+
+```text
+schema_version
+intent_id
+profile_id
+action_class
+tool_name
+decision
+reason
+dry_run_supported
 evidence_refs
 ```
 

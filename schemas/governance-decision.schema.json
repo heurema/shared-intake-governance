@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shared-intake-governance.local/schemas/governance-decision.schema.json",
+  "title": "GovernanceDecision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "intent_id",
+    "profile_id",
+    "action_class",
+    "tool_name",
+    "decision",
+    "reason",
+    "dry_run_supported",
+    "evidence_refs"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "governance-decision.v1"
+    },
+    "intent_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profile_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "action_class": {
+      "type": "string",
+      "enum": [
+        "read_only",
+        "edit_local",
+        "destructive_local",
+        "external_side_effect",
+        "credentialed_remote"
+      ]
+    },
+    "tool_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "allowed",
+        "gated",
+        "denied"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dry_run_supported": {
+      "type": "boolean"
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tool_intent_path": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

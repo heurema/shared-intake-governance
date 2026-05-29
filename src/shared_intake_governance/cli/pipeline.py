@@ -21,6 +21,7 @@ from shared_intake_governance.collector.github_repo import (
     GitHubRepoCollector,
     GitHubRepoSource,
 )
+from shared_intake_governance.governance import evaluate_tool_intent
 from shared_intake_governance.projector import ProfileProjector, load_profile
 from shared_intake_governance.runtime import (
     RunWriter,
@@ -80,6 +81,8 @@ def main(
         return _list_profile_reports(args, stdout)
     if args.command == "inspect-profile-report":
         return _inspect_profile_report(args, stdout)
+    if args.command == "evaluate-tool-intent":
+        return _evaluate_tool_intent(args, stdout)
     if args.command == "inspect-run":
         return _inspect_run(args, stdout)
     if args.command == "show-source-health":
@@ -485,6 +488,16 @@ def _inspect_profile_report(args: argparse.Namespace, stdout: TextIO) -> int:
     report = dict(report)
     report["profile_report_path"] = str(report_path)
     _print_json(stdout, report)
+    return 0
+
+
+def _evaluate_tool_intent(args: argparse.Namespace, stdout: TextIO) -> int:
+    intent_path = Path(args.intent)
+    intent = _read_json(intent_path)
+    decision = evaluate_tool_intent(intent)
+    decision = dict(decision)
+    decision["tool_intent_path"] = str(intent_path)
+    _print_json(stdout, decision)
     return 0
 
 
@@ -898,6 +911,12 @@ def _parser() -> argparse.ArgumentParser:
     inspect_profile_report.add_argument("--runtime-root", required=True)
     inspect_profile_report.add_argument("--profile-id", required=True)
     inspect_profile_report.add_argument("--output-id", required=True)
+
+    evaluate_intent = subparsers.add_parser(
+        "evaluate-tool-intent",
+        help="Evaluate one tool-intent.v1 file without executing tools.",
+    )
+    evaluate_intent.add_argument("--intent", required=True)
 
     inspect_run = subparsers.add_parser(
         "inspect-run",
