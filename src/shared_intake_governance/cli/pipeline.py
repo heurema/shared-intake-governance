@@ -66,6 +66,8 @@ def main(
         )
     if args.command == "list-runs":
         return _list_runs(args, stdout)
+    if args.command == "list-clean-records":
+        return _list_clean_records(args, stdout)
     if args.command == "inspect-run":
         return _inspect_run(args, stdout)
     if args.command == "show-source-health":
@@ -345,6 +347,26 @@ def _list_runs(args: argparse.Namespace, stdout: TextIO) -> int:
     return 0
 
 
+def _list_clean_records(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    clean_records = []
+    if paths.clean_root.exists():
+        clean_records = [
+            _clean_record_summary(path)
+            for path in sorted(paths.clean_root.glob("*.json"))
+        ]
+    clean_records.sort(key=lambda record: record["record_id"])
+    _print_json(
+        stdout,
+        {
+            "runtime_root": str(paths.root),
+            "clean_record_count": len(clean_records),
+            "clean_records": clean_records,
+        },
+    )
+    return 0
+
+
 def _inspect_run(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     manifest_path = paths.run_manifest_path(args.run_id)
@@ -389,6 +411,24 @@ def _run_manifest_summary(manifest_path: Path) -> dict[str, Any]:
         "sources": manifest["sources"],
         "counts": manifest["counts"],
         "source_health_count": len(manifest["source_health"]),
+    }
+
+
+def _clean_record_summary(clean_record_path: Path) -> dict[str, Any]:
+    record = _read_json(clean_record_path)
+    return {
+        "clean_record_path": str(clean_record_path),
+        "record_id": record["record_id"],
+        "source_id": record["source_id"],
+        "source_type": record["source_type"],
+        "canonical_url": record["canonical_url"],
+        "title": record["title"],
+        "published_at": record.get("published_at"),
+        "source_trust": record["source_trust"],
+        "risk_flags": record["risk_flags"],
+        "quarantined": record["quarantined"],
+        "raw_hash": record["raw_hash"],
+        "sanitizer_version": record["sanitizer_version"],
     }
 
 
@@ -656,6 +696,12 @@ def _parser() -> argparse.ArgumentParser:
         help="List run manifests under one runtime root.",
     )
     list_runs.add_argument("--runtime-root", required=True)
+
+    list_clean_records = subparsers.add_parser(
+        "list-clean-records",
+        help="List clean records under one runtime root.",
+    )
+    list_clean_records.add_argument("--runtime-root", required=True)
 
     inspect_run = subparsers.add_parser(
         "inspect-run",
