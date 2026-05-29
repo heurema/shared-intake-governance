@@ -549,6 +549,7 @@ executions should point at output artifacts instead of embedding command output
 or tool arguments.
 Successful tool execution results must have `error: null`; failed or blocked
 tool execution results must include a compact error object.
+`run_id` and `execution_id` must be safe runtime path segments.
 Runtime code validates the input `execution-mediation.v1` record before
 consuming it, then validates tool execution results before writing them.
 
