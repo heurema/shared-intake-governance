@@ -266,6 +266,12 @@ class RawWriter:
         self, metadata: dict[str, Any], *, failure_id: str | None = None
     ) -> Path:
         validate_raw_metadata(metadata)
+        if metadata["storage_path"] is not None:
+            _require_path_under_root(
+                Path(str(metadata["storage_path"])),
+                self.paths.raw_root,
+                "raw metadata storage_path",
+            )
         source_id = str(metadata["source_id"])
         fetched_at = str(metadata["fetched_at"])
         body_hash = metadata.get("body_hash")
@@ -929,6 +935,15 @@ def _require_string_object(payload: dict[str, Any], field: str, label: str) -> N
 def _require_optional_string(payload: dict[str, Any], field: str, label: str) -> None:
     if payload[field] is not None and not isinstance(payload[field], str):
         raise ValueError(f"{label} must be a string or null")
+
+
+def _require_path_under_root(path: Path, root: Path, label: str) -> None:
+    resolved_path = path.resolve()
+    resolved_root = root.resolve()
+    try:
+        resolved_path.relative_to(resolved_root)
+    except ValueError as exc:
+        raise ValueError(f"{label} must stay under raw root") from exc
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> Path:

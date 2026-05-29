@@ -262,6 +262,8 @@ Current implementation:
 - `tests/test_runtime_paths_and_writers.py`
 - `tests/test_source_config_examples.py`
 - raw metadata artifacts are validated before writer output.
+- non-null raw metadata `storage_path` values are bounded to the configured
+  runtime raw root before writer output.
 - run manifests are validated before writer output.
 - source health artifacts are validated before writer output.
 - source config files are validated before `run-source-config` and
