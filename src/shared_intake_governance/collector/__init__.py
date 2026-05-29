@@ -17,6 +17,11 @@ from .github_repo import (
     HttpRequest,
     HttpResponse,
 )
+from .github_search import (
+    GitHubSearchCollectionResult,
+    GitHubSearchCollector,
+    GitHubSearchSource,
+)
 from .rss_feed import (
     RssFeedCollectionResult,
     RssFeedCollector,
@@ -33,6 +38,9 @@ __all__ = [
     "GitHubRepoCollectionResult",
     "GitHubRepoCollector",
     "GitHubRepoSource",
+    "GitHubSearchCollectionResult",
+    "GitHubSearchCollector",
+    "GitHubSearchSource",
     "HttpRequest",
     "HttpResponse",
     "RssFeedCollectionResult",

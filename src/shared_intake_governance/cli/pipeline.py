@@ -26,6 +26,11 @@ from shared_intake_governance.collector.github_repo import (
     GitHubRepoCollector,
     GitHubRepoSource,
 )
+from shared_intake_governance.collector.github_search import (
+    GitHubSearchCollectionResult,
+    GitHubSearchCollector,
+    GitHubSearchSource,
+)
 from shared_intake_governance.collector.rss_feed import (
     RssFeedCollectionResult,
     RssFeedCollector,
@@ -70,6 +75,9 @@ def main(
     *,
     stdout: TextIO | None = None,
     collector_factory: type[GitHubRepoCollector] = GitHubRepoCollector,
+    github_search_collector_factory: type[GitHubSearchCollector] = (
+        GitHubSearchCollector
+    ),
     arxiv_collector_factory: type[ArxivRssKeywordsCollector] = (
         ArxivRssKeywordsCollector
     ),
@@ -81,6 +89,8 @@ def main(
 
     if args.command == "run-github-repo":
         return _run_github_repo(args, stdout, collector_factory)
+    if args.command == "run-github-search":
+        return _run_github_search(args, stdout, github_search_collector_factory)
     if args.command == "run-arxiv-rss-keywords":
         return _run_arxiv_rss_keywords(args, stdout, arxiv_collector_factory)
     if args.command == "run-arxiv-query":
@@ -92,6 +102,7 @@ def main(
             args,
             stdout,
             collector_factory,
+            github_search_collector_factory,
             arxiv_collector_factory,
             arxiv_query_collector_factory,
             rss_collector_factory,
@@ -101,6 +112,7 @@ def main(
             args,
             stdout,
             collector_factory,
+            github_search_collector_factory,
             arxiv_collector_factory,
             arxiv_query_collector_factory,
             rss_collector_factory,
@@ -225,6 +237,96 @@ def _run_github_repo(
         {
             "status": "completed",
             "clean_record_path": str(clean_record.path),
+            "projection_path": str(projection.path),
+            "projected_items": projection.report["counts"]["items_written"],
+            "run_manifest_path": str(evidence["run_manifest_path"]),
+            "source_health_path": str(evidence["source_health_path"]),
+        }
+    )
+    _print_json(stdout, summary)
+    return 0
+
+
+def _run_github_search(
+    args: argparse.Namespace,
+    stdout: TextIO,
+    collector_factory: type[GitHubSearchCollector],
+) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    run_id = args.run_id or generate_run_id()
+    output_id = args.output_id or run_id
+    started_at = _format_utc(datetime.now(timezone.utc))
+    source = GitHubSearchSource(
+        source_id=args.source_id,
+        query=args.query,
+        max_results=args.max_results,
+        api_base_url=args.api_base_url,
+    )
+    collector = collector_factory(paths)
+    collection = collector.collect(source, run_id=run_id)
+    raw_metadata = _read_json(collection.metadata_path)
+
+    summary = _collection_summary(run_id, collection)
+    if collection.fetch_status != "success":
+        evidence = _write_run_evidence(
+            paths,
+            run_id=run_id,
+            source_id=source.source_id,
+            status="failed",
+            started_at=started_at,
+            counts={
+                "raw_payloads_written": 0,
+                "raw_metadata_written": 1,
+                "clean_records_written": 0,
+                "projected_profiles": 0,
+                "quarantined_records": 0,
+                "failed_sources": 1,
+            },
+            raw_metadata=raw_metadata,
+        )
+        summary.update(
+            {
+                "status": "collection_failed",
+                "clean_record_paths": [],
+                "projection_path": None,
+                "projected_items": 0,
+                "run_manifest_path": str(evidence["run_manifest_path"]),
+                "source_health_path": str(evidence["source_health_path"]),
+            }
+        )
+        _print_json(stdout, summary)
+        return 2
+
+    clean_records = CleanRecordEmitter(paths).emit_all_from_raw_metadata(
+        collection.metadata_path
+    )
+    projection = ProfileProjector(paths).project(args.profile, output_id=output_id)
+    evidence = _write_run_evidence(
+        paths,
+        run_id=run_id,
+        source_id=source.source_id,
+        status="completed",
+        started_at=started_at,
+        counts={
+            "raw_payloads_written": 1 if collection.body_path is not None else 0,
+            "raw_metadata_written": 1,
+            "clean_records_written": len(clean_records),
+            "projected_profiles": 1,
+            "quarantined_records": sum(
+                1
+                for clean_record in clean_records
+                if clean_record.record["quarantined"]
+            ),
+            "failed_sources": 0,
+        },
+        raw_metadata=raw_metadata,
+    )
+    summary.update(
+        {
+            "status": "completed",
+            "clean_record_paths": [
+                str(clean_record.path) for clean_record in clean_records
+            ],
             "projection_path": str(projection.path),
             "projected_items": projection.report["counts"]["items_written"],
             "run_manifest_path": str(evidence["run_manifest_path"]),
@@ -508,6 +610,7 @@ def _run_source_config(
     args: argparse.Namespace,
     stdout: TextIO,
     github_collector_factory: type[GitHubRepoCollector],
+    github_search_collector_factory: type[GitHubSearchCollector],
     arxiv_collector_factory: type[ArxivRssKeywordsCollector],
     arxiv_query_collector_factory: type[ArxivQueryCollector],
     rss_collector_factory: type[RssFeedCollector],
@@ -529,6 +632,21 @@ def _run_source_config(
             ),
             stdout,
             github_collector_factory,
+        )
+    if source_type == "github_search":
+        return _run_github_search(
+            argparse.Namespace(
+                runtime_root=args.runtime_root,
+                profile=args.profile,
+                source_id=source_config["source_id"],
+                query=source_config["query"],
+                max_results=source_config["max_results"],
+                api_base_url=source_config["api_base_url"],
+                run_id=args.run_id,
+                output_id=args.output_id,
+            ),
+            stdout,
+            github_search_collector_factory,
         )
     if source_type == "arxiv_rss_keywords":
         return _run_arxiv_rss_keywords(
@@ -582,6 +700,7 @@ def _smoke_source_config(
     args: argparse.Namespace,
     stdout: TextIO,
     github_collector_factory: type[GitHubRepoCollector],
+    github_search_collector_factory: type[GitHubSearchCollector],
     arxiv_collector_factory: type[ArxivRssKeywordsCollector],
     arxiv_query_collector_factory: type[ArxivQueryCollector],
     rss_collector_factory: type[RssFeedCollector],
@@ -598,6 +717,7 @@ def _smoke_source_config(
         ),
         captured_stdout,
         github_collector_factory,
+        github_search_collector_factory,
         arxiv_collector_factory,
         arxiv_query_collector_factory,
         rss_collector_factory,
@@ -1255,6 +1375,7 @@ def _collection_summary(
     run_id: str,
     collection: (
         GitHubRepoCollectionResult
+        | GitHubSearchCollectionResult
         | ArxivRssKeywordsCollectionResult
         | ArxivQueryCollectionResult
         | RssFeedCollectionResult
@@ -1294,6 +1415,25 @@ def _load_source_config(path: str | Path) -> dict[str, Any]:
         )
         _require_text(config, "owner")
         _require_text(config, "repo")
+        config = dict(config)
+        config.setdefault("api_base_url", "https://api.github.com")
+        _require_text(config, "api_base_url")
+        return config
+    if source_type == "github_search":
+        _reject_unknown(
+            config,
+            {
+                "schema_version",
+                "source_type",
+                "source_id",
+                "query",
+                "max_results",
+                "api_base_url",
+            },
+        )
+        _require_text(config, "query")
+        if not isinstance(config.get("max_results"), int):
+            raise ValueError("max_results must be an integer")
         config = dict(config)
         config.setdefault("api_base_url", "https://api.github.com")
         _require_text(config, "api_base_url")
@@ -1524,6 +1664,22 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--run-id")
     run.add_argument("--output-id")
     run.add_argument("--api-base-url", default="https://api.github.com")
+
+    github_search = subparsers.add_parser(
+        "run-github-search",
+        help=(
+            "Collect one GitHub repository search, emit clean records, and "
+            "project one profile."
+        ),
+    )
+    github_search.add_argument("--runtime-root", required=True)
+    github_search.add_argument("--profile", required=True)
+    github_search.add_argument("--source-id", required=True)
+    github_search.add_argument("--query", required=True)
+    github_search.add_argument("--max-results", required=True, type=int)
+    github_search.add_argument("--run-id")
+    github_search.add_argument("--output-id")
+    github_search.add_argument("--api-base-url", default="https://api.github.com")
 
     arxiv = subparsers.add_parser(
         "run-arxiv-rss-keywords",

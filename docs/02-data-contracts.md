@@ -145,6 +145,7 @@ arguments.
 Supported Phase 1 source configs:
 
 - `github_repo`
+- `github_search`
 - `arxiv_rss_keywords`
 - `arxiv_query`
 - `rss`
