@@ -167,6 +167,27 @@ This writes one `governance-audit-event.v1` JSONL line under
 `audit/<run-id>.jsonl`. Audit events intentionally omit tool intent
 `arguments`.
 
+## Record an approval
+
+Use this only to record a local approval or rejection decision. It does not
+execute the requested tool.
+
+```sh
+PYTHONPATH=src python3 -m shared_intake_governance.cli record-approval \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --run-id "$SIG_RUN_ID" \
+  --approval-id approval-1 \
+  --intent path/to/tool-intent.json \
+  --approval-decision approved \
+  --approved-by local-operator \
+  --justification "Dry run reviewed." \
+  --dry-run-ref dry-runs/approval-1.json
+```
+
+Expected output is one summary containing `approval_record_path` and the
+written `approval-record.v1` object. Approval records intentionally omit tool
+intent `arguments`.
+
 ## Reset local runtime data
 
 Only remove runtime data outside the repository:

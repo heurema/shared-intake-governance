@@ -94,6 +94,19 @@ class AuditWriter:
         return path
 
 
+class ApprovalWriter:
+    """Write one explicit local approval record."""
+
+    def __init__(self, paths: RuntimePaths):
+        self.paths = paths
+
+    def write_record(self, record: dict[str, Any]) -> Path:
+        path = self.paths.approval_record_path(
+            str(record["run_id"]), str(record["approval_id"])
+        )
+        return _write_json(path, record)
+
+
 def _write_json(path: Path, payload: dict[str, Any]) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(

@@ -86,6 +86,8 @@ What exists now:
   governance evaluator CLI.
 - governance audit event contract and optional append-only audit logging for
   evaluated tool intents.
+- approval-record contract and local `record-approval` CLI for explicit
+  approval or rejection records without tool execution.
 
 What does not exist yet:
 
@@ -93,8 +95,8 @@ What does not exist yet:
 - sanitizer source mappings beyond `github_repo` and `arxiv_rss_keywords`;
 - multi-profile report shaping beyond deterministic per-profile JSON;
 - automatic profile-state updates or dedupe behavior;
-- governance broker approval records, dry-run sidecar, and tool execution
-  mediation beyond the default evaluator and audit log;
+- governance broker dry-run sidecar and tool execution mediation beyond the
+  default evaluator, audit log, and approval records;
 - provider adapter runtime;
 - SQLite;
 - daemon;

@@ -47,6 +47,10 @@ class RuntimePaths:
         return self.root / "audit"
 
     @property
+    def approvals_root(self) -> Path:
+        return self.root / "approvals"
+
+    @property
     def profiles_root(self) -> Path:
         return self.root / "profiles"
 
@@ -74,6 +78,13 @@ class RuntimePaths:
 
     def audit_log_path(self, run_id: str) -> Path:
         return self.audit_root / f"{_safe_segment(run_id, 'run_id')}.jsonl"
+
+    def approval_record_path(self, run_id: str, approval_id: str) -> Path:
+        return (
+            self.approvals_root
+            / _safe_segment(run_id, "run_id")
+            / f"{_safe_segment(approval_id, 'approval_id')}.json"
+        )
 
     def source_health_path(self, run_id: str, source_id: str) -> Path:
         return (

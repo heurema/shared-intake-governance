@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from shared_intake_governance.runtime import (  # noqa: E402
     AuditWriter,
+    ApprovalWriter,
     RawWriter,
     RunWriter,
     RuntimePaths,
@@ -34,6 +35,7 @@ class RuntimePathTests(unittest.TestCase):
             self.assertEqual(paths.runs_root, root / "runs")
             self.assertEqual(paths.source_health_root, root / "source-health")
             self.assertEqual(paths.audit_root, root / "audit")
+            self.assertEqual(paths.approvals_root, root / "approvals")
             self.assertEqual(paths.profiles_root, root / "profiles")
 
             self.assertEqual(
@@ -65,6 +67,15 @@ class RuntimePathTests(unittest.TestCase):
             self.assertEqual(
                 paths.audit_log_path("20260529T123045Z-deadbeef"),
                 root / "audit" / "20260529T123045Z-deadbeef.jsonl",
+            )
+            self.assertEqual(
+                paths.approval_record_path(
+                    "20260529T123045Z-deadbeef", "approval-1"
+                ),
+                root
+                / "approvals"
+                / "20260529T123045Z-deadbeef"
+                / "approval-1.json",
             )
             self.assertEqual(
                 paths.source_health_path("20260529T123045Z-deadbeef", "github-main"),
@@ -106,6 +117,8 @@ class RuntimePathTests(unittest.TestCase):
                 paths.raw_body_path("../source", FETCHED_AT, "a" * 64)
             with self.assertRaises(ValueError):
                 paths.audit_log_path("../run")
+            with self.assertRaises(ValueError):
+                paths.approval_record_path("20260529T123045Z-deadbeef", "../approval")
             with self.assertRaises(ValueError):
                 paths.profile_state_path("pulse", "../state")
             with self.assertRaises(ValueError):
@@ -242,6 +255,27 @@ class RuntimeWriterTests(unittest.TestCase):
             self.assertEqual(json.loads(lines[0]), first_event)
             self.assertEqual(json.loads(lines[1]), second_event)
 
+    def test_approval_writer_writes_record_deterministically(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            writer = ApprovalWriter(paths)
+            record = _approval_record()
+
+            approval_path = writer.write_record(record)
+            first_write = approval_path.read_text(encoding="utf-8")
+
+            self.assertEqual(
+                approval_path,
+                paths.approval_record_path(
+                    "20260529T123045Z-deadbeef", "approval-1"
+                ),
+            )
+            self.assertEqual(json.loads(first_write), record)
+            self.assertTrue(first_write.endswith("\n"))
+
+            writer.write_record(record)
+            self.assertEqual(approval_path.read_text(encoding="utf-8"), first_write)
+
 
 def _raw_metadata(raw_body):
     return {
@@ -278,6 +312,25 @@ def _audit_event(intent_id, decision):
         "reason": "test decision",
         "dry_run_supported": False,
         "evidence_refs": ["clean/github_repo-good.json"],
+        "tool_intent_path": "intent.json",
+    }
+
+
+def _approval_record():
+    return {
+        "schema_version": "approval-record.v1",
+        "run_id": "20260529T123045Z-deadbeef",
+        "approval_id": "approval-1",
+        "intent_id": "intent-1",
+        "profile_id": "code-intel-kernel",
+        "action_class": "edit_local",
+        "tool_name": "write-report",
+        "approval_decision": "approved",
+        "approved_by": "local-operator",
+        "approved_at": "2026-05-29T12:30:45Z",
+        "justification": "Dry run reviewed.",
+        "dry_run_ref": "dry-runs/approval-1.json",
+        "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
         "tool_intent_path": "intent.json",
     }
 

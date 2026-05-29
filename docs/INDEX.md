@@ -75,6 +75,7 @@ Use this file as the main navigation layer.
 - [../schemas/tool-intent.schema.json](../schemas/tool-intent.schema.json)
 - [../schemas/governance-decision.schema.json](../schemas/governance-decision.schema.json)
 - [../schemas/governance-audit-event.schema.json](../schemas/governance-audit-event.schema.json)
+- [../schemas/approval-record.schema.json](../schemas/approval-record.schema.json)
 - [../profiles/examples/code-intel-kernel.json](../profiles/examples/code-intel-kernel.json)
 - [../profiles/examples/agent-bench-lab.json](../profiles/examples/agent-bench-lab.json)
 - [../profiles/examples/pulse.json](../profiles/examples/pulse.json)

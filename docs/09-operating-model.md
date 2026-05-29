@@ -47,6 +47,9 @@ source-health/
     <source-id>.json
 audit/
   <run-id>.jsonl
+approvals/
+  <run-id>/
+    <approval-id>.json
 profiles/
   <profile-id>/
     state/
@@ -66,6 +69,7 @@ The canonical contract files for these runtime artifacts are:
 - [../schemas/tool-intent.schema.json](../schemas/tool-intent.schema.json)
 - [../schemas/governance-decision.schema.json](../schemas/governance-decision.schema.json)
 - [../schemas/governance-audit-event.schema.json](../schemas/governance-audit-event.schema.json)
+- [../schemas/approval-record.schema.json](../schemas/approval-record.schema.json)
 
 ## Modes of operation
 
@@ -156,6 +160,8 @@ Current CLI behavior:
   `governance-decision.v1` JSON decision without executing tools; when
   `--runtime-root` and `--run-id` are provided together, it appends one
   `governance-audit-event.v1` JSONL record under `audit/<run-id>.jsonl`;
+- `record-approval` reads one `tool-intent.v1` JSON file and writes one
+  `approval-record.v1` JSON file without executing tools;
 - all current run commands write one source health artifact under
   `source-health/`.
 

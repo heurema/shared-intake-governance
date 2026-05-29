@@ -113,6 +113,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli list-profile-reports`
 - `python -m shared_intake_governance.cli inspect-profile-report`
 - `python -m shared_intake_governance.cli evaluate-tool-intent`
+- `python -m shared_intake_governance.cli record-approval`
 - `python -m shared_intake_governance.cli inspect-run`
 - `python -m shared_intake_governance.cli show-source-health`
 - `sources/examples/github-signum.json`
@@ -138,6 +139,9 @@ The governance evaluator reads one `tool-intent.v1` file and prints one
 `governance-decision.v1` decision; when `--runtime-root` and `--run-id` are
 provided together, it appends one `governance-audit-event.v1` JSONL record.
 It does not execute tools or create approvals.
+The approval recorder reads one `tool-intent.v1` file and writes one
+`approval-record.v1` file. It does not execute tools or satisfy the future
+dry-run sidecar requirement by itself.
 
 For current manual invocation examples, see [11-local-runbook.md](11-local-runbook.md).
 
@@ -166,6 +170,7 @@ Current Phase 1 contract anchors:
 - run manifest shape: `schemas/run-manifest.schema.json`
 - governance decision shape: `schemas/governance-decision.schema.json`
 - governance audit event shape: `schemas/governance-audit-event.schema.json`
+- approval record shape: `schemas/approval-record.schema.json`
 
 If these anchors drift, update the docs or schemas before adding runtime code.
 
@@ -300,10 +305,10 @@ Current governance runtime:
 - `evaluate-tool-intent` implements only the default policy evaluator.
 - `evaluate-tool-intent --runtime-root ... --run-id ...` appends audit
   evidence for evaluated intents.
+- `record-approval` writes explicit local approval or rejection records.
 
 Still missing:
 
-- approval records;
 - dry-run sidecar;
 - tool execution mediation.
 

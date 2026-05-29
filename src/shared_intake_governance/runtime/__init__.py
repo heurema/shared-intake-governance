@@ -3,6 +3,7 @@
 from .paths import RuntimePaths, generate_run_id
 from .writers import (
     AuditWriter,
+    ApprovalWriter,
     RawBodyWrite,
     RawWriter,
     RunWriter,
@@ -11,6 +12,7 @@ from .writers import (
 
 __all__ = [
     "AuditWriter",
+    "ApprovalWriter",
     "RawBodyWrite",
     "RawWriter",
     "RunWriter",
