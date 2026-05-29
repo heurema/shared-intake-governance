@@ -38,6 +38,8 @@ Current runtime implementation:
 
 - `github_repo` has a minimal read-only collector that calls the GitHub REST
   repository endpoint and writes raw evidence only.
+- `arxiv_rss_keywords` has a minimal read-only collector that calls the
+  official arXiv API query endpoint and writes raw Atom evidence only.
 
 ## Source selection rules
 
