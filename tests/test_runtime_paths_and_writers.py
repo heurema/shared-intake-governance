@@ -1184,6 +1184,25 @@ class RuntimeWriterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_provider_result(bad_status)
 
+        bad_run_id = dict(valid_result)
+        bad_run_id["run_id"] = "../20260529T123045Z-deadbeef"
+        with self.assertRaisesRegex(ValueError, "run_id must be a safe path segment"):
+            validate_provider_result(bad_run_id)
+
+        bad_result_id = dict(valid_result)
+        bad_result_id["result_id"] = "../provider-result-1"
+        with self.assertRaisesRegex(
+            ValueError, "result_id must be a safe path segment"
+        ):
+            validate_provider_result(bad_result_id)
+
+        bad_request_id = dict(valid_result)
+        bad_request_id["request_id"] = "../provider-request-1"
+        with self.assertRaisesRegex(
+            ValueError, "request_id must be a safe path segment"
+        ):
+            validate_provider_result(bad_request_id)
+
         bad_usage = dict(valid_result)
         bad_usage["usage_metadata"] = {"input_tokens": 120}
         with self.assertRaises(ValueError):
@@ -1193,6 +1212,22 @@ class RuntimeWriterTests(unittest.TestCase):
         bad_error["error"] = {"kind": "provider_error"}
         with self.assertRaises(ValueError):
             validate_provider_result(bad_error)
+
+    def test_provider_result_schema_tracks_runtime_id_constraints(self):
+        schema = _read_schema("provider-result.schema.json")
+
+        self.assertEqual(
+            schema["properties"]["run_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["result_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["request_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
 
     def test_provider_result_validation_rejects_error_status_drift(self):
         succeeded_with_error = _provider_result()
