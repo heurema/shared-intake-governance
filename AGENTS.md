@@ -24,7 +24,8 @@ This repository currently defines docs, schemas, example profiles, and minimal
 file-based runtime helpers for paths, raw payload writes, raw metadata writes,
 run manifest writes, one read-only `github_repo` collector, one `github_repo`
 clean-record emitter, one explicit-profile JSON projector, and one narrow local
-CLI command for the current `github_repo` path.
+CLI command for the current `github_repo` path with run manifest and source
+health output.
 
 No governance broker, provider adapter, additional source collector family,
 additional sanitizer source mapping, or multi-profile report shaping exists yet.

@@ -68,7 +68,8 @@ What exists now:
 - minimal read-only `github_repo` collector that writes raw evidence only;
 - minimal clean-record emitter for `github_repo` raw evidence;
 - minimal one-profile projector that writes deterministic JSON reports;
-- narrow local CLI command for `github_repo` collect, sanitize, and project.
+- narrow local CLI command for `github_repo` collect, sanitize, and project;
+- run manifest and source health artifacts from the CLI pipeline.
 
 What does not exist yet:
 
