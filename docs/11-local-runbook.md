@@ -54,6 +54,22 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli run-source-config \
 Expected output is one JSON summary printed to stdout. The summary includes
 all clean record paths emitted from the Atom feed.
 
+## arXiv explicit query source
+
+```sh
+export SIG_RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-arxiv-query"
+
+PYTHONPATH=src python3 -m shared_intake_governance.cli run-source-config \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --profile profiles/examples/code-intel-kernel.json \
+  --source-config sources/examples/arxiv-query-code-agents.json \
+  --run-id "$SIG_RUN_ID" \
+  --output-id "$SIG_RUN_ID"
+```
+
+Expected output is one JSON summary printed to stdout. The summary includes
+all clean record paths emitted from the explicit arXiv query feed.
+
 ## RSS feed source
 
 ```sh

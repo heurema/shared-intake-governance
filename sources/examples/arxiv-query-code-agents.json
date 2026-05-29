@@ -1,0 +1,7 @@
+{
+  "schema_version": "source-config.v1",
+  "source_type": "arxiv_query",
+  "source_id": "arxiv-query-code-agents",
+  "query": "all:\"coding agent\" AND cat:cs.AI",
+  "max_results": 5
+}

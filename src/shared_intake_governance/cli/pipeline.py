@@ -16,6 +16,11 @@ from shared_intake_governance.collector.arxiv_rss_keywords import (
     ArxivRssKeywordsCollector,
     ArxivRssKeywordsSource,
 )
+from shared_intake_governance.collector.arxiv_query import (
+    ArxivQueryCollectionResult,
+    ArxivQueryCollector,
+    ArxivQuerySource,
+)
 from shared_intake_governance.collector.github_repo import (
     GitHubRepoCollectionResult,
     GitHubRepoCollector,
@@ -68,6 +73,7 @@ def main(
     arxiv_collector_factory: type[ArxivRssKeywordsCollector] = (
         ArxivRssKeywordsCollector
     ),
+    arxiv_query_collector_factory: type[ArxivQueryCollector] = ArxivQueryCollector,
     rss_collector_factory: type[RssFeedCollector] = RssFeedCollector,
 ) -> int:
     args = _parser().parse_args(argv)
@@ -77,6 +83,8 @@ def main(
         return _run_github_repo(args, stdout, collector_factory)
     if args.command == "run-arxiv-rss-keywords":
         return _run_arxiv_rss_keywords(args, stdout, arxiv_collector_factory)
+    if args.command == "run-arxiv-query":
+        return _run_arxiv_query(args, stdout, arxiv_query_collector_factory)
     if args.command == "run-rss-feed":
         return _run_rss_feed(args, stdout, rss_collector_factory)
     if args.command == "run-source-config":
@@ -85,6 +93,7 @@ def main(
             stdout,
             collector_factory,
             arxiv_collector_factory,
+            arxiv_query_collector_factory,
             rss_collector_factory,
         )
     if args.command == "smoke-source-config":
@@ -93,6 +102,7 @@ def main(
             stdout,
             collector_factory,
             arxiv_collector_factory,
+            arxiv_query_collector_factory,
             rss_collector_factory,
         )
     if args.command == "project-profiles":
@@ -315,6 +325,96 @@ def _run_arxiv_rss_keywords(
     return 0
 
 
+def _run_arxiv_query(
+    args: argparse.Namespace,
+    stdout: TextIO,
+    collector_factory: type[ArxivQueryCollector],
+) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    run_id = args.run_id or generate_run_id()
+    output_id = args.output_id or run_id
+    started_at = _format_utc(datetime.now(timezone.utc))
+    source = ArxivQuerySource(
+        source_id=args.source_id,
+        query=args.query,
+        max_results=args.max_results,
+        api_base_url=args.api_base_url,
+    )
+    collector = collector_factory(paths)
+    collection = collector.collect(source, run_id=run_id)
+    raw_metadata = _read_json(collection.metadata_path)
+
+    summary = _collection_summary(run_id, collection)
+    if collection.fetch_status != "success":
+        evidence = _write_run_evidence(
+            paths,
+            run_id=run_id,
+            source_id=source.source_id,
+            status="failed",
+            started_at=started_at,
+            counts={
+                "raw_payloads_written": 0,
+                "raw_metadata_written": 1,
+                "clean_records_written": 0,
+                "projected_profiles": 0,
+                "quarantined_records": 0,
+                "failed_sources": 1,
+            },
+            raw_metadata=raw_metadata,
+        )
+        summary.update(
+            {
+                "status": "collection_failed",
+                "clean_record_paths": [],
+                "projection_path": None,
+                "projected_items": 0,
+                "run_manifest_path": str(evidence["run_manifest_path"]),
+                "source_health_path": str(evidence["source_health_path"]),
+            }
+        )
+        _print_json(stdout, summary)
+        return 2
+
+    clean_records = CleanRecordEmitter(paths).emit_all_from_raw_metadata(
+        collection.metadata_path
+    )
+    projection = ProfileProjector(paths).project(args.profile, output_id=output_id)
+    evidence = _write_run_evidence(
+        paths,
+        run_id=run_id,
+        source_id=source.source_id,
+        status="completed",
+        started_at=started_at,
+        counts={
+            "raw_payloads_written": 1 if collection.body_path is not None else 0,
+            "raw_metadata_written": 1,
+            "clean_records_written": len(clean_records),
+            "projected_profiles": 1,
+            "quarantined_records": sum(
+                1
+                for clean_record in clean_records
+                if clean_record.record["quarantined"]
+            ),
+            "failed_sources": 0,
+        },
+        raw_metadata=raw_metadata,
+    )
+    summary.update(
+        {
+            "status": "completed",
+            "clean_record_paths": [
+                str(clean_record.path) for clean_record in clean_records
+            ],
+            "projection_path": str(projection.path),
+            "projected_items": projection.report["counts"]["items_written"],
+            "run_manifest_path": str(evidence["run_manifest_path"]),
+            "source_health_path": str(evidence["source_health_path"]),
+        }
+    )
+    _print_json(stdout, summary)
+    return 0
+
+
 def _run_rss_feed(
     args: argparse.Namespace,
     stdout: TextIO,
@@ -409,6 +509,7 @@ def _run_source_config(
     stdout: TextIO,
     github_collector_factory: type[GitHubRepoCollector],
     arxiv_collector_factory: type[ArxivRssKeywordsCollector],
+    arxiv_query_collector_factory: type[ArxivQueryCollector],
     rss_collector_factory: type[RssFeedCollector],
 ) -> int:
     source_config = _load_source_config(args.source_config)
@@ -444,6 +545,21 @@ def _run_source_config(
             stdout,
             arxiv_collector_factory,
         )
+    if source_type == "arxiv_query":
+        return _run_arxiv_query(
+            argparse.Namespace(
+                runtime_root=args.runtime_root,
+                profile=args.profile,
+                source_id=source_config["source_id"],
+                query=source_config["query"],
+                max_results=source_config["max_results"],
+                api_base_url=source_config["api_base_url"],
+                run_id=args.run_id,
+                output_id=args.output_id,
+            ),
+            stdout,
+            arxiv_query_collector_factory,
+        )
     if source_type == "rss":
         return _run_rss_feed(
             argparse.Namespace(
@@ -467,6 +583,7 @@ def _smoke_source_config(
     stdout: TextIO,
     github_collector_factory: type[GitHubRepoCollector],
     arxiv_collector_factory: type[ArxivRssKeywordsCollector],
+    arxiv_query_collector_factory: type[ArxivQueryCollector],
     rss_collector_factory: type[RssFeedCollector],
 ) -> int:
     runtime_root = _prepare_smoke_runtime_root(args.runtime_root)
@@ -482,6 +599,7 @@ def _smoke_source_config(
         captured_stdout,
         github_collector_factory,
         arxiv_collector_factory,
+        arxiv_query_collector_factory,
         rss_collector_factory,
     )
     summary = json.loads(captured_stdout.getvalue())
@@ -1138,6 +1256,7 @@ def _collection_summary(
     collection: (
         GitHubRepoCollectionResult
         | ArxivRssKeywordsCollectionResult
+        | ArxivQueryCollectionResult
         | RssFeedCollectionResult
     ),
 ) -> dict[str, Any]:
@@ -1192,6 +1311,25 @@ def _load_source_config(path: str | Path) -> dict[str, Any]:
             },
         )
         _require_string_list(config, "keywords")
+        if not isinstance(config.get("max_results"), int):
+            raise ValueError("max_results must be an integer")
+        config = dict(config)
+        config.setdefault("api_base_url", "https://export.arxiv.org/api/query")
+        _require_text(config, "api_base_url")
+        return config
+    if source_type == "arxiv_query":
+        _reject_unknown(
+            config,
+            {
+                "schema_version",
+                "source_type",
+                "source_id",
+                "query",
+                "max_results",
+                "api_base_url",
+            },
+        )
+        _require_text(config, "query")
         if not isinstance(config.get("max_results"), int):
             raise ValueError("max_results must be an integer")
         config = dict(config)
@@ -1402,6 +1540,24 @@ def _parser() -> argparse.ArgumentParser:
     arxiv.add_argument("--run-id")
     arxiv.add_argument("--output-id")
     arxiv.add_argument(
+        "--api-base-url", default="https://export.arxiv.org/api/query"
+    )
+
+    arxiv_query = subparsers.add_parser(
+        "run-arxiv-query",
+        help=(
+            "Collect one explicit arXiv query, emit clean records, and project "
+            "one profile."
+        ),
+    )
+    arxiv_query.add_argument("--runtime-root", required=True)
+    arxiv_query.add_argument("--profile", required=True)
+    arxiv_query.add_argument("--source-id", required=True)
+    arxiv_query.add_argument("--query", required=True)
+    arxiv_query.add_argument("--max-results", required=True, type=int)
+    arxiv_query.add_argument("--run-id")
+    arxiv_query.add_argument("--output-id")
+    arxiv_query.add_argument(
         "--api-base-url", default="https://export.arxiv.org/api/query"
     )
 
