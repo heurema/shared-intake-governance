@@ -230,6 +230,21 @@ written `execution-mediation.v1` object. `read_only` intents can be `ready`
 without dry-run or approval records. Side-effect classes require a matching
 `passed` dry-run result and a matching `approved` approval record.
 
+To inspect mediation evidence later:
+
+```sh
+PYTHONPATH=src python3 -m shared_intake_governance.cli list-mediation-records \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --run-id "$SIG_RUN_ID"
+
+PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-mediation-record \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --run-id "$SIG_RUN_ID" \
+  --mediation-id mediation-1
+```
+
+Both commands are read-only and should not create runtime files.
+
 ## Reset local runtime data
 
 Only remove runtime data outside the repository:

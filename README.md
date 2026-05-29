@@ -80,7 +80,8 @@ What exists now:
 - isolated smoke CLI command for live one-source checks with runtime data
   outside git;
 - read-only CLI commands for listing and inspecting run manifests, clean
-  records, profile state, profile reports, and source health;
+  records, profile state, profile reports, mediation records, and source
+  health;
 - run manifest and source health artifacts from the CLI pipeline.
 - tool-intent and governance-decision contracts with a read-only default
   governance evaluator CLI.

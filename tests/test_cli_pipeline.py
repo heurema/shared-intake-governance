@@ -1646,6 +1646,186 @@ class CliPipelineTests(unittest.TestCase):
             self.assertEqual(mediation["tool_intent_path"], str(intent_path))
             self.assertNotIn("arguments", mediation)
 
+    def test_list_mediation_records_summarizes_records_without_writes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            first_path = _write_mediation_record(
+                paths,
+                run_id="20260529T100000Z-first",
+                mediation_id="mediation-1",
+                action_class="edit_local",
+                policy_decision="gated",
+                mediation_decision="ready",
+            )
+            second_path = _write_mediation_record(
+                paths,
+                run_id="20260529T110000Z-second",
+                mediation_id="mediation-2",
+                action_class="external_side_effect",
+                policy_decision="denied",
+                mediation_decision="blocked",
+            )
+            before_paths = _all_files(paths.root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "list-mediation-records",
+                    "--runtime-root",
+                    str(paths.root),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(paths.root), before_paths)
+            self.assertEqual(summary["runtime_root"], str(paths.root))
+            self.assertEqual(summary["mediation_record_count"], 2)
+            self.assertEqual(
+                summary["mediation_records"],
+                [
+                    {
+                        "mediation_record_path": str(first_path),
+                        "run_id": "20260529T100000Z-first",
+                        "mediation_id": "mediation-1",
+                        "mediated_at": "2026-05-29T12:30:45Z",
+                        "intent_id": "intent-1",
+                        "profile_id": "code-intel-kernel",
+                        "action_class": "edit_local",
+                        "tool_name": "publish-report",
+                        "policy_decision": "gated",
+                        "mediation_decision": "ready",
+                        "reason": "test mediation",
+                        "dry_run_result_path": "dry-runs/dry-run-1.json",
+                        "approval_record_path": "approvals/approval-1.json",
+                        "tool_intent_path": "intent.json",
+                    },
+                    {
+                        "mediation_record_path": str(second_path),
+                        "run_id": "20260529T110000Z-second",
+                        "mediation_id": "mediation-2",
+                        "mediated_at": "2026-05-29T12:30:45Z",
+                        "intent_id": "intent-1",
+                        "profile_id": "code-intel-kernel",
+                        "action_class": "external_side_effect",
+                        "tool_name": "publish-report",
+                        "policy_decision": "denied",
+                        "mediation_decision": "blocked",
+                        "reason": "test mediation",
+                        "dry_run_result_path": "dry-runs/dry-run-1.json",
+                        "approval_record_path": "approvals/approval-1.json",
+                        "tool_intent_path": "intent.json",
+                    },
+                ],
+            )
+
+    def test_list_mediation_records_can_filter_one_run(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            _write_mediation_record(
+                paths,
+                run_id="20260529T100000Z-first",
+                mediation_id="mediation-1",
+            )
+            record_path = _write_mediation_record(
+                paths,
+                run_id="20260529T110000Z-second",
+                mediation_id="mediation-2",
+            )
+            before_paths = _all_files(paths.root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "list-mediation-records",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--run-id",
+                    "20260529T110000Z-second",
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(paths.root), before_paths)
+            self.assertEqual(summary["mediation_record_count"], 1)
+            self.assertEqual(
+                summary["mediation_records"][0]["mediation_record_path"],
+                str(record_path),
+            )
+            self.assertEqual(
+                summary["mediation_records"][0]["run_id"],
+                "20260529T110000Z-second",
+            )
+
+    def test_list_mediation_records_handles_missing_runtime_without_creating_it(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            runtime_root = Path(tmp_dir) / "runtime"
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "list-mediation-records",
+                    "--runtime-root",
+                    str(runtime_root),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertFalse(runtime_root.exists())
+            self.assertEqual(
+                summary,
+                {
+                    "runtime_root": str(runtime_root),
+                    "mediation_record_count": 0,
+                    "mediation_records": [],
+                },
+            )
+
+    def test_inspect_mediation_record_reads_one_record_without_writes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            record_path = _write_mediation_record(
+                paths,
+                run_id=RUN_ID,
+                mediation_id="mediation-1",
+            )
+            record = json.loads(record_path.read_text(encoding="utf-8"))
+            before_paths = _all_files(paths.root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "inspect-mediation-record",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--run-id",
+                    RUN_ID,
+                    "--mediation-id",
+                    "mediation-1",
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(paths.root), before_paths)
+            self.assertEqual(
+                summary,
+                {
+                    **record,
+                    "mediation_record_path": str(record_path),
+                },
+            )
+
 
 class SuccessfulCollector:
     def __init__(self, paths, **kwargs):
@@ -2061,6 +2241,38 @@ def _write_approval_record(paths, approval_id):
         "tool_intent_path": "intent.json",
     }
     path = paths.approval_record_path(RUN_ID, approval_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(record, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
+def _write_mediation_record(
+    paths,
+    *,
+    run_id,
+    mediation_id,
+    action_class="edit_local",
+    policy_decision="gated",
+    mediation_decision="ready",
+):
+    record = {
+        "schema_version": "execution-mediation.v1",
+        "run_id": run_id,
+        "mediation_id": mediation_id,
+        "mediated_at": "2026-05-29T12:30:45Z",
+        "intent_id": "intent-1",
+        "profile_id": "code-intel-kernel",
+        "action_class": action_class,
+        "tool_name": "publish-report",
+        "policy_decision": policy_decision,
+        "mediation_decision": mediation_decision,
+        "reason": "test mediation",
+        "dry_run_result_path": "dry-runs/dry-run-1.json",
+        "approval_record_path": "approvals/approval-1.json",
+        "tool_intent_path": "intent.json",
+        "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
+    }
+    path = paths.mediation_record_path(run_id, mediation_id)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(record, sort_keys=True) + "\n", encoding="utf-8")
     return path

@@ -116,6 +116,8 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli record-approval`
 - `python -m shared_intake_governance.cli record-dry-run`
 - `python -m shared_intake_governance.cli mediate-tool-intent`
+- `python -m shared_intake_governance.cli list-mediation-records`
+- `python -m shared_intake_governance.cli inspect-mediation-record`
 - `python -m shared_intake_governance.cli inspect-run`
 - `python -m shared_intake_governance.cli show-source-health`
 - `sources/examples/github-signum.json`
@@ -150,6 +152,8 @@ the requested tool or mediate side effects.
 The mediation command reads one `tool-intent.v1` file plus optional dry-run
 and approval records, then writes one `execution-mediation.v1` readiness record.
 It does not execute the requested tool or call provider adapters.
+The mediation inspection commands read existing `execution-mediation.v1`
+artifacts only and do not write runtime data.
 
 For current manual invocation examples, see [11-local-runbook.md](11-local-runbook.md).
 
@@ -321,6 +325,8 @@ Current governance runtime:
 - `record-dry-run` writes recorded dry-run evidence for a tool intent.
 - `mediate-tool-intent` writes a pre-execution readiness record from one tool
   intent plus optional dry-run and approval records.
+- `list-mediation-records` and `inspect-mediation-record` provide read-only
+  mediation inventory and inspection.
 
 Still missing:
 
