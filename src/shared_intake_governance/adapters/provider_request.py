@@ -1,0 +1,45 @@
+"""Provider-neutral request preparation without provider invocation."""
+
+from __future__ import annotations
+
+from typing import Any
+
+
+_PROVIDERS = {"claude", "gemini", "vibe"}
+
+
+def prepare_provider_request(
+    *,
+    run_id: str,
+    request_id: str,
+    provider: str,
+    mediation_record: dict[str, Any],
+    mediation_record_path: str,
+    context_refs: list[str],
+    prepared_at: str,
+) -> dict[str, Any]:
+    """Return a provider request record without invoking the provider."""
+    if provider not in _PROVIDERS:
+        raise ValueError(f"unsupported provider: {provider}")
+    if mediation_record["mediation_decision"] != "ready":
+        raise ValueError("provider request requires ready mediation")
+
+    action_class = str(mediation_record["action_class"])
+    return {
+        "schema_version": "provider-request.v1",
+        "run_id": run_id,
+        "request_id": request_id,
+        "prepared_at": prepared_at,
+        "provider": provider,
+        "mediation_record_path": mediation_record_path,
+        "mediation_id": mediation_record["mediation_id"],
+        "intent_id": mediation_record["intent_id"],
+        "profile_id": mediation_record["profile_id"],
+        "action_class": action_class,
+        "tool_name": mediation_record["tool_name"],
+        "policy_decision": mediation_record["policy_decision"],
+        "mediation_decision": mediation_record["mediation_decision"],
+        "capabilities": [action_class],
+        "context_refs": context_refs,
+        "evidence_refs": mediation_record["evidence_refs"],
+    }

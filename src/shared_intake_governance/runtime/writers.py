@@ -133,6 +133,19 @@ class MediationWriter:
         return _write_json(path, record)
 
 
+class ProviderRequestWriter:
+    """Write one provider-neutral adapter request."""
+
+    def __init__(self, paths: RuntimePaths):
+        self.paths = paths
+
+    def write_request(self, request: dict[str, Any]) -> Path:
+        path = self.paths.provider_request_path(
+            str(request["run_id"]), str(request["request_id"])
+        )
+        return _write_json(path, request)
+
+
 def _write_json(path: Path, payload: dict[str, Any]) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(

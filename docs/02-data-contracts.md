@@ -391,6 +391,48 @@ Default mediation behavior:
 - mediation records should store refs and decision fields only, not full tool
   arguments, credentials, or private payloads.
 
+## Provider request
+
+See [../schemas/provider-request.schema.json](../schemas/provider-request.schema.json).
+
+Provider requests are provider-neutral adapter boundary records. They are
+prepared from a ready execution mediation record and contain the provider name,
+governance-derived capabilities, and context references. They do not invoke a
+provider, execute tools, discover credentials, or grant capability by
+themselves.
+
+Provider requests are written under:
+
+```text
+provider-requests/<run-id>/<request-id>.json
+```
+
+Minimum properties:
+
+```text
+schema_version
+run_id
+request_id
+prepared_at
+provider
+mediation_record_path
+mediation_id
+intent_id
+profile_id
+action_class
+tool_name
+policy_decision
+mediation_decision
+capabilities
+context_refs
+evidence_refs
+```
+
+Provider request records should not include full tool arguments, credentials,
+raw source text, private payloads, or provider-specific policy truth.
+Adapters must still enforce their own narrow translation boundary and must not
+expand capabilities beyond the governance-derived request.
+
 ## Capability classes
 
 The governance broker should classify actions into at least:

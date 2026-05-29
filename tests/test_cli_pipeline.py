@@ -1826,6 +1826,88 @@ class CliPipelineTests(unittest.TestCase):
                 },
             )
 
+    def test_prepare_provider_request_writes_request_without_private_payloads(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            mediation_path = _write_mediation_record(
+                paths,
+                run_id=RUN_ID,
+                mediation_id="mediation-1",
+            )
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "prepare-provider-request",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--run-id",
+                    RUN_ID,
+                    "--request-id",
+                    "provider-request-1",
+                    "--mediation-record",
+                    str(mediation_path),
+                    "--provider",
+                    "claude",
+                    "--context-ref",
+                    "profiles/code-intel-kernel/reports/report.json",
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            request_path = paths.provider_request_path(RUN_ID, "provider-request-1")
+            request = json.loads(request_path.read_text(encoding="utf-8"))
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(summary["provider_request_path"], str(request_path))
+            self.assertEqual(summary["provider_request"], request)
+            self.assertEqual(request["schema_version"], "provider-request.v1")
+            self.assertEqual(request["provider"], "claude")
+            self.assertEqual(request["run_id"], RUN_ID)
+            self.assertEqual(request["request_id"], "provider-request-1")
+            self.assertEqual(request["mediation_record_path"], str(mediation_path))
+            self.assertEqual(request["mediation_id"], "mediation-1")
+            self.assertEqual(request["intent_id"], "intent-1")
+            self.assertEqual(request["action_class"], "edit_local")
+            self.assertEqual(request["policy_decision"], "gated")
+            self.assertEqual(request["mediation_decision"], "ready")
+            self.assertEqual(request["capabilities"], ["edit_local"])
+            self.assertEqual(
+                request["context_refs"],
+                ["profiles/code-intel-kernel/reports/report.json"],
+            )
+            self.assertNotIn("arguments", request)
+            self.assertNotIn("credentials", request)
+
+    def test_prepare_provider_request_rejects_blocked_mediation(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            mediation_path = _write_mediation_record(
+                paths,
+                run_id=RUN_ID,
+                mediation_id="mediation-1",
+                mediation_decision="blocked",
+            )
+
+            with self.assertRaises(ValueError):
+                main(
+                    [
+                        "prepare-provider-request",
+                        "--runtime-root",
+                        str(paths.root),
+                        "--run-id",
+                        RUN_ID,
+                        "--request-id",
+                        "provider-request-1",
+                        "--mediation-record",
+                        str(mediation_path),
+                        "--provider",
+                        "claude",
+                    ],
+                    stdout=io.StringIO(),
+                )
+
 
 class SuccessfulCollector:
     def __init__(self, paths, **kwargs):

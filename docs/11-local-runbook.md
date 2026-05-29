@@ -245,6 +245,27 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-mediation-record 
 
 Both commands are read-only and should not create runtime files.
 
+## Prepare a provider request
+
+Use this after a mediation record is `ready`. It writes a provider-neutral
+adapter request only; it does not invoke the provider, execute tools, or read
+credentials.
+
+```sh
+PYTHONPATH=src python3 -m shared_intake_governance.cli prepare-provider-request \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --run-id "$SIG_RUN_ID" \
+  --request-id provider-request-1 \
+  --mediation-record "$SIG_RUNTIME_ROOT/mediation/$SIG_RUN_ID/mediation-1.json" \
+  --provider claude \
+  --context-ref profiles/code-intel-kernel/reports/report.json
+```
+
+Expected output is one summary containing `provider_request_path` and the
+written `provider-request.v1` object. Provider request records intentionally
+omit full tool arguments, credentials, raw source text, and provider-specific
+policy truth.
+
 ## Reset local runtime data
 
 Only remove runtime data outside the repository:

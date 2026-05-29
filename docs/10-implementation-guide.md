@@ -118,6 +118,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli mediate-tool-intent`
 - `python -m shared_intake_governance.cli list-mediation-records`
 - `python -m shared_intake_governance.cli inspect-mediation-record`
+- `python -m shared_intake_governance.cli prepare-provider-request`
 - `python -m shared_intake_governance.cli inspect-run`
 - `python -m shared_intake_governance.cli show-source-health`
 - `sources/examples/github-signum.json`
@@ -154,6 +155,9 @@ and approval records, then writes one `execution-mediation.v1` readiness record.
 It does not execute the requested tool or call provider adapters.
 The mediation inspection commands read existing `execution-mediation.v1`
 artifacts only and do not write runtime data.
+The provider request command reads one ready `execution-mediation.v1` artifact
+and writes one provider-neutral `provider-request.v1` artifact. It does not
+invoke providers, discover credentials, or execute tools.
 
 For current manual invocation examples, see [11-local-runbook.md](11-local-runbook.md).
 
@@ -185,6 +189,7 @@ Current Phase 1 contract anchors:
 - approval record shape: `schemas/approval-record.schema.json`
 - dry-run result shape: `schemas/dry-run-result.schema.json`
 - execution mediation shape: `schemas/execution-mediation.schema.json`
+- provider request shape: `schemas/provider-request.schema.json`
 
 If these anchors drift, update the docs or schemas before adding runtime code.
 
@@ -328,10 +333,17 @@ Current governance runtime:
 - `list-mediation-records` and `inspect-mediation-record` provide read-only
   mediation inventory and inspection.
 
+Current provider adapter boundary:
+
+- `src/shared_intake_governance/adapters/provider_request.py`
+- `tests/test_provider_request.py`
+- `prepare-provider-request` writes a provider-neutral request record from one
+  ready mediation record without invoking providers.
+
 Still missing:
 
 - actual tool execution;
-- provider adapter runtime.
+- provider invocation and result capture runtime.
 
 ## Handoff rule for the next session
 
