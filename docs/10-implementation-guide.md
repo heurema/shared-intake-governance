@@ -101,12 +101,13 @@ Do not start with a mega-command that hides every phase.
 Current CLI implementation:
 
 - `python -m shared_intake_governance.cli run-github-repo`
+- `python -m shared_intake_governance.cli run-arxiv-rss-keywords`
 - `src/shared_intake_governance/cli/pipeline.py`
 - `tests/test_cli_pipeline.py`
 
-This first command intentionally covers only the implemented `github_repo`
-path and requires explicit runtime root, profile path, source id, owner, repo,
-and run/output identifiers. It also writes:
+These commands intentionally cover only the implemented `github_repo` and
+`arxiv_rss_keywords` paths. They require explicit runtime root, profile path,
+source id, source-specific inputs, and run/output identifiers. They also write:
 
 - `runs/<run-id>.manifest.json`
 - `source-health/<run-id>/<source-id>.json`

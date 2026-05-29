@@ -69,7 +69,8 @@ What exists now:
 - minimal read-only `arxiv_rss_keywords` collector that writes raw evidence only;
 - minimal clean-record emitter for `github_repo` and `arxiv_rss_keywords` raw evidence;
 - minimal one-profile projector that writes deterministic JSON reports;
-- narrow local CLI command for `github_repo` collect, sanitize, and project;
+- narrow local CLI commands for `github_repo` and `arxiv_rss_keywords` collect,
+  sanitize, and project paths;
 - run manifest and source health artifacts from the CLI pipeline.
 
 What does not exist yet:

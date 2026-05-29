@@ -123,7 +123,8 @@ If a source is degraded, the system should say so explicitly instead of hiding i
 Current CLI behavior:
 
 - `run-github-repo` writes one run manifest under `runs/`;
-- `run-github-repo` writes one source health artifact under `source-health/`.
+- `run-arxiv-rss-keywords` writes one run manifest under `runs/`;
+- both commands write one source health artifact under `source-health/`.
 
 ## Cost discipline
 

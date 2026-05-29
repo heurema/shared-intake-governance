@@ -24,8 +24,9 @@ This repository currently defines docs, schemas, example profiles, and minimal
 file-based runtime helpers for paths, raw payload writes, raw metadata writes,
 run manifest writes, read-only `github_repo` and `arxiv_rss_keywords`
 collectors, clean-record emitters for `github_repo` and `arxiv_rss_keywords`,
-one explicit-profile JSON projector, and one narrow local CLI command for the
-current `github_repo` path with run manifest and source health output.
+one explicit-profile JSON projector, and narrow local CLI commands for the
+current `github_repo` and `arxiv_rss_keywords` paths with run manifest and
+source health output.
 
 No governance broker, provider adapter, source collector family beyond
 `github_repo` and `arxiv_rss_keywords`, sanitizer source mapping beyond those
