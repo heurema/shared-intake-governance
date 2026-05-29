@@ -4,6 +4,49 @@
   "title": "ToolExecutionResult",
   "type": "object",
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "execution_status": {
+            "const": "succeeded"
+          }
+        },
+        "required": [
+          "execution_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "error": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "execution_status": {
+            "enum": [
+              "failed",
+              "blocked"
+            ]
+          }
+        },
+        "required": [
+          "execution_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "error": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  ],
   "required": [
     "schema_version",
     "run_id",

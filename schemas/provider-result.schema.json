@@ -4,6 +4,49 @@
   "title": "ProviderResult",
   "type": "object",
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "result_status": {
+            "const": "succeeded"
+          }
+        },
+        "required": [
+          "result_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "error": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "result_status": {
+            "enum": [
+              "failed",
+              "blocked"
+            ]
+          }
+        },
+        "required": [
+          "result_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "error": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  ],
   "required": [
     "schema_version",
     "run_id",
