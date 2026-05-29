@@ -10,6 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from shared_intake_governance.runtime import (  # noqa: E402
+    AuditWriter,
     RawWriter,
     RunWriter,
     RuntimePaths,
@@ -62,6 +63,10 @@ class RuntimePathTests(unittest.TestCase):
                 root / "runs" / "20260529T123045Z-deadbeef.manifest.json",
             )
             self.assertEqual(
+                paths.audit_log_path("20260529T123045Z-deadbeef"),
+                root / "audit" / "20260529T123045Z-deadbeef.jsonl",
+            )
+            self.assertEqual(
                 paths.source_health_path("20260529T123045Z-deadbeef", "github-main"),
                 root / "source-health" / "20260529T123045Z-deadbeef" / "github-main.json",
             )
@@ -99,6 +104,8 @@ class RuntimePathTests(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 paths.raw_body_path("../source", FETCHED_AT, "a" * 64)
+            with self.assertRaises(ValueError):
+                paths.audit_log_path("../run")
             with self.assertRaises(ValueError):
                 paths.profile_state_path("pulse", "../state")
             with self.assertRaises(ValueError):
@@ -215,6 +222,26 @@ class RuntimeWriterTests(unittest.TestCase):
             writer.write_manifest(manifest)
             self.assertEqual(manifest_path.read_text(encoding="utf-8"), first_write)
 
+    def test_audit_writer_appends_jsonl_events(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            writer = AuditWriter(paths)
+            first_event = _audit_event("intent-1", "allowed")
+            second_event = _audit_event("intent-2", "denied")
+
+            audit_path = writer.write_event(first_event)
+            writer.write_event(second_event)
+
+            lines = audit_path.read_text(encoding="utf-8").splitlines()
+
+            self.assertEqual(
+                audit_path,
+                paths.audit_log_path("20260529T123045Z-deadbeef"),
+            )
+            self.assertEqual(len(lines), 2)
+            self.assertEqual(json.loads(lines[0]), first_event)
+            self.assertEqual(json.loads(lines[1]), second_event)
+
 
 def _raw_metadata(raw_body):
     return {
@@ -234,6 +261,24 @@ def _raw_metadata(raw_body):
         "storage_path": None if raw_body is None else str(raw_body.path),
         "collector_version": "test",
         "error": None,
+    }
+
+
+def _audit_event(intent_id, decision):
+    return {
+        "schema_version": "governance-audit-event.v1",
+        "run_id": "20260529T123045Z-deadbeef",
+        "event_type": "tool_intent_evaluated",
+        "recorded_at": "2026-05-29T12:30:45Z",
+        "intent_id": intent_id,
+        "profile_id": "code-intel-kernel",
+        "action_class": "read_only",
+        "tool_name": "inspect-record",
+        "decision": decision,
+        "reason": "test decision",
+        "dry_run_supported": False,
+        "evidence_refs": ["clean/github_repo-good.json"],
+        "tool_intent_path": "intent.json",
     }
 
 

@@ -72,6 +72,9 @@ class RuntimePaths:
     def run_manifest_path(self, run_id: str) -> Path:
         return self.runs_root / f"{_safe_segment(run_id, 'run_id')}.manifest.json"
 
+    def audit_log_path(self, run_id: str) -> Path:
+        return self.audit_root / f"{_safe_segment(run_id, 'run_id')}.jsonl"
+
     def source_health_path(self, run_id: str, source_id: str) -> Path:
         return (
             self.source_health_root

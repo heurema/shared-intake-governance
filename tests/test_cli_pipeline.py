@@ -1408,6 +1408,64 @@ class CliPipelineTests(unittest.TestCase):
             self.assertEqual(summary["action_class"], "external_side_effect")
             self.assertEqual(summary["decision"], "denied")
 
+    def test_evaluate_tool_intent_records_audit_when_runtime_is_provided(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            paths = RuntimePaths(root / "runtime")
+            intent_path = _write_tool_intent(
+                root / "intent.json",
+                action_class="edit_local",
+                dry_run_supported=True,
+            )
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "evaluate-tool-intent",
+                    "--intent",
+                    str(intent_path),
+                    "--runtime-root",
+                    str(paths.root),
+                    "--run-id",
+                    RUN_ID,
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            audit_path = paths.audit_log_path(RUN_ID)
+            audit_events = [
+                json.loads(line)
+                for line in audit_path.read_text(encoding="utf-8").splitlines()
+            ]
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(summary["decision"], "gated")
+            self.assertEqual(summary["audit_log_path"], str(audit_path))
+            self.assertEqual(len(audit_events), 1)
+            self.assertEqual(
+                audit_events[0],
+                {
+                    "schema_version": "governance-audit-event.v1",
+                    "run_id": RUN_ID,
+                    "event_type": "tool_intent_evaluated",
+                    "recorded_at": summary["audit_event"]["recorded_at"],
+                    "intent_id": "intent-1",
+                    "profile_id": "code-intel-kernel",
+                    "action_class": "edit_local",
+                    "tool_name": "publish-report",
+                    "decision": "gated",
+                    "reason": "edit_local actions require explicit approval",
+                    "dry_run_supported": True,
+                    "evidence_refs": [
+                        "profiles/code-intel-kernel/reports/report.json"
+                    ],
+                    "tool_intent_path": str(intent_path),
+                },
+            )
+            self.assertEqual(summary["audit_event"], audit_events[0])
+            self.assertNotIn("arguments", audit_events[0])
+
 
 class SuccessfulCollector:
     def __init__(self, paths, **kwargs):

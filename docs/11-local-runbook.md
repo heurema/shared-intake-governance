@@ -141,7 +141,7 @@ projector commands do not create or update profile state.
 ## Evaluate a tool intent
 
 Use this for a local policy decision only. It does not execute the requested
-tool and does not write audit or approval records.
+tool and does not write approval records.
 
 ```sh
 PYTHONPATH=src python3 -m shared_intake_governance.cli evaluate-tool-intent \
@@ -151,6 +151,21 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli evaluate-tool-intent \
 Expected output is one `governance-decision.v1` JSON object. Current default
 policy allows `read_only`, gates `edit_local`, and denies destructive, external,
 or credentialed actions.
+
+To append audit evidence for that evaluation:
+
+```sh
+export SIG_RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-governance"
+
+PYTHONPATH=src python3 -m shared_intake_governance.cli evaluate-tool-intent \
+  --intent path/to/tool-intent.json \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --run-id "$SIG_RUN_ID"
+```
+
+This writes one `governance-audit-event.v1` JSONL line under
+`audit/<run-id>.jsonl`. Audit events intentionally omit tool intent
+`arguments`.
 
 ## Reset local runtime data
 

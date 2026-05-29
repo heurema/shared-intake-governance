@@ -78,6 +78,22 @@ class SourceHealthWriter:
         return _write_json(path, source_health)
 
 
+class AuditWriter:
+    """Append governance audit events as JSONL."""
+
+    def __init__(self, paths: RuntimePaths):
+        self.paths = paths
+
+    def write_event(self, event: dict[str, Any]) -> Path:
+        path = self.paths.audit_log_path(str(event["run_id"]))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as handle:
+            handle.write(
+                json.dumps(event, sort_keys=True, ensure_ascii=False) + "\n"
+            )
+        return path
+
+
 def _write_json(path: Path, payload: dict[str, Any]) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(

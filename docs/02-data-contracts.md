@@ -12,7 +12,8 @@ The first stable contracts should cover:
 6. project profiles;
 7. profile-local runtime state;
 8. tool intents passed into governance;
-9. governance decisions returned by policy evaluation.
+9. governance decisions returned by policy evaluation;
+10. governance audit events.
 
 ## Raw payload metadata
 
@@ -219,8 +220,9 @@ evidence_refs
 See [../schemas/governance-decision.schema.json](../schemas/governance-decision.schema.json).
 
 The first governance runtime slice evaluates one intent and returns a decision.
-It does not execute tools, write audit logs, create approvals, call providers,
-or mutate runtime state.
+It can also append a minimal audit event when a runtime root and run id are
+explicitly provided. It does not execute tools, create approvals, call
+providers, or mutate unrelated runtime state.
 
 Minimum properties:
 
@@ -235,6 +237,38 @@ reason
 dry_run_supported
 evidence_refs
 ```
+
+## Governance audit event
+
+See [../schemas/governance-audit-event.schema.json](../schemas/governance-audit-event.schema.json).
+
+Governance audit events are append-only JSONL records under:
+
+```text
+audit/<run-id>.jsonl
+```
+
+Minimum properties:
+
+```text
+schema_version
+run_id
+event_type
+recorded_at
+intent_id
+profile_id
+action_class
+tool_name
+decision
+reason
+dry_run_supported
+evidence_refs
+tool_intent_path
+```
+
+Audit events should record the decision surface, not the full tool arguments.
+Do not log secrets, credentials, private payloads, or unneeded side-effect
+arguments into audit JSONL.
 
 ## Capability classes
 
