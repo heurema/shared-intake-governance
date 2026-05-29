@@ -505,6 +505,8 @@ If mediation is blocked or mismatched, the executor must write a `blocked`
 result and must not invoke the supplied command. Successful and failed
 executions should point at output artifacts instead of embedding command output
 or tool arguments.
+Successful tool execution results must have `error: null`; failed or blocked
+tool execution results must include a compact error object.
 Runtime code validates the input `execution-mediation.v1` record before
 consuming it, then validates tool execution results before writing them.
 
@@ -597,7 +599,8 @@ evidence_refs
 Provider result records should point at response artifacts or summaries rather
 than embedding full responses. They should not include credentials, tool
 arguments, raw source text, private payloads, or provider-specific policy truth.
-Failed or blocked results should include a compact error object.
+Successful provider results must have `error: null`; failed or blocked results
+must include a compact error object.
 Runtime code validates provider results before writing them.
 Runtime code also validates provider requests before recording provider results
 or forwarding request JSON to an explicit local provider command.

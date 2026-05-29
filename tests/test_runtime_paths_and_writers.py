@@ -773,6 +773,31 @@ class RuntimeWriterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_tool_execution_result(bad_error)
 
+    def test_tool_execution_result_validation_rejects_error_status_drift(self):
+        succeeded_with_error = _tool_execution_result()
+        succeeded_with_error["error"] = {
+            "kind": "unexpected_error",
+            "message": "unexpected error",
+        }
+        with self.assertRaisesRegex(
+            ValueError, "succeeded tool execution results must not include an error"
+        ):
+            validate_tool_execution_result(succeeded_with_error)
+
+        failed_without_error = _tool_execution_result()
+        failed_without_error["execution_status"] = "failed"
+        with self.assertRaisesRegex(
+            ValueError, "failed or blocked tool execution results require an error"
+        ):
+            validate_tool_execution_result(failed_without_error)
+
+        blocked_without_error = _tool_execution_result()
+        blocked_without_error["execution_status"] = "blocked"
+        with self.assertRaisesRegex(
+            ValueError, "failed or blocked tool execution results require an error"
+        ):
+            validate_tool_execution_result(blocked_without_error)
+
     def test_provider_result_writer_writes_result_deterministically(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             paths = RuntimePaths(Path(tmp_dir) / "runtime")
@@ -832,6 +857,70 @@ class RuntimeWriterTests(unittest.TestCase):
         bad_error["error"] = {"kind": "provider_error"}
         with self.assertRaises(ValueError):
             validate_provider_result(bad_error)
+
+    def test_provider_result_validation_rejects_error_status_drift(self):
+        succeeded_with_error = _provider_result()
+        succeeded_with_error["error"] = {
+            "kind": "unexpected_error",
+            "message": "unexpected error",
+        }
+        with self.assertRaisesRegex(
+            ValueError, "succeeded provider results must not include an error"
+        ):
+            validate_provider_result(succeeded_with_error)
+
+        failed_without_error = _provider_result()
+        failed_without_error["result_status"] = "failed"
+        with self.assertRaisesRegex(
+            ValueError, "failed or blocked provider results require an error"
+        ):
+            validate_provider_result(failed_without_error)
+
+        blocked_without_error = _provider_result()
+        blocked_without_error["result_status"] = "blocked"
+        with self.assertRaisesRegex(
+            ValueError, "failed or blocked provider results require an error"
+        ):
+            validate_provider_result(blocked_without_error)
+
+    def test_result_schemas_encode_error_status_consistency(self):
+        expected = [
+            (
+                "tool-execution-result.schema.json",
+                "execution_status",
+            ),
+            (
+                "provider-result.schema.json",
+                "result_status",
+            ),
+        ]
+
+        for schema_name, status_field in expected:
+            with self.subTest(schema_name=schema_name):
+                schema = _read_schema(schema_name)
+                rules = schema.get("allOf", [])
+                self.assertIn(
+                    {
+                        "if": {
+                            "properties": {status_field: {"const": "succeeded"}},
+                            "required": [status_field],
+                        },
+                        "then": {"properties": {"error": {"type": "null"}}},
+                    },
+                    rules,
+                )
+                self.assertIn(
+                    {
+                        "if": {
+                            "properties": {
+                                status_field: {"enum": ["failed", "blocked"]}
+                            },
+                            "required": [status_field],
+                        },
+                        "then": {"properties": {"error": {"type": "object"}}},
+                    },
+                    rules,
+                )
 
 
 def _raw_metadata(raw_body):
@@ -1040,6 +1129,11 @@ def _provider_result():
         "error": None,
         "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
     }
+
+
+def _read_schema(filename):
+    path = Path(__file__).resolve().parents[1] / "schemas" / filename
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

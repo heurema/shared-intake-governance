@@ -610,6 +610,12 @@ def validate_tool_execution_result(result: dict[str, Any]) -> None:
         raise ValueError("tool execution result has unsupported action_class")
     if result["execution_status"] not in _TOOL_EXECUTION_STATUS:
         raise ValueError("tool execution result has unsupported execution_status")
+    if result["execution_status"] == "succeeded" and result["error"] is not None:
+        raise ValueError(
+            "succeeded tool execution results must not include an error"
+        )
+    if result["execution_status"] in {"failed", "blocked"} and result["error"] is None:
+        raise ValueError("failed or blocked tool execution results require an error")
     _require_string_array(
         result,
         "output_refs",
@@ -714,6 +720,10 @@ def validate_provider_result(result: dict[str, Any]) -> None:
         raise ValueError("provider result has unsupported action_class")
     if result["result_status"] not in _PROVIDER_RESULT_STATUS:
         raise ValueError("provider result has unsupported result_status")
+    if result["result_status"] == "succeeded" and result["error"] is not None:
+        raise ValueError("succeeded provider results must not include an error")
+    if result["result_status"] in {"failed", "blocked"} and result["error"] is None:
+        raise ValueError("failed or blocked provider results require an error")
     _require_string_array(
         result,
         "response_refs",
