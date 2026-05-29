@@ -568,6 +568,11 @@ def validate_execution_mediation(record: dict[str, Any]) -> None:
         raise ValueError("execution mediation has unsupported policy_decision")
     if record["mediation_decision"] not in _MEDIATION_DECISIONS:
         raise ValueError("execution mediation has unsupported mediation_decision")
+    if (
+        record["policy_decision"] == "denied"
+        and record["mediation_decision"] == "ready"
+    ):
+        raise ValueError("denied policy decisions cannot be ready")
     _require_optional_string(
         record,
         "dry_run_result_path",

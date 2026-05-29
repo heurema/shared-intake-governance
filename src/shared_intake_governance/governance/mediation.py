@@ -42,6 +42,7 @@ def mediate_tool_intent(
 
     mediation_decision, reason = _mediation_decision(
         intent=intent,
+        policy_decision=decision["decision"],
         policy_reason=decision["reason"],
         dry_run_result=dry_run_result,
         approval_record=approval_record,
@@ -69,10 +70,14 @@ def mediate_tool_intent(
 def _mediation_decision(
     *,
     intent: dict[str, Any],
+    policy_decision: str,
     policy_reason: str,
     dry_run_result: dict[str, Any] | None,
     approval_record: dict[str, Any] | None,
 ) -> tuple[str, str]:
+    if policy_decision == "denied":
+        return "blocked", "denied policy decisions cannot become ready"
+
     action_class = str(intent["action_class"])
     if action_class == "read_only":
         return "ready", policy_reason
