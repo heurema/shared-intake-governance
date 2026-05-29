@@ -72,6 +72,7 @@ from shared_intake_governance.runtime import (
     validate_source_health,
 )
 from shared_intake_governance.sanitizer import CleanRecordEmitter, validate_clean_record
+from shared_intake_governance.source_config import load_source_config
 
 
 _SMOKE_BOUNDARY_FILENAME = "SMOKE_RUNTIME_DO_NOT_COMMIT.txt"
@@ -622,7 +623,7 @@ def _run_source_config(
     arxiv_query_collector_factory: type[ArxivQueryCollector],
     rss_collector_factory: type[RssFeedCollector],
 ) -> int:
-    source_config = _load_source_config(args.source_config)
+    source_config = load_source_config(args.source_config)
     source_type = source_config["source_type"]
 
     if source_type == "github_repo":
@@ -1436,109 +1437,6 @@ def _collection_summary(
     }
 
 
-def _load_source_config(path: str | Path) -> dict[str, Any]:
-    config = _read_json(Path(path))
-    if config.get("schema_version") != "source-config.v1":
-        raise ValueError("source config must use schema_version source-config.v1")
-    _require_text(config, "source_type")
-    _require_text(config, "source_id")
-
-    source_type = config["source_type"]
-    if source_type == "github_repo":
-        _reject_unknown(
-            config,
-            {
-                "schema_version",
-                "source_type",
-                "source_id",
-                "owner",
-                "repo",
-                "api_base_url",
-            },
-        )
-        _require_text(config, "owner")
-        _require_text(config, "repo")
-        config = dict(config)
-        config.setdefault("api_base_url", "https://api.github.com")
-        _require_text(config, "api_base_url")
-        return config
-    if source_type == "github_search":
-        _reject_unknown(
-            config,
-            {
-                "schema_version",
-                "source_type",
-                "source_id",
-                "query",
-                "max_results",
-                "api_base_url",
-            },
-        )
-        _require_text(config, "query")
-        if not isinstance(config.get("max_results"), int):
-            raise ValueError("max_results must be an integer")
-        config = dict(config)
-        config.setdefault("api_base_url", "https://api.github.com")
-        _require_text(config, "api_base_url")
-        return config
-    if source_type == "arxiv_rss_keywords":
-        _reject_unknown(
-            config,
-            {
-                "schema_version",
-                "source_type",
-                "source_id",
-                "keywords",
-                "max_results",
-                "api_base_url",
-            },
-        )
-        _require_string_list(config, "keywords")
-        if not isinstance(config.get("max_results"), int):
-            raise ValueError("max_results must be an integer")
-        config = dict(config)
-        config.setdefault("api_base_url", "https://export.arxiv.org/api/query")
-        _require_text(config, "api_base_url")
-        return config
-    if source_type == "arxiv_query":
-        _reject_unknown(
-            config,
-            {
-                "schema_version",
-                "source_type",
-                "source_id",
-                "query",
-                "max_results",
-                "api_base_url",
-            },
-        )
-        _require_text(config, "query")
-        if not isinstance(config.get("max_results"), int):
-            raise ValueError("max_results must be an integer")
-        config = dict(config)
-        config.setdefault("api_base_url", "https://export.arxiv.org/api/query")
-        _require_text(config, "api_base_url")
-        return config
-    if source_type == "rss":
-        _reject_unknown(
-            config,
-            {
-                "schema_version",
-                "source_type",
-                "source_id",
-                "feed_url",
-                "source_trust",
-            },
-        )
-        _require_text(config, "feed_url")
-        config = dict(config)
-        config.setdefault("source_trust", "secondary")
-        _require_text(config, "source_trust")
-        return config
-
-    raise ValueError(f"unsupported source_type: {source_type}")
-
-
 def _prepare_smoke_runtime_root(runtime_root: str | None) -> Path:
     if runtime_root is None:
         path = Path(
@@ -1568,24 +1466,6 @@ def _is_relative_to(path: Path, parent: Path) -> bool:
     except ValueError:
         return False
     return True
-
-
-def _reject_unknown(config: dict[str, Any], allowed: set[str]) -> None:
-    unknown = sorted(set(config) - allowed)
-    if unknown:
-        raise ValueError(f"source config has unknown fields: {', '.join(unknown)}")
-
-
-def _require_text(config: dict[str, Any], field: str) -> None:
-    if not isinstance(config.get(field), str) or not config[field]:
-        raise ValueError(f"{field} must be a non-empty string")
-
-
-def _require_string_list(config: dict[str, Any], field: str) -> None:
-    if not isinstance(config.get(field), list) or not all(
-        isinstance(item, str) and item for item in config[field]
-    ):
-        raise ValueError(f"{field} must be a list of non-empty strings")
 
 
 def _usage_metadata(items: list[str]) -> dict[str, str]:

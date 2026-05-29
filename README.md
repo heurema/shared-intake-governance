@@ -65,7 +65,7 @@ What exists now:
 - implementation staging guide;
 - example consumer profiles;
 - example source configs;
-- source config contract for one-source local runs;
+- source config contract and validator for one-source local runs;
 - minimal runtime path helpers and raw payload, validated raw metadata, and
   validated run manifest writers;
 - minimal read-only `github_repo` collector that writes raw evidence only;
