@@ -164,7 +164,9 @@ Current CLI behavior:
 - `smoke-source-config` runs one `source-config.v1` JSON file with a smoke
   runtime root outside the repository and writes a do-not-commit marker;
 - `project-profiles` reads existing clean records and writes one deterministic
-  report per explicit profile path;
+  report per explicit profile path; when `--update-seen-state` is provided, it
+  also merges each generated report into that profile's local `seen_records`
+  state artifact;
 - `list-runs` reads existing run manifests and returns a deterministic
   inventory without writing runtime data;
 - `list-clean-records` reads existing clean records and returns a deterministic

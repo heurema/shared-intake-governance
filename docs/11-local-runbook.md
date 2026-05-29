@@ -119,6 +119,22 @@ Expected output is one JSON summary with one projection path per profile.
 Reports are written under `profiles/<profile-id>/reports/` inside the runtime
 root.
 
+To update profile-local seen state from the same generated reports, add the
+explicit state flag:
+
+```sh
+PYTHONPATH=src python3 -m shared_intake_governance.cli project-profiles \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --profile profiles/examples/code-intel-kernel.json \
+  --profile profiles/examples/agent-bench-lab.json \
+  --output-id "$SIG_RUN_ID" \
+  --update-seen-state
+```
+
+This writes or merges `profiles/<profile-id>/state/seen-records.json` for each
+projected profile. Without `--update-seen-state`, projection remains report
+only.
+
 ## Isolated smoke run
 
 Use this when you want a live one-source check without choosing a persistent
@@ -183,8 +199,9 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli show-source-health \
 
 These commands are read-only. They do not fetch upstream sources and do not
 write runtime files. `inspect-profile-state` requires an existing
-`profile-state.v1` artifact under `profiles/<profile-id>/state/`; current
-projector commands do not implicitly create or update profile state.
+`profile-state.v1` artifact under `profiles/<profile-id>/state/`;
+`project-profiles` creates or updates it only when `--update-seen-state` is
+provided.
 
 To explicitly update a profile-local seen-records state from one generated
 profile report:

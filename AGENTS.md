@@ -36,7 +36,7 @@ and explicit provider command invocation runtime slices.
 
 No source collector family beyond `github_repo`, `github_search`,
 `arxiv_rss_keywords`, `arxiv_query`, and `rss`, sanitizer source mapping beyond
-those five source types, automatic profile-state updates from projection,
+those five source types, implicit profile-state updates from projection,
 automatic command discovery, credential mapping, default provider/tool presets,
 or multi-profile report shaping exists yet.
 

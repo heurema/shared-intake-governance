@@ -148,7 +148,9 @@ commands also write:
 
 The inspection commands are read-only and should not create runtime files.
 The `project-profiles` command reads the shared clean cache and writes one
-deterministic report per explicit profile path.
+deterministic report per explicit profile path. With `--update-seen-state`, it
+also merges each generated report into that profile's local `seen_records`
+state artifact.
 The profile-state inspection commands read existing `profile-state.v1`
 artifacts only. The profile seen-state update command explicitly merges record
 ids from one `profile-projection.v1` report into one `seen_records` state
@@ -321,6 +323,8 @@ Current implementation:
 - `tests/test_profile_state.py`
 - `project-profiles` CLI can run the same projector for multiple explicit
   profile paths from one clean cache.
+- `project-profiles --update-seen-state` can explicitly merge each generated
+  projection report into that profile's local `seen_records` state file.
 - `update-profile-seen-state` CLI can explicitly merge one projection report
   into one profile-local `seen_records` state file.
 
@@ -400,7 +404,7 @@ Current provider adapter boundary:
 
 Still missing:
 
-- automatic profile-state updates from `project-profiles` or consumer-specific
+- implicit profile-state updates from `project-profiles` or consumer-specific
   dedupe behavior;
 - source collector families beyond `github_repo`, `github_search`,
   `arxiv_rss_keywords`, `arxiv_query`, and `rss`;
