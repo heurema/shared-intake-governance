@@ -1466,6 +1466,70 @@ class CliPipelineTests(unittest.TestCase):
             self.assertEqual(summary["audit_event"], audit_events[0])
             self.assertNotIn("arguments", audit_events[0])
 
+    def test_record_approval_writes_record_without_tool_arguments(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            paths = RuntimePaths(root / "runtime")
+            intent_path = _write_tool_intent(
+                root / "intent.json",
+                action_class="edit_local",
+                dry_run_supported=True,
+            )
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "record-approval",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--run-id",
+                    RUN_ID,
+                    "--approval-id",
+                    "approval-1",
+                    "--intent",
+                    str(intent_path),
+                    "--approval-decision",
+                    "approved",
+                    "--approved-by",
+                    "local-operator",
+                    "--justification",
+                    "Dry run reviewed.",
+                    "--dry-run-ref",
+                    "dry-runs/approval-1.json",
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            approval_path = paths.approval_record_path(RUN_ID, "approval-1")
+            approval = json.loads(approval_path.read_text(encoding="utf-8"))
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(summary["approval_record_path"], str(approval_path))
+            self.assertEqual(summary["approval_record"], approval)
+            self.assertEqual(
+                approval,
+                {
+                    "schema_version": "approval-record.v1",
+                    "run_id": RUN_ID,
+                    "approval_id": "approval-1",
+                    "intent_id": "intent-1",
+                    "profile_id": "code-intel-kernel",
+                    "action_class": "edit_local",
+                    "tool_name": "publish-report",
+                    "approval_decision": "approved",
+                    "approved_by": "local-operator",
+                    "approved_at": summary["approval_record"]["approved_at"],
+                    "justification": "Dry run reviewed.",
+                    "dry_run_ref": "dry-runs/approval-1.json",
+                    "evidence_refs": [
+                        "profiles/code-intel-kernel/reports/report.json"
+                    ],
+                    "tool_intent_path": str(intent_path),
+                },
+            )
+            self.assertNotIn("arguments", approval)
+
 
 class SuccessfulCollector:
     def __init__(self, paths, **kwargs):

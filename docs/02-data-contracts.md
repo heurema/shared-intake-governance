@@ -13,7 +13,8 @@ The first stable contracts should cover:
 7. profile-local runtime state;
 8. tool intents passed into governance;
 9. governance decisions returned by policy evaluation;
-10. governance audit events.
+10. governance audit events;
+11. approval records.
 
 ## Raw payload metadata
 
@@ -269,6 +270,43 @@ tool_intent_path
 Audit events should record the decision surface, not the full tool arguments.
 Do not log secrets, credentials, private payloads, or unneeded side-effect
 arguments into audit JSONL.
+
+## Approval record
+
+See [../schemas/approval-record.schema.json](../schemas/approval-record.schema.json).
+
+Approval records are explicit local records that an operator approved or
+rejected one tool intent. They do not execute the requested tool and do not
+replace the later dry-run sidecar or execution mediation.
+
+Approval records are written under:
+
+```text
+approvals/<run-id>/<approval-id>.json
+```
+
+Minimum properties:
+
+```text
+schema_version
+run_id
+approval_id
+intent_id
+profile_id
+action_class
+tool_name
+approval_decision
+approved_by
+approved_at
+justification
+dry_run_ref
+evidence_refs
+tool_intent_path
+```
+
+Approval records should not include full tool arguments, credentials, or
+private payloads. A later executor must still enforce policy, check approval
+scope, and require dry-run evidence where applicable.
 
 ## Capability classes
 

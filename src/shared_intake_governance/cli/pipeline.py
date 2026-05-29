@@ -25,6 +25,7 @@ from shared_intake_governance.governance import evaluate_tool_intent
 from shared_intake_governance.projector import ProfileProjector, load_profile
 from shared_intake_governance.runtime import (
     AuditWriter,
+    ApprovalWriter,
     RunWriter,
     RuntimePaths,
     SourceHealthWriter,
@@ -84,6 +85,8 @@ def main(
         return _inspect_profile_report(args, stdout)
     if args.command == "evaluate-tool-intent":
         return _evaluate_tool_intent(args, stdout)
+    if args.command == "record-approval":
+        return _record_approval(args, stdout)
     if args.command == "inspect-run":
         return _inspect_run(args, stdout)
     if args.command == "show-source-health":
@@ -537,6 +540,60 @@ def _governance_audit_event(
     }
 
 
+def _record_approval(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    intent_path = Path(args.intent)
+    intent = _read_json(intent_path)
+    record = _approval_record(
+        run_id=args.run_id,
+        approval_id=args.approval_id,
+        intent=intent,
+        approval_decision=args.approval_decision,
+        approved_by=args.approved_by,
+        justification=args.justification,
+        dry_run_ref=args.dry_run_ref,
+        tool_intent_path=str(intent_path),
+    )
+    approval_record_path = ApprovalWriter(paths).write_record(record)
+    _print_json(
+        stdout,
+        {
+            "approval_record_path": str(approval_record_path),
+            "approval_record": record,
+        },
+    )
+    return 0
+
+
+def _approval_record(
+    *,
+    run_id: str,
+    approval_id: str,
+    intent: dict[str, Any],
+    approval_decision: str,
+    approved_by: str,
+    justification: str,
+    dry_run_ref: str | None,
+    tool_intent_path: str,
+) -> dict[str, Any]:
+    return {
+        "schema_version": "approval-record.v1",
+        "run_id": run_id,
+        "approval_id": approval_id,
+        "intent_id": intent["intent_id"],
+        "profile_id": intent["profile_id"],
+        "action_class": intent["action_class"],
+        "tool_name": intent["tool_name"],
+        "approval_decision": approval_decision,
+        "approved_by": approved_by,
+        "approved_at": _format_utc(datetime.now(timezone.utc)),
+        "justification": justification,
+        "dry_run_ref": dry_run_ref,
+        "evidence_refs": intent["evidence_refs"],
+        "tool_intent_path": tool_intent_path,
+    }
+
+
 def _inspect_run(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     manifest_path = paths.run_manifest_path(args.run_id)
@@ -955,6 +1012,21 @@ def _parser() -> argparse.ArgumentParser:
     evaluate_intent.add_argument("--intent", required=True)
     evaluate_intent.add_argument("--runtime-root")
     evaluate_intent.add_argument("--run-id")
+
+    approval = subparsers.add_parser(
+        "record-approval",
+        help="Record one local approval decision without executing tools.",
+    )
+    approval.add_argument("--runtime-root", required=True)
+    approval.add_argument("--run-id", required=True)
+    approval.add_argument("--approval-id", required=True)
+    approval.add_argument("--intent", required=True)
+    approval.add_argument(
+        "--approval-decision", choices=["approved", "rejected"], required=True
+    )
+    approval.add_argument("--approved-by", required=True)
+    approval.add_argument("--justification", required=True)
+    approval.add_argument("--dry-run-ref")
 
     inspect_run = subparsers.add_parser(
         "inspect-run",
