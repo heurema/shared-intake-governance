@@ -1,0 +1,185 @@
+"""Project clean records into one explicit profile output."""
+
+from __future__ import annotations
+
+import json
+import re
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+from shared_intake_governance.runtime import RuntimePaths
+from shared_intake_governance.sanitizer import validate_clean_record
+
+
+_SAFE_SEGMENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+_OUTPUT_MODES = {"research_digest", "benchmark_brief", "news_brief", "custom"}
+_PROVIDERS = {"claude", "gemini", "vibe"}
+_PROFILE_REQUIRED = {
+    "profile_id",
+    "description",
+    "accepted_sources",
+    "keywords",
+    "output_mode",
+}
+_PROFILE_OPTIONAL = {"required_risk_flags_absent", "provider_preferences"}
+_PROFILE_ALLOWED = _PROFILE_REQUIRED | _PROFILE_OPTIONAL
+
+
+@dataclass(frozen=True)
+class ProfileProjectionWrite:
+    report: dict[str, Any]
+    path: Path
+
+
+class ProfileProjector:
+    """Filter clean records through one explicit profile."""
+
+    def __init__(self, paths: RuntimePaths):
+        self.paths = paths
+
+    def project(
+        self,
+        profile_path: str | Path,
+        *,
+        output_id: str,
+        generated_at: datetime | None = None,
+    ) -> ProfileProjectionWrite:
+        profile = load_profile(profile_path)
+        generated_at_text = _format_utc(generated_at or datetime.now(timezone.utc))
+        output_segment = _safe_segment(output_id, "output_id")
+
+        counts = {
+            "clean_records_seen": 0,
+            "items_written": 0,
+            "excluded_by_source": 0,
+            "excluded_by_keyword": 0,
+            "excluded_by_risk": 0,
+            "excluded_quarantined": 0,
+        }
+        items = []
+
+        for record_path in sorted(self.paths.clean_root.glob("*.json")):
+            record = _read_json(record_path)
+            validate_clean_record(record)
+            counts["clean_records_seen"] += 1
+
+            if record["source_type"] not in profile["accepted_sources"]:
+                counts["excluded_by_source"] += 1
+                continue
+            if not _matches_keywords(record, profile["keywords"]):
+                counts["excluded_by_keyword"] += 1
+                continue
+            if set(record["risk_flags"]) & set(profile["required_risk_flags_absent"]):
+                counts["excluded_by_risk"] += 1
+                continue
+            if record["quarantined"]:
+                counts["excluded_quarantined"] += 1
+                continue
+
+            items.append(_project_item(record))
+
+        items.sort(key=lambda item: item["record_id"])
+        counts["items_written"] = len(items)
+        report = {
+            "schema_version": "profile-projection.v1",
+            "profile_id": profile["profile_id"],
+            "output_mode": profile["output_mode"],
+            "generated_at": generated_at_text,
+            "counts": counts,
+            "items": items,
+        }
+        path = (
+            self.paths.profile_reports_dir(profile["profile_id"])
+            / f"{output_segment}.json"
+        )
+        _write_json(path, report)
+        return ProfileProjectionWrite(report=report, path=path)
+
+
+def load_profile(profile_path: str | Path) -> dict[str, Any]:
+    profile = _read_json(Path(profile_path))
+    missing = sorted(_PROFILE_REQUIRED - set(profile))
+    if missing:
+        raise ValueError(f"profile missing required fields: {', '.join(missing)}")
+    extra = sorted(set(profile) - _PROFILE_ALLOWED)
+    if extra:
+        raise ValueError(f"profile has unknown fields: {', '.join(extra)}")
+
+    _require_text(profile, "profile_id")
+    _safe_segment(profile["profile_id"], "profile_id")
+    _require_text(profile, "description")
+    _require_string_list(profile, "accepted_sources")
+    _require_string_list(profile, "keywords")
+    if profile["output_mode"] not in _OUTPUT_MODES:
+        raise ValueError("profile has unsupported output_mode")
+
+    profile = dict(profile)
+    profile.setdefault("required_risk_flags_absent", [])
+    _require_string_list(profile, "required_risk_flags_absent")
+    if "provider_preferences" in profile:
+        _require_string_list(profile, "provider_preferences")
+        if any(provider not in _PROVIDERS for provider in profile["provider_preferences"]):
+            raise ValueError("profile has unsupported provider preference")
+    return profile
+
+
+def _matches_keywords(record: dict[str, Any], keywords: list[str]) -> bool:
+    if not keywords:
+        return True
+    haystack = f"{record['title']} {record['sanitized_summary']}".lower()
+    return any(keyword.lower() in haystack for keyword in keywords)
+
+
+def _project_item(record: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "record_id": record["record_id"],
+        "source_id": record["source_id"],
+        "source_type": record["source_type"],
+        "canonical_url": record["canonical_url"],
+        "title": record["title"],
+        "sanitized_summary": record["sanitized_summary"],
+        "source_trust": record["source_trust"],
+        "risk_flags": record["risk_flags"],
+        "raw_hash": record["raw_hash"],
+    }
+
+
+def _format_utc(value: datetime) -> str:
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _safe_segment(value: str, label: str) -> str:
+    if not _SAFE_SEGMENT.fullmatch(value):
+        raise ValueError(f"{label} must be a safe path segment")
+    return value
+
+
+def _require_text(profile: dict[str, Any], field: str) -> None:
+    if not isinstance(profile[field], str) or not profile[field]:
+        raise ValueError(f"{field} must be a non-empty string")
+
+
+def _require_string_list(profile: dict[str, Any], field: str) -> None:
+    if not isinstance(profile[field], list) or not all(
+        isinstance(item, str) for item in profile[field]
+    ):
+        raise ValueError(f"{field} must be a list of strings")
+
+
+def _read_json(path: Path) -> dict[str, Any]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("expected JSON object")
+    return data
+
+
+def _write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )

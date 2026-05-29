@@ -22,10 +22,11 @@ Read in this order before making structural or runtime decisions:
 
 This repository currently defines docs, schemas, example profiles, and minimal
 file-based runtime helpers for paths, raw payload writes, raw metadata writes,
-run manifest writes, and one read-only `github_repo` collector.
+run manifest writes, one read-only `github_repo` collector, one `github_repo`
+clean-record emitter, and one explicit-profile JSON projector.
 
-No sanitizer, projector, governance broker, provider adapter, or additional
-source collector family implementation exists yet.
+No governance broker, provider adapter, additional source collector family,
+additional sanitizer source mapping, or multi-profile report shaping exists yet.
 
 ## Core rules
 
