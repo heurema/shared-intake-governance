@@ -21,6 +21,7 @@ from shared_intake_governance.runtime import (  # noqa: E402
     RuntimePaths,
     SourceHealthWriter,
     ToolExecutionWriter,
+    validate_governance_audit_event,
     validate_raw_metadata,
     validate_run_manifest,
     validate_source_health,
@@ -415,6 +416,7 @@ class RuntimeWriterTests(unittest.TestCase):
             writer = AuditWriter(paths)
             first_event = _audit_event("intent-1", "allowed")
             second_event = _audit_event("intent-2", "denied")
+            validate_governance_audit_event(first_event)
 
             audit_path = writer.write_event(first_event)
             writer.write_event(second_event)
@@ -428,6 +430,34 @@ class RuntimeWriterTests(unittest.TestCase):
             self.assertEqual(len(lines), 2)
             self.assertEqual(json.loads(lines[0]), first_event)
             self.assertEqual(json.loads(lines[1]), second_event)
+
+    def test_governance_audit_event_validation_rejects_contract_drift(self):
+        valid_event = _audit_event("intent-1", "allowed")
+
+        missing_required = dict(valid_event)
+        missing_required.pop("event_type")
+        with self.assertRaises(ValueError):
+            validate_governance_audit_event(missing_required)
+
+        unknown_field = dict(valid_event)
+        unknown_field["score"] = 1
+        with self.assertRaises(ValueError):
+            validate_governance_audit_event(unknown_field)
+
+        bad_action = dict(valid_event)
+        bad_action["action_class"] = "network"
+        with self.assertRaises(ValueError):
+            validate_governance_audit_event(bad_action)
+
+        bad_decision = dict(valid_event)
+        bad_decision["decision"] = "approved"
+        with self.assertRaises(ValueError):
+            validate_governance_audit_event(bad_decision)
+
+        bad_refs = dict(valid_event)
+        bad_refs["evidence_refs"] = ["clean/good.json", 1]
+        with self.assertRaises(ValueError):
+            validate_governance_audit_event(bad_refs)
 
     def test_approval_writer_writes_record_deterministically(self):
         with tempfile.TemporaryDirectory() as tmp_dir:

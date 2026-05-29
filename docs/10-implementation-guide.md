@@ -158,8 +158,8 @@ artifact. `project-profiles` still does not update seen state implicitly or
 change projection behavior.
 The governance evaluator reads one `tool-intent.v1` file and prints one
 `governance-decision.v1` decision; when `--runtime-root` and `--run-id` are
-provided together, it appends one `governance-audit-event.v1` JSONL record.
-It does not execute tools or create approvals.
+provided together, it validates and appends one `governance-audit-event.v1`
+JSONL record. It does not execute tools or create approvals.
 The approval recorder reads one `tool-intent.v1` file and writes one
 `approval-record.v1` file. It does not execute tools or satisfy the future
 dry-run sidecar requirement by itself.

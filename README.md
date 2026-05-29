@@ -98,8 +98,8 @@ What exists now:
 - validated run manifest and source health artifacts from the CLI pipeline.
 - tool-intent and governance-decision contracts with a read-only default
   governance evaluator CLI.
-- governance audit event contract and optional append-only audit logging for
-  evaluated tool intents.
+- governance audit event contract and optional validated append-only audit
+  logging for evaluated tool intents.
 - approval-record contract and local `record-approval` CLI for explicit
   approval or rejection records without tool execution.
 - dry-run-result contract and local `record-dry-run` CLI for recorded dry-run
