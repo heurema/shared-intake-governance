@@ -24,6 +24,7 @@ from shared_intake_governance.sanitizer.clean_records import (  # noqa: E402
 FETCHED_AT = datetime(2026, 5, 29, 12, 30, 45, tzinfo=timezone.utc)
 FETCHED_AT_TEXT = "2026-05-29T12:30:45Z"
 RUN_ID = "20260529T123045Z-deadbeef"
+SAFE_SEGMENT_PATTERN = "^[A-Za-z0-9][A-Za-z0-9._-]*$"
 
 
 class CleanRecordEmitterTests(unittest.TestCase):
@@ -539,12 +540,34 @@ class CleanRecordEmitterTests(unittest.TestCase):
         ):
             validate_clean_record(invalid_canonical_url)
 
+        invalid_record_id = dict(valid_record)
+        invalid_record_id["record_id"] = "../github_repo-good"
+        with self.assertRaisesRegex(ValueError, "record_id must be a safe path segment"):
+            validate_clean_record(invalid_record_id)
+
+        invalid_source_id = dict(valid_record)
+        invalid_source_id["source_id"] = "../github_repo-source"
+        with self.assertRaisesRegex(ValueError, "source_id must be a safe path segment"):
+            validate_clean_record(invalid_source_id)
+
         invalid_published_at = dict(valid_record)
         invalid_published_at["published_at"] = "Fri, 29 May 2026 12:00:00 GMT"
         with self.assertRaisesRegex(
             ValueError, "published_at must be a date-time string"
         ):
             validate_clean_record(invalid_published_at)
+
+    def test_clean_record_schema_tracks_runtime_id_constraints(self):
+        schema = _read_schema("clean-record.schema.json")
+
+        self.assertEqual(
+            schema["properties"]["record_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["source_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
 
 
 class ProfileProjectorTests(unittest.TestCase):
@@ -898,6 +921,11 @@ def _write_clean(paths, record):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(record, sort_keys=True) + "\n", encoding="utf-8")
     return path
+
+
+def _read_schema(name):
+    schema_path = Path(__file__).resolve().parents[1] / "schemas" / name
+    return json.loads(schema_path.read_text(encoding="utf-8"))
 
 
 def _clean_record(
