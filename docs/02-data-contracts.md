@@ -455,7 +455,9 @@ Default mediation behavior:
 - mismatched or missing evidence blocks mediation;
 - mediation records should store refs and decision fields only, not full tool
   arguments, credentials, or private payloads.
-Runtime code validates execution mediation records before writing them.
+Runtime code validates any provided `dry-run-result.v1` and
+`approval-record.v1` evidence before mediation consumes it, then validates the
+`execution-mediation.v1` record before writing it.
 
 ## Tool execution result
 

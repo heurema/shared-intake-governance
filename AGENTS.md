@@ -32,7 +32,8 @@ narrow local CLI commands for the current `github_repo`, `github_search`,
 `arxiv_rss_keywords`, `arxiv_query`, `rss`, and `source-config.v1` paths with
 validated source config input, run manifest, and source health output.
 It also includes governance decision, validated audit, validated approval,
-validated dry-run, validated execution mediation, validated provider request,
+validated dry-run, validated mediation evidence input, validated execution
+mediation, validated provider request,
 validated provider result, explicit governed tool execution with validated
 result writes, explicit provider command invocation runtime slices, validated
 tool-intent and governance-decision boundary checks, and validated provider

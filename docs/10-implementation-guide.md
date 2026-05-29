@@ -395,15 +395,15 @@ Current governance runtime:
 - `record-approval` writes explicit local approval or rejection records.
 - `record-dry-run` writes recorded dry-run evidence for a tool intent.
 - `mediate-tool-intent` writes a pre-execution readiness record from one tool
-  intent plus optional dry-run and approval records.
+  intent plus optional validated dry-run and approval records.
 - `list-mediation-records` and `inspect-mediation-record` provide read-only
   mediation inventory and inspection.
 - read-only runtime inventory and inspection commands validate artifacts before
   returning summaries or full objects.
 - `execute-tool-intent` writes one `tool-execution-result.v1` artifact after
   checking ready mediation and running only an explicit local command.
-- tool intents and governance decisions are validated before the governance
-  runtime consumes or returns them.
+- tool intents, optional mediation evidence, and governance decisions are
+  validated before the governance runtime consumes or returns them.
 
 Current provider adapter boundary:
 
