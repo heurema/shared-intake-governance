@@ -107,7 +107,8 @@ What exists now:
 - execution-mediation contract and local `mediate-tool-intent` CLI for
   validated pre-execution readiness checks without tool execution.
 - tool-execution-result contract and local `execute-tool-intent` CLI for
-  explicit governed local command execution after ready mediation.
+  explicit governed local command execution with validated result records after
+  ready mediation.
 - provider-request contract and local `prepare-provider-request` CLI for
   provider-neutral adapter request records without provider invocation.
 - provider-result contract and local `record-provider-result` CLI for provider

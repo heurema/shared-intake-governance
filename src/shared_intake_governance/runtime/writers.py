@@ -159,6 +159,26 @@ _EXECUTION_MEDIATION_REQUIRED = {
     "tool_intent_path",
     "evidence_refs",
 }
+_TOOL_EXECUTION_STATUS = {"succeeded", "failed", "blocked"}
+_TOOL_EXECUTION_RESULT_REQUIRED = {
+    "schema_version",
+    "run_id",
+    "execution_id",
+    "intent_id",
+    "profile_id",
+    "action_class",
+    "tool_name",
+    "executed_by",
+    "executed_at",
+    "execution_status",
+    "summary",
+    "tool_intent_path",
+    "mediation_record_path",
+    "output_refs",
+    "execution_metadata",
+    "error",
+    "evidence_refs",
+}
 _SOURCE_HEALTH_REQUIRED = {
     "schema_version",
     "run_id",
@@ -311,6 +331,7 @@ class ToolExecutionWriter:
         self.paths = paths
 
     def write_result(self, result: dict[str, Any]) -> Path:
+        validate_tool_execution_result(result)
         path = self.paths.tool_execution_result_path(
             str(result["run_id"]), str(result["execution_id"])
         )
@@ -509,6 +530,60 @@ def validate_execution_mediation(record: dict[str, Any]) -> None:
     )
 
 
+def validate_tool_execution_result(result: dict[str, Any]) -> None:
+    missing = sorted(_TOOL_EXECUTION_RESULT_REQUIRED - set(result))
+    if missing:
+        raise ValueError(
+            "tool execution result missing required fields: " + ", ".join(missing)
+        )
+    extra = sorted(set(result) - _TOOL_EXECUTION_RESULT_REQUIRED)
+    if extra:
+        raise ValueError(
+            "tool execution result has unknown fields: " + ", ".join(extra)
+        )
+
+    if result["schema_version"] != "tool-execution-result.v1":
+        raise ValueError("tool execution result must use tool-execution-result.v1")
+    for field in [
+        "run_id",
+        "execution_id",
+        "intent_id",
+        "profile_id",
+        "tool_name",
+        "executed_by",
+        "executed_at",
+        "summary",
+        "tool_intent_path",
+        "mediation_record_path",
+    ]:
+        _require_text(result, field)
+    if result["action_class"] not in _ACTION_CLASSES:
+        raise ValueError("tool execution result has unsupported action_class")
+    if result["execution_status"] not in _TOOL_EXECUTION_STATUS:
+        raise ValueError("tool execution result has unsupported execution_status")
+    _require_string_array(
+        result,
+        "output_refs",
+        "tool execution result output_refs",
+    )
+    _require_string_object(
+        result,
+        "execution_metadata",
+        "tool execution result execution_metadata",
+    )
+    if result["error"] is not None:
+        _validate_error_object(
+            result["error"],
+            "tool execution result error",
+            allow_retryable=False,
+        )
+    _require_string_array(
+        result,
+        "evidence_refs",
+        "tool execution result evidence_refs",
+    )
+
+
 def validate_raw_metadata(metadata: dict[str, Any]) -> None:
     missing = sorted(_RAW_METADATA_REQUIRED - set(metadata))
     if missing:
@@ -643,11 +718,16 @@ def validate_source_health(source_health: dict[str, Any]) -> None:
         _require_text(source_health, "next_retry_after")
 
 
-def _validate_error_object(error: Any, label: str) -> None:
+def _validate_error_object(
+    error: Any,
+    label: str,
+    *,
+    allow_retryable: bool = True,
+) -> None:
     if not isinstance(error, dict):
         raise ValueError(f"{label} must be an object")
     required = {"kind", "message"}
-    allowed = required | {"retryable"}
+    allowed = required | ({"retryable"} if allow_retryable else set())
     missing = sorted(required - set(error))
     if missing:
         raise ValueError(f"{label} missing required fields: {', '.join(missing)}")
@@ -677,6 +757,14 @@ def _require_string_array(payload: dict[str, Any], field: str, label: str) -> No
         isinstance(item, str) for item in payload[field]
     ):
         raise ValueError(f"{label} must be strings")
+
+
+def _require_string_object(payload: dict[str, Any], field: str, label: str) -> None:
+    if not isinstance(payload[field], dict) or not all(
+        isinstance(key, str) and isinstance(value, str)
+        for key, value in payload[field].items()
+    ):
+        raise ValueError(f"{label} must be an object with string values")
 
 
 def _require_optional_string(payload: dict[str, Any], field: str, label: str) -> None:

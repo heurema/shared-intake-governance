@@ -177,7 +177,7 @@ The tool execution command reads one `tool-intent.v1` artifact plus one matching
 without invoking the command. When mediation is ready, it runs only the explicit
 local command supplied by the operator, passes the tool intent JSON on stdin,
 stores stdout/stderr as runtime artifacts, and writes one
-`tool-execution-result.v1` artifact.
+validated `tool-execution-result.v1` artifact.
 The provider request command reads one ready `execution-mediation.v1` artifact
 and writes one provider-neutral `provider-request.v1` artifact. It does not
 invoke providers, discover credentials, or execute tools.

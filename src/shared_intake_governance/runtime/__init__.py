@@ -20,6 +20,7 @@ from .writers import (
     validate_raw_metadata,
     validate_run_manifest,
     validate_source_health,
+    validate_tool_execution_result,
 )
 
 __all__ = [
@@ -43,4 +44,5 @@ __all__ = [
     "validate_raw_metadata",
     "validate_run_manifest",
     "validate_source_health",
+    "validate_tool_execution_result",
 ]
