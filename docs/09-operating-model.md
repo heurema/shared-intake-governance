@@ -159,6 +159,7 @@ Current CLI behavior:
 - `run-arxiv-rss-keywords` writes one run manifest under `runs/`;
 - `run-arxiv-query` writes one run manifest under `runs/`;
 - `run-rss-feed` writes one run manifest under `runs/`;
+- `run-news-feed` writes one run manifest under `runs/`;
 - `run-source-config` reads one `source-config.v1` JSON file and writes one
   run manifest under `runs/`;
 - `smoke-source-config` runs one `source-config.v1` JSON file with a smoke

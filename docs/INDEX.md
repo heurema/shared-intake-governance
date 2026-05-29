@@ -89,6 +89,7 @@ Use this file as the main navigation layer.
 - [../sources/examples/github-search-code-agents.json](../sources/examples/github-search-code-agents.json)
 - [../sources/examples/arxiv-code-agents.json](../sources/examples/arxiv-code-agents.json)
 - [../sources/examples/arxiv-query-code-agents.json](../sources/examples/arxiv-query-code-agents.json)
+- [../sources/examples/news-openai-blog.json](../sources/examples/news-openai-blog.json)
 - [../sources/examples/rss-github-blog.json](../sources/examples/rss-github-blog.json)
 
 ## Runtime code
@@ -101,6 +102,7 @@ Use this file as the main navigation layer.
 - [../src/shared_intake_governance/collector/github_search.py](../src/shared_intake_governance/collector/github_search.py)
 - [../src/shared_intake_governance/collector/arxiv_rss_keywords.py](../src/shared_intake_governance/collector/arxiv_rss_keywords.py)
 - [../src/shared_intake_governance/collector/arxiv_query.py](../src/shared_intake_governance/collector/arxiv_query.py)
+- [../src/shared_intake_governance/collector/news_feed.py](../src/shared_intake_governance/collector/news_feed.py)
 - [../src/shared_intake_governance/collector/rss_feed.py](../src/shared_intake_governance/collector/rss_feed.py)
 - [../src/shared_intake_governance/sanitizer/clean_records.py](../src/shared_intake_governance/sanitizer/clean_records.py)
 - [../src/shared_intake_governance/projector/profile.py](../src/shared_intake_governance/projector/profile.py)
@@ -127,6 +129,7 @@ Use this file as the main navigation layer.
 - [../tests/test_github_search_collector.py](../tests/test_github_search_collector.py)
 - [../tests/test_arxiv_rss_keywords_collector.py](../tests/test_arxiv_rss_keywords_collector.py)
 - [../tests/test_arxiv_query_collector.py](../tests/test_arxiv_query_collector.py)
+- [../tests/test_news_feed_collector.py](../tests/test_news_feed_collector.py)
 - [../tests/test_rss_feed_collector.py](../tests/test_rss_feed_collector.py)
 - [../tests/test_clean_records_and_projection.py](../tests/test_clean_records_and_projection.py)
 - [../tests/test_cli_pipeline.py](../tests/test_cli_pipeline.py)

@@ -22,6 +22,11 @@ from .github_search import (
     GitHubSearchCollector,
     GitHubSearchSource,
 )
+from .news_feed import (
+    NewsFeedCollectionResult,
+    NewsFeedCollector,
+    NewsFeedSource,
+)
 from .rss_feed import (
     RssFeedCollectionResult,
     RssFeedCollector,
@@ -43,6 +48,9 @@ __all__ = [
     "GitHubSearchSource",
     "HttpRequest",
     "HttpResponse",
+    "NewsFeedCollectionResult",
+    "NewsFeedCollector",
+    "NewsFeedSource",
     "RssFeedCollectionResult",
     "RssFeedCollector",
     "RssFeedSource",

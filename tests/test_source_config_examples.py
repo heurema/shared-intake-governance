@@ -27,6 +27,7 @@ class SourceConfigExampleTests(unittest.TestCase):
                 "arxiv-query-code-agents.json",
                 "github-search-code-agents.json",
                 "github-signum.json",
+                "news-openai-blog.json",
                 "rss-github-blog.json",
             ],
         )
@@ -41,6 +42,7 @@ class SourceConfigExampleTests(unittest.TestCase):
                 "source-config.v1",
                 "source-config.v1",
                 "source-config.v1",
+                "source-config.v1",
             ],
         )
         self.assertEqual(
@@ -50,6 +52,7 @@ class SourceConfigExampleTests(unittest.TestCase):
                 "arxiv_query",
                 "github_search",
                 "github_repo",
+                "news",
                 "rss",
             ],
         )
@@ -60,6 +63,7 @@ class SourceConfigExampleTests(unittest.TestCase):
                 "arxiv-query-code-agents",
                 "github-search-code-agents",
                 "github-signum",
+                "news-openai-blog",
                 "rss-github-blog",
             ],
         )
@@ -117,6 +121,23 @@ class SourceConfigExampleTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 load_source_config(config_path)
 
+    def test_news_source_config_requires_feed_url(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            config_path = Path(tmp_dir) / "source-config.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": "source-config.v1",
+                        "source_type": "news",
+                        "source_id": "news-example",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaises(ValueError):
+                load_source_config(config_path)
+
     def test_source_config_validation_rejects_contract_drift(self):
         valid = {
             "schema_version": "source-config.v1",
@@ -166,6 +187,25 @@ class SourceConfigExampleTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "unsupported source_trust"):
                 load_source_config(config_path)
 
+    def test_news_source_config_rejects_unsupported_source_trust(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            config_path = Path(tmp_dir) / "source-config.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": "source-config.v1",
+                        "source_type": "news",
+                        "source_id": "news-example",
+                        "feed_url": "https://example.test/news.xml",
+                        "source_trust": "private",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "unsupported source_trust"):
+                load_source_config(config_path)
+
     def test_source_config_schema_keeps_url_fields_https_only(self):
         schema = json.loads(
             (ROOT / "schemas" / "source-config.schema.json").read_text(
@@ -188,6 +228,7 @@ class SourceConfigExampleTests(unittest.TestCase):
                 ("arxiv_query", "api_base_url"),
                 ("arxiv_rss_keywords", "api_base_url"),
                 ("rss", "feed_url"),
+                ("news", "feed_url"),
             ],
         )
         for _source_type, _field, definition in url_fields:
