@@ -47,6 +47,7 @@ Scope:
 - per-profile scoring;
 - per-profile state;
 - per-profile reports.
+- explicit seen-record updates from generated reports.
 
 Do not add:
 

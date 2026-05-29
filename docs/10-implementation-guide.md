@@ -110,6 +110,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli inspect-record`
 - `python -m shared_intake_governance.cli list-profile-state`
 - `python -m shared_intake_governance.cli inspect-profile-state`
+- `python -m shared_intake_governance.cli update-profile-seen-state`
 - `python -m shared_intake_governance.cli list-profile-reports`
 - `python -m shared_intake_governance.cli inspect-profile-report`
 - `python -m shared_intake_governance.cli evaluate-tool-intent`
@@ -142,7 +143,10 @@ The inspection commands are read-only and should not create runtime files.
 The `project-profiles` command reads the shared clean cache and writes one
 deterministic report per explicit profile path.
 The profile-state inspection commands read existing `profile-state.v1`
-artifacts only; they do not update seen state or change projection behavior.
+artifacts only. The profile seen-state update command explicitly merges record
+ids from one `profile-projection.v1` report into one `seen_records` state
+artifact. `project-profiles` still does not update seen state implicitly or
+change projection behavior.
 The governance evaluator reads one `tool-intent.v1` file and prints one
 `governance-decision.v1` decision; when `--runtime-root` and `--run-id` are
 provided together, it appends one `governance-audit-event.v1` JSONL record.
@@ -295,9 +299,13 @@ Keep the first output simple, even JSON-only if needed.
 Current implementation:
 
 - `src/shared_intake_governance/projector/profile.py`
+- `src/shared_intake_governance/projector/profile_state.py`
 - `tests/test_clean_records_and_projection.py`
+- `tests/test_profile_state.py`
 - `project-profiles` CLI can run the same projector for multiple explicit
   profile paths from one clean cache.
+- `update-profile-seen-state` CLI can explicitly merge one projection report
+  into one profile-local `seen_records` state file.
 
 ### Step 7: add tests before more features
 
@@ -375,7 +383,8 @@ Current provider adapter boundary:
 
 Still missing:
 
-- automatic profile-state updates or dedupe behavior;
+- automatic profile-state updates from `project-profiles` or consumer-specific
+  dedupe behavior;
 - source collector families beyond `github_repo` and `arxiv_rss_keywords`;
 - sanitizer source mappings beyond `github_repo` and `arxiv_rss_keywords`;
 - provider/tool command discovery, credential mapping, or default presets.
