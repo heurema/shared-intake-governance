@@ -115,6 +115,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli evaluate-tool-intent`
 - `python -m shared_intake_governance.cli record-approval`
 - `python -m shared_intake_governance.cli record-dry-run`
+- `python -m shared_intake_governance.cli mediate-tool-intent`
 - `python -m shared_intake_governance.cli inspect-run`
 - `python -m shared_intake_governance.cli show-source-health`
 - `sources/examples/github-signum.json`
@@ -146,6 +147,9 @@ dry-run sidecar requirement by itself.
 The dry-run recorder reads one `tool-intent.v1` file and writes one
 `dry-run-result.v1` file. It records dry-run evidence only; it does not execute
 the requested tool or mediate side effects.
+The mediation command reads one `tool-intent.v1` file plus optional dry-run
+and approval records, then writes one `execution-mediation.v1` readiness record.
+It does not execute the requested tool or call provider adapters.
 
 For current manual invocation examples, see [11-local-runbook.md](11-local-runbook.md).
 
@@ -176,6 +180,7 @@ Current Phase 1 contract anchors:
 - governance audit event shape: `schemas/governance-audit-event.schema.json`
 - approval record shape: `schemas/approval-record.schema.json`
 - dry-run result shape: `schemas/dry-run-result.schema.json`
+- execution mediation shape: `schemas/execution-mediation.schema.json`
 
 If these anchors drift, update the docs or schemas before adding runtime code.
 
@@ -306,16 +311,21 @@ Only after Phase 1 is solid:
 Current governance runtime:
 
 - `src/shared_intake_governance/governance/policy.py`
+- `src/shared_intake_governance/governance/mediation.py`
 - `tests/test_governance_policy.py`
+- `tests/test_governance_mediation.py`
 - `evaluate-tool-intent` implements only the default policy evaluator.
 - `evaluate-tool-intent --runtime-root ... --run-id ...` appends audit
   evidence for evaluated intents.
 - `record-approval` writes explicit local approval or rejection records.
 - `record-dry-run` writes recorded dry-run evidence for a tool intent.
+- `mediate-tool-intent` writes a pre-execution readiness record from one tool
+  intent plus optional dry-run and approval records.
 
 Still missing:
 
-- tool execution mediation.
+- actual tool execution;
+- provider adapter runtime.
 
 ## Handoff rule for the next session
 

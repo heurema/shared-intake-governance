@@ -13,6 +13,7 @@ from shared_intake_governance.runtime import (  # noqa: E402
     AuditWriter,
     ApprovalWriter,
     DryRunWriter,
+    MediationWriter,
     RawWriter,
     RunWriter,
     RuntimePaths,
@@ -38,6 +39,7 @@ class RuntimePathTests(unittest.TestCase):
             self.assertEqual(paths.audit_root, root / "audit")
             self.assertEqual(paths.approvals_root, root / "approvals")
             self.assertEqual(paths.dry_runs_root, root / "dry-runs")
+            self.assertEqual(paths.mediation_root, root / "mediation")
             self.assertEqual(paths.profiles_root, root / "profiles")
 
             self.assertEqual(
@@ -89,6 +91,15 @@ class RuntimePathTests(unittest.TestCase):
                 / "dry-run-1.json",
             )
             self.assertEqual(
+                paths.mediation_record_path(
+                    "20260529T123045Z-deadbeef", "mediation-1"
+                ),
+                root
+                / "mediation"
+                / "20260529T123045Z-deadbeef"
+                / "mediation-1.json",
+            )
+            self.assertEqual(
                 paths.source_health_path("20260529T123045Z-deadbeef", "github-main"),
                 root / "source-health" / "20260529T123045Z-deadbeef" / "github-main.json",
             )
@@ -132,6 +143,8 @@ class RuntimePathTests(unittest.TestCase):
                 paths.approval_record_path("20260529T123045Z-deadbeef", "../approval")
             with self.assertRaises(ValueError):
                 paths.dry_run_result_path("20260529T123045Z-deadbeef", "../dry-run")
+            with self.assertRaises(ValueError):
+                paths.mediation_record_path("20260529T123045Z-deadbeef", "../record")
             with self.assertRaises(ValueError):
                 paths.profile_state_path("pulse", "../state")
             with self.assertRaises(ValueError):
@@ -310,6 +323,27 @@ class RuntimeWriterTests(unittest.TestCase):
             writer.write_result(result)
             self.assertEqual(dry_run_path.read_text(encoding="utf-8"), first_write)
 
+    def test_mediation_writer_writes_record_deterministically(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            writer = MediationWriter(paths)
+            record = _mediation_record()
+
+            mediation_path = writer.write_record(record)
+            first_write = mediation_path.read_text(encoding="utf-8")
+
+            self.assertEqual(
+                mediation_path,
+                paths.mediation_record_path(
+                    "20260529T123045Z-deadbeef", "mediation-1"
+                ),
+            )
+            self.assertEqual(json.loads(first_write), record)
+            self.assertTrue(first_write.endswith("\n"))
+
+            writer.write_record(record)
+            self.assertEqual(mediation_path.read_text(encoding="utf-8"), first_write)
+
 
 def _raw_metadata(raw_body):
     return {
@@ -386,6 +420,26 @@ def _dry_run_result():
         "artifact_refs": ["dry-runs/dry-run-1.json"],
         "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
         "tool_intent_path": "intent.json",
+    }
+
+
+def _mediation_record():
+    return {
+        "schema_version": "execution-mediation.v1",
+        "run_id": "20260529T123045Z-deadbeef",
+        "mediation_id": "mediation-1",
+        "mediated_at": "2026-05-29T12:30:45Z",
+        "intent_id": "intent-1",
+        "profile_id": "code-intel-kernel",
+        "action_class": "edit_local",
+        "tool_name": "write-report",
+        "policy_decision": "gated",
+        "mediation_decision": "ready",
+        "reason": "side-effect action has passed dry run and approved approval record",
+        "dry_run_result_path": "dry-runs/20260529T123045Z-deadbeef/dry-run-1.json",
+        "approval_record_path": "approvals/20260529T123045Z-deadbeef/approval-1.json",
+        "tool_intent_path": "intent.json",
+        "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
     }
 
 

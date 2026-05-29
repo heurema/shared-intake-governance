@@ -21,12 +21,16 @@ from shared_intake_governance.collector.github_repo import (
     GitHubRepoCollector,
     GitHubRepoSource,
 )
-from shared_intake_governance.governance import evaluate_tool_intent
+from shared_intake_governance.governance import (
+    evaluate_tool_intent,
+    mediate_tool_intent,
+)
 from shared_intake_governance.projector import ProfileProjector, load_profile
 from shared_intake_governance.runtime import (
     AuditWriter,
     ApprovalWriter,
     DryRunWriter,
+    MediationWriter,
     RunWriter,
     RuntimePaths,
     SourceHealthWriter,
@@ -90,6 +94,8 @@ def main(
         return _record_approval(args, stdout)
     if args.command == "record-dry-run":
         return _record_dry_run(args, stdout)
+    if args.command == "mediate-tool-intent":
+        return _mediate_tool_intent(args, stdout)
     if args.command == "inspect-run":
         return _inspect_run(args, stdout)
     if args.command == "show-source-health":
@@ -623,6 +629,46 @@ def _record_dry_run(args: argparse.Namespace, stdout: TextIO) -> int:
     return 0
 
 
+def _mediate_tool_intent(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    intent_path = Path(args.intent)
+    dry_run_result_path = None if args.dry_run_result is None else Path(args.dry_run_result)
+    approval_record_path = (
+        None if args.approval_record is None else Path(args.approval_record)
+    )
+    intent = _read_json(intent_path)
+    dry_run_result = (
+        None if dry_run_result_path is None else _read_json(dry_run_result_path)
+    )
+    approval_record = (
+        None if approval_record_path is None else _read_json(approval_record_path)
+    )
+    record = mediate_tool_intent(
+        run_id=args.run_id,
+        mediation_id=args.mediation_id,
+        intent=intent,
+        tool_intent_path=str(intent_path),
+        dry_run_result=dry_run_result,
+        dry_run_result_path=(
+            None if dry_run_result_path is None else str(dry_run_result_path)
+        ),
+        approval_record=approval_record,
+        approval_record_path=(
+            None if approval_record_path is None else str(approval_record_path)
+        ),
+        mediated_at=_format_utc(datetime.now(timezone.utc)),
+    )
+    mediation_record_path = MediationWriter(paths).write_record(record)
+    _print_json(
+        stdout,
+        {
+            "mediation_record_path": str(mediation_record_path),
+            "mediation_record": record,
+        },
+    )
+    return 0
+
+
 def _dry_run_result(
     *,
     run_id: str,
@@ -1113,6 +1159,17 @@ def _parser() -> argparse.ArgumentParser:
     dry_run.add_argument("--recorded-by", required=True)
     dry_run.add_argument("--summary", required=True)
     dry_run.add_argument("--artifact-ref", dest="artifact_refs", action="append")
+
+    mediation = subparsers.add_parser(
+        "mediate-tool-intent",
+        help="Mediate one tool-intent.v1 file without executing tools.",
+    )
+    mediation.add_argument("--runtime-root", required=True)
+    mediation.add_argument("--run-id", required=True)
+    mediation.add_argument("--mediation-id", required=True)
+    mediation.add_argument("--intent", required=True)
+    mediation.add_argument("--dry-run-result")
+    mediation.add_argument("--approval-record")
 
     inspect_run = subparsers.add_parser(
         "inspect-run",

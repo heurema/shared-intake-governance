@@ -347,6 +347,50 @@ Dry-run results should not include full tool arguments, credentials, or private
 payloads. They should point at external artifacts or summaries that can be
 reviewed before an approval record is created.
 
+## Execution mediation
+
+See [../schemas/execution-mediation.schema.json](../schemas/execution-mediation.schema.json).
+
+Execution mediation records are pre-execution readiness decisions. They combine
+the default policy decision with optional dry-run and approval evidence. They
+do not execute the requested tool, call providers, or grant capability by
+themselves.
+
+Mediation records are written under:
+
+```text
+mediation/<run-id>/<mediation-id>.json
+```
+
+Minimum properties:
+
+```text
+schema_version
+run_id
+mediation_id
+mediated_at
+intent_id
+profile_id
+action_class
+tool_name
+policy_decision
+mediation_decision
+reason
+dry_run_result_path
+approval_record_path
+tool_intent_path
+evidence_refs
+```
+
+Default mediation behavior:
+
+- `read_only` intents may become `ready` without dry-run or approval evidence;
+- side-effect classes require a matching `passed` dry-run result and a matching
+  `approved` approval record;
+- mismatched or missing evidence blocks mediation;
+- mediation records should store refs and decision fields only, not full tool
+  arguments, credentials, or private payloads.
+
 ## Capability classes
 
 The governance broker should classify actions into at least:
