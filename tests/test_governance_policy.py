@@ -125,6 +125,27 @@ class GovernancePolicyTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_governance_decision(bad_decision)
 
+        bad_audit_event = dict(decision)
+        bad_audit_event["audit_event"] = {
+            "schema_version": "governance-audit-event.v1",
+            "run_id": "20260529T123045Z-deadbeef",
+            "event_type": "tool_intent_evaluated",
+            "recorded_at": "not-a-date-time",
+            "intent_id": decision["intent_id"],
+            "profile_id": decision["profile_id"],
+            "action_class": decision["action_class"],
+            "tool_name": decision["tool_name"],
+            "decision": decision["decision"],
+            "reason": decision["reason"],
+            "dry_run_supported": decision["dry_run_supported"],
+            "evidence_refs": decision["evidence_refs"],
+            "tool_intent_path": "intents/intent-1.json",
+        }
+        with self.assertRaisesRegex(
+            ValueError, "recorded_at must be a date-time string"
+        ):
+            validate_governance_decision(bad_audit_event)
+
 
 def _tool_intent(*, action_class, dry_run_supported):
     return {
