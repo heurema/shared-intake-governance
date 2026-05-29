@@ -50,7 +50,8 @@ This repository exists to centralize the shared part without centralizing projec
 
 ## Current state
 
-This repository is still docs-first.
+This repository is still docs/contracts-first, with a minimal file-based
+runtime foundation now started.
 
 What exists now:
 
@@ -62,7 +63,8 @@ What exists now:
 - onboarding guides for sources and consumers;
 - operating model;
 - implementation staging guide;
-- example consumer profiles.
+- example consumer profiles;
+- minimal runtime path helpers and raw payload/metadata/run manifest writers.
 
 What does not exist yet:
 
@@ -94,6 +96,8 @@ README.md            quick orientation and entrypoint
 docs/                canonical design, onboarding, threat model, roadmap
 schemas/             JSON schemas for contracts
 profiles/examples/   example consumer profiles
+src/                 minimal Python runtime helpers
+tests/               focused runtime contract tests
 ```
 
 ## Runtime boundary

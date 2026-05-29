@@ -145,6 +145,12 @@ Add file writers for:
 
 This should be usable before any source-specific collector exists.
 
+Current implementation:
+
+- `src/shared_intake_governance/runtime/paths.py`
+- `src/shared_intake_governance/runtime/writers.py`
+- `tests/test_runtime_paths_and_writers.py`
+
 ### Step 4: implement one source collector family
 
 Start with `github_repo` or `arxiv_rss_keywords`.

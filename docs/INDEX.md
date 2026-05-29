@@ -72,3 +72,9 @@ Use this file as the main navigation layer.
 - [../profiles/examples/code-intel-kernel.json](../profiles/examples/code-intel-kernel.json)
 - [../profiles/examples/agent-bench-lab.json](../profiles/examples/agent-bench-lab.json)
 - [../profiles/examples/pulse.json](../profiles/examples/pulse.json)
+
+## Runtime code
+
+- [../src/shared_intake_governance/runtime/paths.py](../src/shared_intake_governance/runtime/paths.py)
+- [../src/shared_intake_governance/runtime/writers.py](../src/shared_intake_governance/runtime/writers.py)
+- [../tests/test_runtime_paths_and_writers.py](../tests/test_runtime_paths_and_writers.py)
