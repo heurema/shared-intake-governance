@@ -270,9 +270,9 @@ to encode project-specific ranking or editorial decisions.
 Runtime code validates profile state before consuming existing state and before
 writing updated state.
 `updated_at` must follow the shared `date-time` validation rule.
-For `seen_records` state, `record_ids` must be sorted and unique so repeated
-updates remain deterministic. This does not define consumer publication or
-ranking dedupe policy.
+For `seen_records` state, `record_ids` must be safe runtime path segments,
+sorted, and unique so repeated updates remain deterministic. This does not
+define consumer publication or ranking dedupe policy.
 
 The current `seen_records` update paths are explicit: `update-profile-seen-state`
 merges record ids from one `profile-projection.v1` report into one

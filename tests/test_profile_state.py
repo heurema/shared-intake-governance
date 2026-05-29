@@ -154,6 +154,11 @@ class ProfileStateUpdateTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_profile_state(bad_record_ids)
 
+        unsafe_record_ids = dict(valid_state)
+        unsafe_record_ids["record_ids"] = ["../github_repo-good"]
+        with self.assertRaisesRegex(ValueError, "record_id must be a safe path segment"):
+            validate_profile_state(unsafe_record_ids)
+
         bad_updated_at = dict(valid_state)
         bad_updated_at["updated_at"] = "not-a-date-time"
         with self.assertRaisesRegex(
@@ -190,6 +195,10 @@ class ProfileStateUpdateTests(unittest.TestCase):
         )
         self.assertEqual(
             schema["properties"]["state_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(
+            schema["properties"]["record_ids"]["items"].get("pattern"),
             SAFE_SEGMENT_PATTERN,
         )
 
