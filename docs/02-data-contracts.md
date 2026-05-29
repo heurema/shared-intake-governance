@@ -27,6 +27,12 @@ inspection surfaces also validate runtime artifacts before summarizing or
 returning them, because runtime roots may contain hand-edited or corrupted
 JSON outside the repository.
 
+Fields are runtime path segments only when this document says so explicitly.
+In the current governance contracts, `intent_id` is a logical correlation id
+for matching tool intent scope across decision, evidence, execution, and
+provider artifacts. It is not a runtime path segment and is not used to derive
+artifact paths.
+
 Fields marked as `format: date-time` in JSON schemas must be valid date-time
 strings with timezone information. Runtime validators reject invalid timestamp
 strings before writer output.
@@ -315,6 +321,8 @@ evidence_refs
 
 Runtime code validates tool intents before governance policy, approval, dry-run,
 mediation, or execution helpers consume them.
+`intent_id` is the logical correlation id for this requested action. Current
+runtime code does not store tool intents under `intent_id` paths.
 `profile_id` must remain a safe runtime path segment so tool intents cannot
 introduce a profile identity that later profile-scoped artifacts could not
 address safely.
