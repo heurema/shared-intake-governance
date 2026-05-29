@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from shared_intake_governance.projector.profile import (  # noqa: E402
     ProfileProjector,
     load_profile,
+    validate_profile_projection,
 )
 from shared_intake_governance.runtime import RawWriter, RuntimePaths  # noqa: E402
 from shared_intake_governance.sanitizer.clean_records import (  # noqa: E402
@@ -494,6 +495,27 @@ class ProfileProjectorTests(unittest.TestCase):
                 first.report["items"][0]["canonical_url"],
                 "https://example.test/github_repo-good",
             )
+            validate_profile_projection(first.report)
+
+    def test_profile_projection_validation_rejects_contract_drift(self):
+        valid_report = _profile_projection_report()
+        validate_profile_projection(valid_report)
+
+        missing_required = dict(valid_report)
+        missing_required.pop("counts")
+        with self.assertRaises(ValueError):
+            validate_profile_projection(missing_required)
+
+        unknown_field = dict(valid_report)
+        unknown_field["score"] = 100
+        with self.assertRaises(ValueError):
+            validate_profile_projection(unknown_field)
+
+        malformed_item = dict(valid_report)
+        malformed_item["items"] = [dict(valid_report["items"][0])]
+        malformed_item["items"][0].pop("raw_hash")
+        with self.assertRaises(ValueError):
+            validate_profile_projection(malformed_item)
 
     def test_profile_loader_defaults_required_risk_flags_absent(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -700,6 +722,36 @@ def _clean_record(
         "quarantined": quarantined,
         "raw_hash": f"raw-{record_id}",
         "sanitizer_version": "clean-record.v1",
+    }
+
+
+def _profile_projection_report():
+    return {
+        "schema_version": "profile-projection.v1",
+        "profile_id": "code-intel-kernel",
+        "output_mode": "research_digest",
+        "generated_at": FETCHED_AT_TEXT,
+        "counts": {
+            "clean_records_seen": 1,
+            "items_written": 1,
+            "excluded_by_source": 0,
+            "excluded_by_keyword": 0,
+            "excluded_by_risk": 0,
+            "excluded_quarantined": 0,
+        },
+        "items": [
+            {
+                "record_id": "github_repo-good",
+                "source_id": "github-signum",
+                "source_type": "github_repo",
+                "canonical_url": "https://example.test/github_repo-good",
+                "title": "Coding agent benchmark",
+                "sanitized_summary": "Coding agent benchmark",
+                "source_trust": "platform",
+                "risk_flags": [],
+                "raw_hash": "raw-github",
+            }
+        ],
     }
 
 

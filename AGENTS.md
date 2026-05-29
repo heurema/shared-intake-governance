@@ -26,7 +26,8 @@ run manifest writes, read-only `github_repo`, `github_search`,
 `arxiv_rss_keywords`, `arxiv_query`, and `rss` collectors, clean-record emitters
 for `github_repo`, `github_search`, `arxiv_rss_keywords`, `arxiv_query`, and
 `rss`,
-one explicit-profile JSON projector, explicit profile seen-state updates, and
+one validated explicit-profile JSON projector, explicit profile seen-state
+updates, and
 narrow local CLI commands for the current `github_repo`, `github_search`,
 `arxiv_rss_keywords`, `arxiv_query`, `rss`, and `source-config.v1` paths with
 run manifest and source health output.

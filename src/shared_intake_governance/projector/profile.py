@@ -15,6 +15,16 @@ from shared_intake_governance.sanitizer import validate_clean_record
 
 _SAFE_SEGMENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _OUTPUT_MODES = {"research_digest", "benchmark_brief", "news_brief", "custom"}
+_SOURCE_TYPES = {
+    "github_repo",
+    "github_search",
+    "arxiv_query",
+    "arxiv_rss_keywords",
+    "rss",
+    "news",
+    "custom",
+}
+_SOURCE_TRUST = {"official", "maintainer", "platform", "secondary", "social", "unknown"}
 _PROVIDERS = {"claude", "gemini", "vibe"}
 _PROFILE_REQUIRED = {
     "profile_id",
@@ -25,6 +35,34 @@ _PROFILE_REQUIRED = {
 }
 _PROFILE_OPTIONAL = {"required_risk_flags_absent", "provider_preferences"}
 _PROFILE_ALLOWED = _PROFILE_REQUIRED | _PROFILE_OPTIONAL
+_PROJECTION_REQUIRED = {
+    "schema_version",
+    "profile_id",
+    "output_mode",
+    "generated_at",
+    "counts",
+    "items",
+}
+_PROJECTION_ALLOWED = _PROJECTION_REQUIRED
+_PROJECTION_COUNT_REQUIRED = {
+    "clean_records_seen",
+    "items_written",
+    "excluded_by_source",
+    "excluded_by_keyword",
+    "excluded_by_risk",
+    "excluded_quarantined",
+}
+_PROJECTION_ITEM_REQUIRED = {
+    "record_id",
+    "source_id",
+    "source_type",
+    "canonical_url",
+    "title",
+    "sanitized_summary",
+    "source_trust",
+    "risk_flags",
+    "raw_hash",
+}
 
 
 @dataclass(frozen=True)
@@ -90,6 +128,7 @@ class ProfileProjector:
             "counts": counts,
             "items": items,
         }
+        validate_profile_projection(report)
         path = (
             self.paths.profile_reports_dir(profile["profile_id"])
             / f"{output_segment}.json"
@@ -123,6 +162,82 @@ def load_profile(profile_path: str | Path) -> dict[str, Any]:
         if any(provider not in _PROVIDERS for provider in profile["provider_preferences"]):
             raise ValueError("profile has unsupported provider preference")
     return profile
+
+
+def validate_profile_projection(report: dict[str, Any]) -> None:
+    missing = sorted(_PROJECTION_REQUIRED - set(report))
+    if missing:
+        raise ValueError(
+            f"profile projection missing required fields: {', '.join(missing)}"
+        )
+    extra = sorted(set(report) - _PROJECTION_ALLOWED)
+    if extra:
+        raise ValueError(
+            f"profile projection has unknown fields: {', '.join(extra)}"
+        )
+
+    if report["schema_version"] != "profile-projection.v1":
+        raise ValueError("profile projection must use profile-projection.v1")
+    _require_text(report, "profile_id")
+    if report["output_mode"] not in _OUTPUT_MODES:
+        raise ValueError("profile projection has unsupported output_mode")
+    _require_text(report, "generated_at")
+
+    counts = report["counts"]
+    if not isinstance(counts, dict):
+        raise ValueError("profile projection counts must be an object")
+    count_missing = sorted(_PROJECTION_COUNT_REQUIRED - set(counts))
+    if count_missing:
+        raise ValueError(
+            "profile projection counts missing required fields: "
+            + ", ".join(count_missing)
+        )
+    count_extra = sorted(set(counts) - _PROJECTION_COUNT_REQUIRED)
+    if count_extra:
+        raise ValueError(
+            "profile projection counts has unknown fields: "
+            + ", ".join(count_extra)
+        )
+    for field in sorted(_PROJECTION_COUNT_REQUIRED):
+        if not isinstance(counts[field], int) or counts[field] < 0:
+            raise ValueError(f"profile projection count {field} must be non-negative")
+
+    items = report["items"]
+    if not isinstance(items, list):
+        raise ValueError("profile projection items must be a list")
+    for item in items:
+        _validate_projection_item(item)
+
+
+def _validate_projection_item(item: Any) -> None:
+    if not isinstance(item, dict):
+        raise ValueError("profile projection item must be an object")
+    missing = sorted(_PROJECTION_ITEM_REQUIRED - set(item))
+    if missing:
+        raise ValueError(
+            f"profile projection item missing required fields: {', '.join(missing)}"
+        )
+    extra = sorted(set(item) - _PROJECTION_ITEM_REQUIRED)
+    if extra:
+        raise ValueError(
+            f"profile projection item has unknown fields: {', '.join(extra)}"
+        )
+
+    _require_text(item, "record_id")
+    _require_text(item, "source_id")
+    _require_text(item, "canonical_url")
+    _require_text(item, "title")
+    _require_text(item, "raw_hash")
+    if item["source_type"] not in _SOURCE_TYPES:
+        raise ValueError("profile projection item has unsupported source_type")
+    if item["source_trust"] not in _SOURCE_TRUST:
+        raise ValueError("profile projection item has unsupported source_trust")
+    if not isinstance(item["sanitized_summary"], str):
+        raise ValueError("profile projection item summary must be a string")
+    if not isinstance(item["risk_flags"], list) or not all(
+        isinstance(flag, str) for flag in item["risk_flags"]
+    ):
+        raise ValueError("profile projection item risk_flags must be strings")
 
 
 def _matches_keywords(record: dict[str, Any], keywords: list[str]) -> bool:

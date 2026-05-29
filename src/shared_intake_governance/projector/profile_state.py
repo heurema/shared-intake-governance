@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from shared_intake_governance.projector.profile import validate_profile_projection
 from shared_intake_governance.runtime import RuntimePaths
 
 
@@ -25,8 +26,7 @@ def update_seen_records_state(
     updated_at: str,
 ) -> ProfileStateWrite:
     """Merge one profile report into a profile-local seen-records state."""
-    if profile_report["schema_version"] != "profile-projection.v1":
-        raise ValueError("profile report must use profile-projection.v1")
+    validate_profile_projection(profile_report)
     if profile_report["profile_id"] != profile_id:
         raise ValueError("profile report does not match profile_id")
 
