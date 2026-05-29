@@ -16,7 +16,8 @@ Read in this order before making structural or runtime decisions:
 10. `docs/03-provider-adapters.md`
 11. `docs/05-threat-model.md`
 12. `docs/10-implementation-guide.md`
-13. `docs/04-mvp-roadmap.md`
+13. `docs/11-local-runbook.md`
+14. `docs/04-mvp-roadmap.md`
 
 ## Current repository state
 
@@ -44,9 +45,10 @@ artifacts before returning summaries or full objects.
 
 No source collector family beyond `github_repo`, `github_search`,
 `arxiv_rss_keywords`, `arxiv_query`, and `rss`, sanitizer source mapping beyond
-those five source types, implicit profile-state updates from projection,
-automatic command discovery, credential mapping, default provider/tool presets,
-or multi-profile report shaping exists yet.
+those five source types, automatic or implicit profile-state updates beyond the
+explicit `--update-seen-state` gate, automatic command discovery, credential
+mapping, default provider/tool presets, or multi-profile report shaping exists
+yet.
 
 ## Core rules
 

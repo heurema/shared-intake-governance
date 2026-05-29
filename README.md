@@ -126,8 +126,9 @@ What does not exist yet:
 - sanitizer source mappings beyond `github_repo`, `github_search`,
   `arxiv_rss_keywords`, `arxiv_query`, and `rss`;
 - multi-profile report shaping beyond deterministic per-profile JSON;
-- implicit profile-state updates from `project-profiles` or consumer-specific
-  dedupe behavior;
+- consumer-specific dedupe behavior; implicit profile-state updates remain out
+  of current scope unless a new behavior decision replaces the explicit
+  `--update-seen-state` gate;
 - automatic command discovery, credential mapping, or default provider/tool
   presets;
 - SQLite;
