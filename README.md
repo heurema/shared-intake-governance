@@ -76,6 +76,7 @@ What exists now:
 - config-driven one-source CLI command for source definitions stored in JSON;
 - isolated smoke CLI command for live one-source checks with runtime data
   outside git;
+- read-only CLI commands for inspecting run manifests and source health;
 - run manifest and source health artifacts from the CLI pipeline.
 
 What does not exist yet:

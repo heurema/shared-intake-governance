@@ -76,10 +76,18 @@ Expected output is one JSON summary printed to stdout. The summary includes
 ## Inspect output
 
 ```sh
-find "$SIG_RUNTIME_ROOT/runs" -type f -name '*.manifest.json'
-find "$SIG_RUNTIME_ROOT/source-health" -type f -name '*.json'
-find "$SIG_RUNTIME_ROOT/profiles/code-intel-kernel/reports" -type f -name '*.json'
+PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-run \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --run-id "$SIG_RUN_ID"
+
+PYTHONPATH=src python3 -m shared_intake_governance.cli show-source-health \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --run-id "$SIG_RUN_ID" \
+  --source-id github-signum
 ```
+
+Both commands are read-only. They do not fetch upstream sources and do not write
+runtime files.
 
 ## Reset local runtime data
 

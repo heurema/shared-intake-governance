@@ -17,7 +17,12 @@ from shared_intake_governance.collector.arxiv_rss_keywords import (  # noqa: E40
 from shared_intake_governance.collector.github_repo import (  # noqa: E402
     GitHubRepoCollectionResult,
 )
-from shared_intake_governance.runtime import RawWriter, RuntimePaths  # noqa: E402
+from shared_intake_governance.runtime import (  # noqa: E402
+    RawWriter,
+    RunWriter,
+    RuntimePaths,
+    SourceHealthWriter,
+)
 
 
 RUN_ID = "20260529T123045Z-deadbeef"
@@ -570,6 +575,81 @@ class CliPipelineTests(unittest.TestCase):
 
             self.assertFalse(runtime_root.exists())
 
+    def test_inspect_run_reads_manifest_and_source_health_without_writes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            source_health_path = _write_source_health(paths)
+            manifest_path = _write_run_manifest(paths, source_health_path)
+            before_paths = _all_files(paths.root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "inspect-run",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--run-id",
+                    RUN_ID,
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(paths.root), before_paths)
+            self.assertEqual(summary["run_id"], RUN_ID)
+            self.assertEqual(summary["run_manifest_path"], str(manifest_path))
+            self.assertEqual(summary["status"], "completed")
+            self.assertEqual(summary["mode"], "daily_collection")
+            self.assertEqual(summary["sources"], ["github-signum"])
+            self.assertEqual(summary["counts"]["clean_records_written"], 1)
+            self.assertEqual(
+                summary["source_health"],
+                [
+                    {
+                        "source_health_path": str(source_health_path),
+                        "source_id": "github-signum",
+                        "source_type": "github_repo",
+                        "status": "healthy",
+                        "degraded_reasons": [],
+                        "last_error": None,
+                    }
+                ],
+            )
+
+    def test_show_source_health_reads_one_artifact_without_writes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            source_health_path = _write_source_health(paths)
+            before_paths = _all_files(paths.root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "show-source-health",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--run-id",
+                    RUN_ID,
+                    "--source-id",
+                    "github-signum",
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(paths.root), before_paths)
+            self.assertEqual(summary["source_health_path"], str(source_health_path))
+            self.assertEqual(summary["run_id"], RUN_ID)
+            self.assertEqual(summary["source_id"], "github-signum")
+            self.assertEqual(summary["source_type"], "github_repo")
+            self.assertEqual(summary["status"], "healthy")
+            self.assertEqual(summary["degraded_reasons"], [])
+            self.assertIsNone(summary["last_error"])
+
 
 class SuccessfulCollector:
     def __init__(self, paths, **kwargs):
@@ -798,6 +878,61 @@ def _write_source_config(root, payload):
     source_config_path = root / "source-config.json"
     source_config_path.write_text(json.dumps(payload), encoding="utf-8")
     return source_config_path
+
+
+def _write_run_manifest(paths, source_health_path):
+    return RunWriter(paths).write_manifest(
+        {
+            "schema_version": "run-manifest.v1",
+            "run_id": RUN_ID,
+            "mode": "daily_collection",
+            "status": "completed",
+            "started_at": "2026-05-29T12:30:45Z",
+            "finished_at": "2026-05-29T12:30:46Z",
+            "runtime_root": str(paths.root),
+            "raw_root": str(paths.raw_root),
+            "clean_root": str(paths.clean_root),
+            "profiles_root": str(paths.profiles_root),
+            "sources": ["github-signum"],
+            "counts": {
+                "raw_payloads_written": 1,
+                "raw_metadata_written": 1,
+                "clean_records_written": 1,
+                "projected_profiles": 1,
+                "quarantined_records": 0,
+                "failed_sources": 0,
+            },
+            "source_health": [str(source_health_path)],
+        }
+    )
+
+
+def _write_source_health(paths):
+    return SourceHealthWriter(paths).write_source_health(
+        {
+            "schema_version": "source-health.v1",
+            "run_id": RUN_ID,
+            "source_id": "github-signum",
+            "source_type": "github_repo",
+            "status": "healthy",
+            "checked_at": "2026-05-29T12:30:46Z",
+            "attempted_fetches": 1,
+            "successful_fetches": 1,
+            "failed_fetches": 0,
+            "raw_records_written": 1,
+            "degraded_reasons": [],
+            "last_error": None,
+            "next_retry_after": None,
+        }
+    )
+
+
+def _all_files(root):
+    if not root.exists():
+        return []
+    return sorted(
+        str(path.relative_to(root)) for path in root.rglob("*") if path.is_file()
+    )
 
 
 def _is_relative_to(path, parent):
