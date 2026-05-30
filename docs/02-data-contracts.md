@@ -186,7 +186,6 @@ Supported Phase 1 source configs:
 
 - `github_repo`
 - `github_search`
-- `arxiv_rss_keywords`
 - `arxiv_query`
 - `rss`
 - `news`
@@ -560,9 +559,12 @@ evidence_refs
 ```
 
 If mediation is blocked or mismatched, the executor must write a `blocked`
-result and must not invoke the supplied command. Successful and failed
-executions should point at output artifacts instead of embedding command output
-or tool arguments.
+result and must not invoke the supplied command. When mediation is ready, the
+executor must still require `tool-intent.v1` `arguments.command` to exactly
+match the supplied argv sequence before invoking anything; unbound or
+mismatched commands produce a `blocked` result. Successful and failed executions
+should point at output artifacts instead of embedding command output or tool
+arguments.
 Successful tool execution results must have `error: null`; failed or blocked
 tool execution results must include a compact error object.
 `run_id`, `execution_id`, and `profile_id` must be safe runtime path segments.
@@ -575,9 +577,10 @@ See [../schemas/provider-request.schema.json](../schemas/provider-request.schema
 
 Provider requests are provider-neutral adapter boundary records. They are
 prepared from a ready execution mediation record and contain the provider name,
-governance-derived capabilities, and context references. They do not invoke a
-provider, execute tools, discover credentials, or grant capability by
-themselves.
+the current `read_only` capability, and context references. They do not invoke
+a provider, execute tools, discover credentials, or grant capability by
+themselves. Side-effect action classes do not cross into the provider adapter
+boundary in the current contracts.
 
 Provider requests are written under:
 
@@ -616,6 +619,9 @@ Runtime code validates provider requests before writing them.
 Runtime code also validates the ready execution mediation record before
 preparing a provider request.
 Denied policy decisions must not prepare provider requests.
+Only `read_only` provider requests and provider capabilities are valid in the
+current runtime. Provider-mediated side effects require a separate behavior
+decision before they can be added.
 
 ## Provider result
 
@@ -624,7 +630,8 @@ See [../schemas/provider-result.schema.json](../schemas/provider-result.schema.j
 Provider results are adapter boundary records for response refs and usage
 metadata. They may be recorded manually from a provider request or written by
 the explicit local invocation runner. They do not store full provider
-responses.
+responses. Because current provider requests are `read_only`-only, provider
+results are also `read_only`-only.
 
 Provider results are written under:
 

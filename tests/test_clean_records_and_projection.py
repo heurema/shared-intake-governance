@@ -216,73 +216,6 @@ class CleanRecordEmitterTests(unittest.TestCase):
             for result in results:
                 validate_clean_record(result.record)
 
-    def test_emit_clean_records_from_arxiv_rss_keywords_atom_feed(self):
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            paths = RuntimePaths(Path(tmp_dir) / "runtime")
-            metadata_path, raw_hash = _write_arxiv_raw(
-                paths,
-                [
-                    {
-                        "id": "http://arxiv.org/abs/2605.00001v1",
-                        "title": "Coding Agent Benchmark",
-                        "summary": (
-                            "Benchmark for &lt;b&gt;coding agents&lt;/b&gt; "
-                            "with eval traces."
-                        ),
-                        "published": "2026-05-28T10:00:00Z",
-                    },
-                    {
-                        "id": "http://arxiv.org/abs/2605.00002v1",
-                        "title": "Agent Tool Governance",
-                        "summary": "Local-first governance for agent tools.",
-                        "published": "2026-05-29T11:00:00Z",
-                    },
-                ],
-            )
-
-            results = CleanRecordEmitter(paths).emit_all_from_raw_metadata(metadata_path)
-
-            self.assertEqual(len(results), 2)
-            first = results[0]
-            expected_digest = hashlib.sha256(
-                b"arxiv_rss_keywords:http://arxiv.org/abs/2605.00001v1"
-            ).hexdigest()[:16]
-            self.assertEqual(
-                first.record["record_id"], f"arxiv_rss_keywords-{expected_digest}"
-            )
-            self.assertEqual(
-                first.path,
-                paths.clean_record_path(first.record["record_id"]),
-            )
-            self.assertEqual(json.loads(first.path.read_text()), first.record)
-            self.assertEqual(first.record["source_id"], "arxiv-code-agents")
-            self.assertEqual(first.record["source_type"], "arxiv_rss_keywords")
-            self.assertEqual(
-                first.record["canonical_url"], "http://arxiv.org/abs/2605.00001v1"
-            )
-            self.assertEqual(first.record["title"], "Coding Agent Benchmark")
-            self.assertIn(
-                "Benchmark for coding agents",
-                first.record["sanitized_summary"],
-            )
-            self.assertNotIn("<b>", first.record["sanitized_summary"])
-            self.assertEqual(first.record["published_at"], "2026-05-28T10:00:00Z")
-            self.assertIsNone(first.record["license_or_terms_note"])
-            self.assertEqual(first.record["source_trust"], "official")
-            self.assertEqual(first.record["risk_flags"], [])
-            self.assertFalse(first.record["quarantined"])
-            self.assertEqual(first.record["raw_hash"], raw_hash)
-            self.assertEqual(first.record["sanitizer_version"], "clean-record.v1")
-
-            second = results[1].record
-            self.assertEqual(second["title"], "Agent Tool Governance")
-            self.assertEqual(
-                second["canonical_url"], "http://arxiv.org/abs/2605.00002v1"
-            )
-
-            for result in results:
-                validate_clean_record(result.record)
-
     def test_emit_clean_records_from_arxiv_query_atom_feed(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             paths = RuntimePaths(Path(tmp_dir) / "runtime")
@@ -831,7 +764,7 @@ def _write_arxiv_raw(
     paths,
     entries,
     source_id="arxiv-code-agents",
-    source_type="arxiv_rss_keywords",
+    source_type="arxiv_query",
 ):
     writer = RawWriter(paths)
     body = _arxiv_feed(entries).encode("utf-8")

@@ -1,10 +1,5 @@
 """Read-only source collectors."""
 
-from .arxiv_rss_keywords import (
-    ArxivRssKeywordsCollectionResult,
-    ArxivRssKeywordsCollector,
-    ArxivRssKeywordsSource,
-)
 from .arxiv_query import (
     ArxivQueryCollectionResult,
     ArxivQueryCollector,
@@ -34,9 +29,6 @@ from .rss_feed import (
 )
 
 __all__ = [
-    "ArxivRssKeywordsCollectionResult",
-    "ArxivRssKeywordsCollector",
-    "ArxivRssKeywordsSource",
     "ArxivQueryCollectionResult",
     "ArxivQueryCollector",
     "ArxivQuerySource",

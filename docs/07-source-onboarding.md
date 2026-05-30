@@ -27,7 +27,6 @@ The current contract surface already anticipates these `source_type` values:
 - `github_repo`
 - `github_search`
 - `arxiv_query`
-- `arxiv_rss_keywords`
 - `rss`
 - `news`
 - `custom`
@@ -40,8 +39,6 @@ Current runtime implementation:
   repository endpoint and writes raw evidence only.
 - `github_search` has a minimal read-only collector that calls the GitHub REST
   repository search endpoint and writes raw JSON evidence only.
-- `arxiv_rss_keywords` has a minimal read-only collector that calls the
-  official arXiv API query endpoint and writes raw Atom evidence only.
 - `arxiv_query` has a minimal read-only collector that calls the official
   arXiv API query endpoint with an explicit query string and writes raw Atom
   evidence only.
@@ -50,8 +47,8 @@ Current runtime implementation:
 - `news` has a minimal read-only collector that fetches one explicit HTTPS feed
   URL and writes raw XML evidence only.
 - clean-record emission exists for `github_repo` raw JSON, `github_search`
-  raw repository search items, `arxiv_rss_keywords` raw Atom entries,
-  `arxiv_query` raw Atom entries, `rss` XML items, and `news` XML items.
+  raw repository search items, `arxiv_query` raw Atom entries, `rss` XML
+  items, and `news` XML items.
 
 ## Source selection rules
 

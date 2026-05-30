@@ -70,13 +70,12 @@ What exists now:
   raw metadata, and validated run manifest writers;
 - minimal read-only `github_repo` collector that writes raw evidence only;
 - minimal read-only `github_search` collector that writes raw evidence only;
-- minimal read-only `arxiv_rss_keywords` collector that writes raw evidence only;
 - minimal read-only `arxiv_query` collector that writes raw evidence only;
 - minimal read-only `rss` collector that writes raw evidence only;
 - minimal read-only `news` collector that writes raw evidence only;
 - minimal clean-record emitter with validated raw metadata input and raw-root
   bounded body reads for `github_repo`, `github_search`,
-  `arxiv_rss_keywords`, `arxiv_query`, `rss`, and `news` raw evidence;
+  `arxiv_query`, `rss`, and `news` raw evidence;
 - profile-projection contract for deterministic per-profile report artifacts;
 - minimal explicit-profile projector that writes deterministic JSON reports;
 - runtime validation for profile projection reports before write and seen-state
@@ -84,9 +83,8 @@ What exists now:
 - profile-state contract and validator for profile-local runtime state artifacts;
 - explicit `update-profile-seen-state` CLI that merges one profile report into
   a profile-local `seen_records` state artifact;
-- narrow local CLI commands for `github_repo`, `github_search`,
-  `arxiv_rss_keywords`, `arxiv_query`, `rss`, and `news` collect, sanitize, and
-  project paths;
+- narrow local CLI commands for `github_repo`, `github_search`, `arxiv_query`,
+  `rss`, and `news` collect, sanitize, and project paths;
 - multi-profile CLI command that projects existing clean cache into multiple
   explicit profile reports;
 - explicit `project-profiles --update-seen-state` flag that merges each
@@ -111,21 +109,25 @@ What exists now:
   execution.
 - tool-execution-result contract and local `execute-tool-intent` CLI for
   explicit governed local command execution with validated result records after
-  validated ready mediation.
+  validated ready mediation and exact argv binding from the tool intent.
 - provider-request contract and local `prepare-provider-request` CLI for
-  validated provider-neutral adapter request records without provider invocation.
+  validated `read_only` provider-neutral adapter request records without
+  provider invocation.
 - provider-result contract and local `record-provider-result` CLI for validated
   provider response refs and usage metadata without provider invocation.
 - local `invoke-provider-request` CLI for running an explicit provider command
   with validated provider-request JSON on stdin, storing stdout/stderr as
-  runtime artifacts, and recording `provider-result.v1`.
+  runtime artifacts, and recording `provider-result.v1`. Current provider
+  invocation is `read_only`-only.
 
 What does not exist yet:
 
 - source collector families beyond `github_repo`, `github_search`,
-  `arxiv_rss_keywords`, `arxiv_query`, `rss`, and `news`;
+  `arxiv_query`, `rss`, and `news`;
 - sanitizer source mappings beyond `github_repo`, `github_search`,
-  `arxiv_rss_keywords`, `arxiv_query`, `rss`, and `news`;
+  `arxiv_query`, `rss`, and `news`;
+- the retired `arxiv_rss_keywords` family; use `arxiv_query` for arXiv query
+  transport or `rss` for explicit feed transport;
 - multi-profile report shaping beyond deterministic per-profile JSON;
 - consumer-specific dedupe behavior; implicit profile-state updates remain out
   of current scope unless a new behavior decision replaces the explicit

@@ -24,13 +24,12 @@ Read in this order before making structural or runtime decisions:
 This repository currently defines docs, schemas, example profiles, and minimal
 file-based runtime helpers for paths, raw payload writes, validated raw metadata
 writes, validated run manifest writes, read-only `github_repo`, `github_search`,
-`arxiv_rss_keywords`, `arxiv_query`, and `rss` collectors, clean-record emitters
-for `github_repo`, `github_search`, `arxiv_rss_keywords`, `arxiv_query`, and
-`rss`,
+`arxiv_query`, `rss`, and `news` collectors, clean-record emitters
+for `github_repo`, `github_search`, `arxiv_query`, `rss`, and `news`,
 one validated explicit-profile JSON projector, explicit validated profile
 seen-state updates, and
 narrow local CLI commands for the current `github_repo`, `github_search`,
-`arxiv_rss_keywords`, `arxiv_query`, `rss`, and `source-config.v1` paths with
+`arxiv_query`, `rss`, `news`, and `source-config.v1` paths with
 validated source config input, raw-root bounded raw metadata, run manifest, and
 source health output.
 It also includes validated and raw-root bounded sanitizer input, governance
@@ -43,12 +42,14 @@ tool-intent and governance-decision boundary checks, and validated provider
 adapter input boundaries. Read-only runtime inspection commands validate
 artifacts before returning summaries or full objects.
 
-No source collector family beyond `github_repo`, `github_search`,
-`arxiv_rss_keywords`, `arxiv_query`, and `rss`, sanitizer source mapping beyond
-those five source types, automatic or implicit profile-state updates beyond the
-explicit `--update-seen-state` gate, automatic command discovery, credential
-mapping, default provider/tool presets, or multi-profile report shaping exists
-yet.
+No source collector family beyond `github_repo`, `github_search`, `arxiv_query`,
+`rss`, and `news`, sanitizer source mapping beyond those five source types,
+automatic or implicit profile-state updates beyond the explicit
+`--update-seen-state` gate, automatic command discovery, credential mapping,
+default provider/tool presets, or multi-profile report shaping exists yet.
+The retired `arxiv_rss_keywords` family is not active source surface; use
+`arxiv_query` for arXiv API query transport or `rss` for explicit feed
+transport.
 
 ## Core rules
 

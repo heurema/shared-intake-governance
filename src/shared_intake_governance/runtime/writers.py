@@ -21,7 +21,6 @@ _SOURCE_TYPES = {
     "github_repo",
     "github_search",
     "arxiv_query",
-    "arxiv_rss_keywords",
     "rss",
     "news",
     "custom",
@@ -86,6 +85,7 @@ _ACTION_CLASSES = {
     "external_side_effect",
     "credentialed_remote",
 }
+_PROVIDER_ACTION_CLASS = "read_only"
 _GOVERNANCE_DECISIONS = {"allowed", "gated", "denied"}
 _GOVERNANCE_AUDIT_REQUIRED = {
     "schema_version",
@@ -698,6 +698,10 @@ def validate_provider_request(request: dict[str, Any]) -> None:
         raise ValueError("provider request has unsupported provider")
     if request["action_class"] not in _ACTION_CLASSES:
         raise ValueError("provider request has unsupported action_class")
+    if request["action_class"] != _PROVIDER_ACTION_CLASS:
+        raise ValueError(
+            "provider requests currently support read_only provider requests"
+        )
     if request["policy_decision"] not in _GOVERNANCE_DECISIONS:
         raise ValueError("provider request has unsupported policy_decision")
     if request["mediation_decision"] != "ready":
@@ -710,6 +714,8 @@ def validate_provider_request(request: dict[str, Any]) -> None:
         _ACTION_CLASSES,
         "provider request capabilities",
     )
+    if request["capabilities"] != [_PROVIDER_ACTION_CLASS]:
+        raise ValueError("provider requests currently support read_only capabilities")
     _require_string_array(
         request,
         "context_refs",
@@ -758,6 +764,10 @@ def validate_provider_result(result: dict[str, Any]) -> None:
         raise ValueError("provider result has unsupported provider")
     if result["action_class"] not in _ACTION_CLASSES:
         raise ValueError("provider result has unsupported action_class")
+    if result["action_class"] != _PROVIDER_ACTION_CLASS:
+        raise ValueError(
+            "provider results currently support read_only provider results"
+        )
     if result["result_status"] not in _PROVIDER_RESULT_STATUS:
         raise ValueError("provider result has unsupported result_status")
     if result["result_status"] == "succeeded" and result["error"] is not None:

@@ -71,11 +71,7 @@
     "action_class": {
       "type": "string",
       "enum": [
-        "read_only",
-        "edit_local",
-        "destructive_local",
-        "external_side_effect",
-        "credentialed_remote"
+        "read_only"
       ]
     },
     "tool_name": {
@@ -99,11 +95,7 @@
       "items": {
         "type": "string",
         "enum": [
-          "read_only",
-          "edit_local",
-          "destructive_local",
-          "external_side_effect",
-          "credentialed_remote"
+          "read_only"
         ]
       }
     },

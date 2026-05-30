@@ -25,7 +25,6 @@ _SOURCE_TYPES = {
     "github_repo",
     "github_search",
     "arxiv_query",
-    "arxiv_rss_keywords",
     "rss",
     "news",
     "custom",
@@ -120,8 +119,6 @@ class CleanRecordEmitter:
             return [_github_repo_clean_record(metadata, body)]
         if metadata["source_type"] == "github_search":
             return _github_search_clean_records(metadata, body)
-        if metadata["source_type"] == "arxiv_rss_keywords":
-            return _arxiv_rss_keywords_clean_records(metadata, body)
         if metadata["source_type"] == "arxiv_query":
             return _arxiv_query_clean_records(metadata, body)
         if metadata["source_type"] == "rss":
@@ -243,12 +240,6 @@ def _github_repository_clean_record(
         "raw_hash": metadata["body_hash"],
         "sanitizer_version": SANITIZER_VERSION,
     }
-
-
-def _arxiv_rss_keywords_clean_records(
-    metadata: dict[str, Any], body: bytes
-) -> list[dict[str, Any]]:
-    return _arxiv_atom_clean_records(metadata, body, "arxiv_rss_keywords")
 
 
 def _arxiv_query_clean_records(

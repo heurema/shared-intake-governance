@@ -1028,6 +1028,13 @@ class RuntimeWriterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_provider_request(bad_action)
 
+        side_effect_action = dict(valid_request)
+        side_effect_action["action_class"] = "edit_local"
+        side_effect_action["policy_decision"] = "gated"
+        side_effect_action["capabilities"] = ["edit_local"]
+        with self.assertRaisesRegex(ValueError, "read_only provider requests"):
+            validate_provider_request(side_effect_action)
+
         bad_mediation = dict(valid_request)
         bad_mediation["mediation_decision"] = "blocked"
         with self.assertRaises(ValueError):
@@ -1094,6 +1101,11 @@ class RuntimeWriterTests(unittest.TestCase):
         self.assertEqual(
             schema["properties"]["profile_id"].get("pattern"),
             SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(schema["properties"]["action_class"].get("enum"), ["read_only"])
+        self.assertEqual(
+            schema["properties"]["capabilities"]["items"].get("enum"),
+            ["read_only"],
         )
 
     def test_tool_execution_writer_writes_result_deterministically(self):
@@ -1256,6 +1268,11 @@ class RuntimeWriterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_provider_result(bad_action)
 
+        side_effect_action = dict(valid_result)
+        side_effect_action["action_class"] = "edit_local"
+        with self.assertRaisesRegex(ValueError, "read_only provider results"):
+            validate_provider_result(side_effect_action)
+
         bad_status = dict(valid_result)
         bad_status["result_status"] = "passed"
         with self.assertRaises(ValueError):
@@ -1327,6 +1344,7 @@ class RuntimeWriterTests(unittest.TestCase):
             schema["properties"]["profile_id"].get("pattern"),
             SAFE_SEGMENT_PATTERN,
         )
+        self.assertEqual(schema["properties"]["action_class"].get("enum"), ["read_only"])
 
     def test_provider_result_validation_rejects_error_status_drift(self):
         succeeded_with_error = _provider_result()
@@ -1612,11 +1630,11 @@ def _provider_request():
         "mediation_id": "mediation-1",
         "intent_id": "intent-1",
         "profile_id": "code-intel-kernel",
-        "action_class": "edit_local",
+        "action_class": "read_only",
         "tool_name": "write-report",
-        "policy_decision": "gated",
+        "policy_decision": "allowed",
         "mediation_decision": "ready",
-        "capabilities": ["edit_local"],
+        "capabilities": ["read_only"],
         "context_refs": ["profiles/code-intel-kernel/reports/report.json"],
         "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
     }
@@ -1659,7 +1677,7 @@ def _provider_result():
         "mediation_id": "mediation-1",
         "intent_id": "intent-1",
         "profile_id": "code-intel-kernel",
-        "action_class": "edit_local",
+        "action_class": "read_only",
         "tool_name": "write-report",
         "response_refs": ["provider-results/provider-result-1.summary.json"],
         "usage_metadata": {"input_tokens": "120", "output_tokens": "30"},

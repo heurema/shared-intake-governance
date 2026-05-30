@@ -40,7 +40,6 @@ manifest output for:
 
 - `github_repo`
 - `github_search`
-- `arxiv_rss_keywords`
 - `arxiv_query`
 - `rss`
 - `news`
@@ -48,6 +47,9 @@ manifest output for:
 `custom` remains a contract-level source type for consumer-owned or future
 runtime paths. It does not currently have a shared collector or source-config
 dispatch path.
+The retired `arxiv_rss_keywords` family is not active source surface because it
+duplicated arXiv API query transport under an RSS/feed name. Use `arxiv_query`
+for arXiv API query transport or `rss` for explicit feed transport.
 
 ## Implemented runtime boundaries
 
@@ -86,6 +88,10 @@ runtime paths consume them:
   from execution mediation records;
 - `intent_id` remains a logical correlation id for matching tool intent scope;
   it is not a runtime path segment in the current contracts;
+- governed tool execution requires the supplied argv to exactly match
+  `tool-intent.v1` `arguments.command` before invocation;
+- provider request, provider result, and provider invocation boundaries are
+  currently `read_only`-only and reject side-effect action classes;
 - denied provider requests are rejected before provider-request records;
 - embedded governance audit events reuse standalone audit id validation;
 - `profile_id`, source ids, clean record ids, profile projection ids, raw
@@ -111,26 +117,24 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-05-30:
 
-- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 198 tests.
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 195 tests
+  after retiring `arxiv_rss_keywords` and adding execution-boundary tests.
 - `jq empty schemas/*.json profiles/examples/*.json sources/examples/*.json`
   passed.
 - `git diff --check` passed.
 - `PYTHONPATH=src python3 -m compileall -q src tests` passed.
 - `PYTHONPATH=src python3 -m shared_intake_governance.cli --help` passed.
-- `GH_SAFE_ACCOUNT=t3chn gh issue list --state open --limit 20 --json number,title,url`
-  returned `[]`.
-- Local `main` matched `origin/main` before this audit refresh.
 
 Live isolated source smoke on 2026-05-30:
 
 - command: `smoke-source-config` with
-  `sources/examples/arxiv-code-agents.json` and
+  `sources/examples/arxiv-query-code-agents.json` and
   `profiles/examples/code-intel-kernel.json`;
 - runtime policy: temporary runtime root outside the repository with
   `SMOKE_RUNTIME_DO_NOT_COMMIT.txt`;
 - result: `status=completed`, `fetch_status=success`, `http_status=200`;
-- output: 1 raw payload, 1 raw metadata artifact, 10 clean records, 1
-  projection report, 8 projected items, 1 run manifest, and 1 healthy source
+- output: 1 raw payload, 1 raw metadata artifact, 5 clean records, 1
+  projection report, 3 projected items, 1 run manifest, and 1 healthy source
   health artifact;
 - read-only inspection commands validated the smoke run manifest, source
   health artifact, and profile report.

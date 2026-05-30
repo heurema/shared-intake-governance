@@ -24,7 +24,6 @@ class SourceConfigExampleTests(unittest.TestCase):
         self.assertEqual(
             [path.name for path in example_paths],
             [
-                "arxiv-code-agents.json",
                 "arxiv-query-code-agents.json",
                 "github-search-code-agents.json",
                 "github-signum.json",
@@ -43,13 +42,11 @@ class SourceConfigExampleTests(unittest.TestCase):
                 "source-config.v1",
                 "source-config.v1",
                 "source-config.v1",
-                "source-config.v1",
             ],
         )
         self.assertEqual(
             [config["source_type"] for config in configs],
             [
-                "arxiv_rss_keywords",
                 "arxiv_query",
                 "github_search",
                 "github_repo",
@@ -60,7 +57,6 @@ class SourceConfigExampleTests(unittest.TestCase):
         self.assertEqual(
             [config["source_id"] for config in configs],
             [
-                "arxiv-code-agents",
                 "arxiv-query-code-agents",
                 "github-search-code-agents",
                 "github-signum",
@@ -232,7 +228,6 @@ class SourceConfigExampleTests(unittest.TestCase):
                 ("github_repo", "api_base_url"),
                 ("github_search", "api_base_url"),
                 ("arxiv_query", "api_base_url"),
-                ("arxiv_rss_keywords", "api_base_url"),
                 ("rss", "feed_url"),
                 ("news", "feed_url"),
             ],
@@ -260,7 +255,6 @@ class SourceConfigExampleTests(unittest.TestCase):
                 ("github_repo", SAFE_SEGMENT_PATTERN),
                 ("github_search", SAFE_SEGMENT_PATTERN),
                 ("arxiv_query", SAFE_SEGMENT_PATTERN),
-                ("arxiv_rss_keywords", SAFE_SEGMENT_PATTERN),
                 ("rss", SAFE_SEGMENT_PATTERN),
                 ("news", SAFE_SEGMENT_PATTERN),
             ],

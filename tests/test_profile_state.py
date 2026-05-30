@@ -58,7 +58,7 @@ class ProfileStateUpdateTests(unittest.TestCase):
                     "state_kind": "seen_records",
                     "updated_at": "2026-05-29T12:30:45Z",
                     "record_ids": [
-                        "arxiv_rss_keywords-good",
+                        "arxiv_query-good",
                         "github_repo-good",
                         "github_repo-old",
                     ],
@@ -224,8 +224,8 @@ def _profile_report(profile_id):
                 source_trust="platform",
             ),
             _projection_item(
-                "arxiv_rss_keywords-good",
-                source_type="arxiv_rss_keywords",
+                "arxiv_query-good",
+                source_type="arxiv_query",
                 source_trust="official",
             ),
         ],

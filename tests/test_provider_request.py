@@ -12,7 +12,7 @@ RUN_ID = "20260529T123045Z-deadbeef"
 
 
 class ProviderRequestTests(unittest.TestCase):
-    def test_ready_mediation_becomes_provider_request_without_arguments(self):
+    def test_ready_read_only_mediation_becomes_provider_request_without_arguments(self):
         request = prepare_provider_request(
             run_id=RUN_ID,
             request_id="provider-request-1",
@@ -26,13 +26,30 @@ class ProviderRequestTests(unittest.TestCase):
         self.assertEqual(request["schema_version"], "provider-request.v1")
         self.assertEqual(request["provider"], "claude")
         self.assertEqual(request["mediation_decision"], "ready")
-        self.assertEqual(request["capabilities"], ["edit_local"])
+        self.assertEqual(request["action_class"], "read_only")
+        self.assertEqual(request["capabilities"], ["read_only"])
         self.assertEqual(
             request["context_refs"],
             ["profiles/code-intel-kernel/reports/report.json"],
         )
         self.assertNotIn("arguments", request)
         self.assertNotIn("credentials", request)
+
+    def test_side_effect_mediation_cannot_prepare_provider_request(self):
+        with self.assertRaisesRegex(ValueError, "requires read_only mediation"):
+            prepare_provider_request(
+                run_id=RUN_ID,
+                request_id="provider-request-1",
+                provider="claude",
+                mediation_record=_mediation_record(
+                    mediation_decision="ready",
+                    action_class="edit_local",
+                    policy_decision="gated",
+                ),
+                mediation_record_path="mediation/20260529T123045Z-deadbeef/mediation-1.json",
+                context_refs=[],
+                prepared_at="2026-05-29T12:30:45Z",
+            )
 
     def test_blocked_mediation_cannot_prepare_provider_request(self):
         with self.assertRaises(ValueError):
@@ -74,7 +91,12 @@ class ProviderRequestTests(unittest.TestCase):
             )
 
 
-def _mediation_record(*, mediation_decision):
+def _mediation_record(
+    *,
+    mediation_decision,
+    action_class="read_only",
+    policy_decision="allowed",
+):
     return {
         "schema_version": "execution-mediation.v1",
         "run_id": RUN_ID,
@@ -82,9 +104,9 @@ def _mediation_record(*, mediation_decision):
         "mediated_at": "2026-05-29T12:30:45Z",
         "intent_id": "intent-1",
         "profile_id": "code-intel-kernel",
-        "action_class": "edit_local",
+        "action_class": action_class,
         "tool_name": "publish-report",
-        "policy_decision": "gated",
+        "policy_decision": policy_decision,
         "mediation_decision": mediation_decision,
         "reason": "test mediation",
         "dry_run_result_path": "dry-runs/dry-run-1.json",

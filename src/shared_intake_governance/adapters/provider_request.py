@@ -11,6 +11,7 @@ from shared_intake_governance.runtime import (
 
 
 _PROVIDERS = {"claude", "gemini", "vibe"}
+_PROVIDER_ACTION_CLASS = "read_only"
 
 
 def prepare_provider_request(
@@ -29,6 +30,8 @@ def prepare_provider_request(
         raise ValueError(f"unsupported provider: {provider}")
     if mediation_record["mediation_decision"] != "ready":
         raise ValueError("provider request requires ready mediation")
+    if mediation_record["action_class"] != _PROVIDER_ACTION_CLASS:
+        raise ValueError("provider request requires read_only mediation")
 
     action_class = str(mediation_record["action_class"])
     request = {

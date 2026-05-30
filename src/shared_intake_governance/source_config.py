@@ -16,7 +16,6 @@ _SOURCE_TYPES = {
     "github_repo",
     "github_search",
     "arxiv_query",
-    "arxiv_rss_keywords",
     "news",
     "rss",
 }
@@ -47,8 +46,6 @@ def validate_source_config(config: dict[str, Any]) -> dict[str, Any]:
             required_field="query",
             default_api_base_url="https://api.github.com",
         )
-    if source_type == "arxiv_rss_keywords":
-        return _validate_arxiv_keywords_config(config)
     if source_type == "arxiv_query":
         return _validate_query_config(
             config,
@@ -105,27 +102,6 @@ def _validate_query_config(
     return result
 
 
-def _validate_arxiv_keywords_config(config: dict[str, Any]) -> dict[str, Any]:
-    _require_fields(config, {"keywords", "max_results"})
-    _reject_unknown(
-        config,
-        {
-            "schema_version",
-            "source_type",
-            "source_id",
-            "keywords",
-            "max_results",
-            "api_base_url",
-        },
-    )
-    _require_string_list(config, "keywords")
-    _require_max_results(config)
-    result = dict(config)
-    result.setdefault("api_base_url", "https://export.arxiv.org/api/query")
-    _require_https_url(result, "api_base_url")
-    return result
-
-
 def _validate_feed_config(config: dict[str, Any]) -> dict[str, Any]:
     _require_fields(config, {"feed_url"})
     _reject_unknown(
@@ -177,13 +153,6 @@ def _safe_segment(value: str, label: str) -> str:
     if not _SAFE_SEGMENT.fullmatch(value):
         raise ValueError(f"{label} must be a safe path segment")
     return value
-
-
-def _require_string_list(config: dict[str, Any], field: str) -> None:
-    if not isinstance(config.get(field), list) or not all(
-        isinstance(item, str) and item for item in config[field]
-    ):
-        raise ValueError(f"{field} must be a list of non-empty strings")
 
 
 def _require_https_url(config: dict[str, Any], field: str) -> None:
