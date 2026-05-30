@@ -123,9 +123,9 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-05-30:
 
-- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 201 tests
-  after adding provider preset allowlist resolution and removing invoke-time
-  command overrides.
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 206 tests
+  after adding optional GitHub auth headers, empty-result sanitizer coverage,
+  broader GitHub search query operators, and Claude preset prompt framing.
 - `jq empty schemas/*.json profiles/examples/*.json sources/examples/*.json`
   passed.
 - `git diff --check` passed.

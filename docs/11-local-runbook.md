@@ -23,6 +23,10 @@ export SIG_RUNTIME_ROOT="$HOME/.local/share/shared-intake-governance"
 
 ## GitHub repository source
 
+GitHub collectors use unauthenticated API calls by default. To raise rate
+limits locally, export `GITHUB_TOKEN` or `GH_TOKEN`; the token is read from the
+environment and is not written to runtime artifacts.
+
 ```sh
 export SIG_RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-github"
 
@@ -365,6 +369,11 @@ Current read-only presets:
 - `claude_readonly_local`
 - `gemini_readonly_local`
 - `vibe_readonly_local`
+
+`claude_readonly_local` intentionally includes a preset-owned instruction
+prompt in `resolved_command`. Current Claude CLI behavior is reliable when the
+raw `provider-request.v1` JSON arrives on stdin as explicitly labeled
+untrusted data; sending the JSON without that framing caused local timeouts.
 
 ```sh
 PYTHONPATH=src python3 -m shared_intake_governance.cli prepare-provider-request \

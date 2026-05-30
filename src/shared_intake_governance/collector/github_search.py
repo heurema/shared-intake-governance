@@ -11,13 +11,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Mapping
 
+from shared_intake_governance.collector.github_auth import github_auth_headers
 from shared_intake_governance.runtime import RawWriter, RuntimePaths
 from shared_intake_governance.validation import require_https_url
 
 
 COLLECTOR_VERSION = "github-search.v1"
 _SAFE_SEGMENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
-_QUERY = re.compile(r'^[A-Za-z0-9][A-Za-z0-9 ._+\-:/()"=]*$')
+_QUERY = re.compile(r'^[A-Za-z0-9("][A-Za-z0-9 ._+\-:/()"=<>]*$')
 
 
 @dataclass(frozen=True)
@@ -112,6 +113,7 @@ class GitHubSearchCollector:
                 "Accept": "application/vnd.github+json",
                 "User-Agent": self.user_agent,
                 "X-GitHub-Api-Version": "2022-11-28",
+                **github_auth_headers(),
             },
             timeout_seconds=self.timeout_seconds,
         )

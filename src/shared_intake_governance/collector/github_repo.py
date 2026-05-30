@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Mapping
 
+from shared_intake_governance.collector.github_auth import github_auth_headers
 from shared_intake_governance.runtime import RawWriter, RuntimePaths
 from shared_intake_governance.validation import require_https_url
 
@@ -102,6 +103,7 @@ class GitHubRepoCollector:
                 "Accept": "application/vnd.github+json",
                 "User-Agent": self.user_agent,
                 "X-GitHub-Api-Version": "2022-11-28",
+                **github_auth_headers(),
             },
             timeout_seconds=self.timeout_seconds,
         )
