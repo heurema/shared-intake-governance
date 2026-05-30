@@ -64,7 +64,8 @@ Current runtime code covers:
 - read-only runtime inspection commands;
 - governance decision evaluation and optional audit logging;
 - approval, dry-run, mediation, and local tool-execution records;
-- provider-neutral request and result records with bound provider command argv;
+- provider-neutral request and result records with preset-resolved provider
+  command argv;
 - explicit local provider command invocation.
 
 The runtime remains local-first and file-based. Runtime data belongs outside
@@ -90,8 +91,10 @@ runtime paths consume them:
   it is not a runtime path segment in the current contracts;
 - governed tool execution requires the supplied argv to exactly match
   `tool-intent.v1` `arguments.command` before invocation;
-- provider invocation requires the supplied argv to exactly match
-  `provider-request.v1` `command` before invocation;
+- provider requests resolve command argv from a repo-owned read-only preset
+  allowlist;
+- provider invocation rejects invoke-time command overrides and blocks requests
+  whose provider command fields no longer match the allowlist preset;
 - provider request, provider result, and provider invocation boundaries are
   currently `read_only`-only and reject side-effect action classes;
 - denied provider requests are rejected before provider-request records;
@@ -112,16 +115,17 @@ Do not treat these as missing bugs without a new behavior decision:
 - consumer-specific ranking, editorial shaping, or dedupe policy;
 - implicit profile-state updates without an explicit gate;
 - automatic command discovery;
-- credential mapping or default provider/tool presets;
+- credential mapping or provider/tool presets beyond the repo-owned read-only
+  provider allowlist;
 - SQLite, daemon, web UI, cloud service, dashboard, or scheduler.
 
 ## Latest verification evidence
 
 Local verification on 2026-05-30:
 
-- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 197 tests
-  after adding provider request command binding and provider invocation mismatch
-  coverage.
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 201 tests
+  after adding provider preset allowlist resolution and removing invoke-time
+  command overrides.
 - `jq empty schemas/*.json profiles/examples/*.json sources/examples/*.json`
   passed.
 - `git diff --check` passed.

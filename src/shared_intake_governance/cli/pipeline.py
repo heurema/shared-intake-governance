@@ -48,6 +48,7 @@ from shared_intake_governance.governance import (
     validate_tool_intent,
 )
 from shared_intake_governance.executor import execute_tool_intent
+from shared_intake_governance.provider_presets import provider_preset_ids
 from shared_intake_governance.projector import (
     ProfileProjector,
     load_profile,
@@ -1174,10 +1175,9 @@ def _prepare_provider_request(args: argparse.Namespace, stdout: TextIO) -> int:
     request = prepare_provider_request(
         run_id=args.run_id,
         request_id=args.request_id,
-        provider=args.provider,
+        preset_id=args.preset_id,
         mediation_record=mediation_record,
         mediation_record_path=str(mediation_record_path),
-        command=[args.provider_command] + (args.provider_args or []),
         context_refs=args.context_refs or [],
         prepared_at=_format_utc(datetime.now(timezone.utc)),
     )
@@ -1231,7 +1231,6 @@ def _invoke_provider_request(args: argparse.Namespace, stdout: TextIO) -> int:
         result_id=args.result_id,
         provider_request=provider_request,
         provider_request_path=str(provider_request_path),
-        command=[args.provider_command] + (args.provider_args or []),
         recorded_by=args.recorded_by,
         timeout_seconds=args.timeout_seconds,
         usage_metadata=_usage_metadata(args.usage_keys or []),
@@ -1843,10 +1842,11 @@ def _parser() -> argparse.ArgumentParser:
     provider_request.add_argument("--request-id", required=True)
     provider_request.add_argument("--mediation-record", required=True)
     provider_request.add_argument(
-        "--provider", choices=["claude", "gemini", "vibe"], required=True
+        "--preset",
+        dest="preset_id",
+        choices=provider_preset_ids(),
+        required=True,
     )
-    provider_request.add_argument("--command", dest="provider_command", required=True)
-    provider_request.add_argument("--arg", dest="provider_args", action="append")
     provider_request.add_argument(
         "--context-ref", dest="context_refs", action="append"
     )
@@ -1878,8 +1878,6 @@ def _parser() -> argparse.ArgumentParser:
     provider_invocation.add_argument("--result-id", required=True)
     provider_invocation.add_argument("--provider-request", required=True)
     provider_invocation.add_argument("--recorded-by", required=True)
-    provider_invocation.add_argument("--command", dest="provider_command", required=True)
-    provider_invocation.add_argument("--arg", dest="provider_args", action="append")
     provider_invocation.add_argument("--timeout-seconds", type=float, default=30.0)
     provider_invocation.add_argument("--usage-key", dest="usage_keys", action="append")
 

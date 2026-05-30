@@ -4,8 +4,10 @@ import shutil
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stderr
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -26,6 +28,11 @@ from shared_intake_governance.collector.news_feed import (  # noqa: E402
 from shared_intake_governance.collector.rss_feed import (  # noqa: E402
     RssFeedCollectionResult,
 )
+from shared_intake_governance.provider_presets import (  # noqa: E402
+    ProviderPreset,
+    provider_command_hash,
+)
+import shared_intake_governance.provider_presets as provider_presets  # noqa: E402
 from shared_intake_governance.runtime import (  # noqa: E402
     RawWriter,
     RunWriter,
@@ -2570,11 +2577,8 @@ class CliPipelineTests(unittest.TestCase):
                     "provider-request-1",
                     "--mediation-record",
                     str(mediation_path),
-                    "--provider",
-                    "claude",
-                    "--command",
-                    "provider-wrapper",
-                    "--arg=--safe-mode",
+                    "--preset",
+                    "claude_readonly_local",
                     "--context-ref",
                     "profiles/code-intel-kernel/reports/report.json",
                 ],
@@ -2590,6 +2594,7 @@ class CliPipelineTests(unittest.TestCase):
             self.assertEqual(summary["provider_request"], request)
             self.assertEqual(request["schema_version"], "provider-request.v1")
             self.assertEqual(request["provider"], "claude")
+            self.assertEqual(request["preset_id"], "claude_readonly_local")
             self.assertEqual(request["run_id"], RUN_ID)
             self.assertEqual(request["request_id"], "provider-request-1")
             self.assertEqual(request["mediation_record_path"], str(mediation_path))
@@ -2599,11 +2604,19 @@ class CliPipelineTests(unittest.TestCase):
             self.assertEqual(request["policy_decision"], "allowed")
             self.assertEqual(request["mediation_decision"], "ready")
             self.assertEqual(request["capabilities"], ["read_only"])
-            self.assertEqual(request["command"], ["provider-wrapper", "--safe-mode"])
+            self.assertEqual(
+                request["resolved_command"],
+                ["claude", "--print", "--format", "json"],
+            )
+            self.assertEqual(
+                request["command_hash"],
+                provider_command_hash(request["resolved_command"]),
+            )
             self.assertEqual(
                 request["context_refs"],
                 ["profiles/code-intel-kernel/reports/report.json"],
             )
+            self.assertNotIn("command", request)
             self.assertNotIn("arguments", request)
             self.assertNotIn("credentials", request)
 
@@ -2630,10 +2643,8 @@ class CliPipelineTests(unittest.TestCase):
                         "provider-request-1",
                         "--mediation-record",
                         str(mediation_path),
-                        "--provider",
-                        "claude",
-                        "--command",
-                        "provider-wrapper",
+                        "--preset",
+                        "claude_readonly_local",
                     ],
                     stdout=io.StringIO(),
                 )
@@ -2660,10 +2671,8 @@ class CliPipelineTests(unittest.TestCase):
                         "provider-request-1",
                         "--mediation-record",
                         str(mediation_path),
-                        "--provider",
-                        "claude",
-                        "--command",
-                        "provider-wrapper",
+                        "--preset",
+                        "claude_readonly_local",
                     ],
                     stdout=io.StringIO(),
                 )
@@ -2770,28 +2779,25 @@ class CliPipelineTests(unittest.TestCase):
             )
             stdout = io.StringIO()
 
-            exit_code = main(
-                [
-                    "invoke-provider-request",
-                    "--runtime-root",
-                    str(paths.root),
-                    "--run-id",
-                    RUN_ID,
-                    "--result-id",
-                    "provider-result-1",
-                    "--provider-request",
-                    str(request_path),
-                    "--recorded-by",
-                    "local-operator",
-                    "--command",
-                    sys.executable,
-                    "--arg",
-                    str(script_path),
-                    "--usage-key",
-                    "test_run=true",
-                ],
-                stdout=stdout,
-            )
+            with _provider_preset(command):
+                exit_code = main(
+                    [
+                        "invoke-provider-request",
+                        "--runtime-root",
+                        str(paths.root),
+                        "--run-id",
+                        RUN_ID,
+                        "--result-id",
+                        "provider-result-1",
+                        "--provider-request",
+                        str(request_path),
+                        "--recorded-by",
+                        "local-operator",
+                        "--usage-key",
+                        "test_run=true",
+                    ],
+                    stdout=stdout,
+                )
 
             summary = json.loads(stdout.getvalue())
             result_path = paths.provider_result_path(RUN_ID, "provider-result-1")
@@ -2829,26 +2835,23 @@ class CliPipelineTests(unittest.TestCase):
             )
             stdout = io.StringIO()
 
-            exit_code = main(
-                [
-                    "invoke-provider-request",
-                    "--runtime-root",
-                    str(paths.root),
-                    "--run-id",
-                    RUN_ID,
-                    "--result-id",
-                    "provider-result-1",
-                    "--provider-request",
-                    str(request_path),
-                    "--recorded-by",
-                    "local-operator",
-                    "--command",
-                    sys.executable,
-                    "--arg",
-                    str(script_path),
-                ],
-                stdout=stdout,
-            )
+            with _provider_preset(command):
+                exit_code = main(
+                    [
+                        "invoke-provider-request",
+                        "--runtime-root",
+                        str(paths.root),
+                        "--run-id",
+                        RUN_ID,
+                        "--result-id",
+                        "provider-result-1",
+                        "--provider-request",
+                        str(request_path),
+                        "--recorded-by",
+                        "local-operator",
+                    ],
+                    stdout=stdout,
+                )
 
             summary = json.loads(stdout.getvalue())
             result = summary["provider_result"]
@@ -2868,7 +2871,7 @@ class CliPipelineTests(unittest.TestCase):
             )
             self.assertEqual(stderr_path.read_text(encoding="utf-8"), "provider failed\n")
 
-    def test_invoke_provider_request_blocks_mismatched_command(self):
+    def test_invoke_provider_request_blocks_tampered_preset_command(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
             paths = RuntimePaths(root / "runtime")
@@ -2876,34 +2879,36 @@ class CliPipelineTests(unittest.TestCase):
                 root,
                 "print('expected command')\n",
             )
+            expected_command = [sys.executable, str(script_path)]
+            tampered_command = [
+                sys.executable,
+                "-c",
+                "raise SystemExit(99)",
+            ]
             request_path = _write_provider_request(
                 paths,
                 "provider-request-1",
-                command=[sys.executable, str(script_path)],
+                command=tampered_command,
             )
             stdout = io.StringIO()
 
-            exit_code = main(
-                [
-                    "invoke-provider-request",
-                    "--runtime-root",
-                    str(paths.root),
-                    "--run-id",
-                    RUN_ID,
-                    "--result-id",
-                    "provider-result-1",
-                    "--provider-request",
-                    str(request_path),
-                    "--recorded-by",
-                    "local-operator",
-                    "--command",
-                    sys.executable,
-                    "--arg=-c",
-                    "--arg",
-                    "raise SystemExit(99)",
-                ],
-                stdout=stdout,
-            )
+            with _provider_preset(expected_command):
+                exit_code = main(
+                    [
+                        "invoke-provider-request",
+                        "--runtime-root",
+                        str(paths.root),
+                        "--run-id",
+                        RUN_ID,
+                        "--result-id",
+                        "provider-result-1",
+                        "--provider-request",
+                        str(request_path),
+                        "--recorded-by",
+                        "local-operator",
+                    ],
+                    stdout=stdout,
+                )
 
             summary = json.loads(stdout.getvalue())
             result = summary["provider_result"]
@@ -2917,13 +2922,36 @@ class CliPipelineTests(unittest.TestCase):
             self.assertEqual(
                 result["error"],
                 {
-                    "kind": "provider_command_mismatch",
-                    "message": (
-                        "supplied command does not match provider request command"
-                    ),
+                    "kind": "provider_preset_mismatch",
+                    "message": "provider request does not match provider preset",
                 },
             )
             self.assertFalse(stdout_path.exists())
+
+    def test_invoke_provider_request_rejects_command_override_argument(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            request_path = _write_provider_request(paths, "provider-request-1")
+
+            with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                main(
+                    [
+                        "invoke-provider-request",
+                        "--runtime-root",
+                        str(paths.root),
+                        "--run-id",
+                        RUN_ID,
+                        "--result-id",
+                        "provider-result-1",
+                        "--provider-request",
+                        str(request_path),
+                        "--recorded-by",
+                        "local-operator",
+                        "--command",
+                        "python3",
+                    ],
+                    stdout=io.StringIO(),
+                )
 
     def test_execute_tool_intent_runs_explicit_command_and_records_result(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -3685,6 +3713,7 @@ def _write_provider_request(paths, request_id, command=None):
         "request_id": request_id,
         "prepared_at": "2026-05-29T12:30:45Z",
         "provider": "claude",
+        "preset_id": "claude_readonly_local",
         "mediation_record_path": "mediation/20260529T123045Z-deadbeef/mediation-1.json",
         "mediation_id": "mediation-1",
         "intent_id": "intent-1",
@@ -3694,7 +3723,8 @@ def _write_provider_request(paths, request_id, command=None):
         "policy_decision": "allowed",
         "mediation_decision": "ready",
         "capabilities": ["read_only"],
-        "command": list(command),
+        "resolved_command": list(command),
+        "command_hash": provider_command_hash(command),
         "context_refs": ["profiles/code-intel-kernel/reports/report.json"],
         "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
     }
@@ -3702,6 +3732,19 @@ def _write_provider_request(paths, request_id, command=None):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(request, sort_keys=True) + "\n", encoding="utf-8")
     return path
+
+
+def _provider_preset(command):
+    return patch.dict(
+        provider_presets._PROVIDER_PRESETS,
+        {
+            "claude_readonly_local": ProviderPreset(
+                preset_id="claude_readonly_local",
+                provider="claude",
+                resolved_command=tuple(command),
+            )
+        },
+    )
 
 
 def _write_fake_provider_script(root, source):

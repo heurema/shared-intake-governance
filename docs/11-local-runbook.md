@@ -357,8 +357,14 @@ error object.
 Use this after a `read_only` mediation record is `ready`. It writes a
 provider-neutral adapter request only; it does not invoke the provider, execute
 tools, read credentials, or translate side-effect mediations into provider
-requests. Choose the exact local provider command before preparing the request;
-the argv is recorded in the request and must not contain secrets.
+requests. Choose a repo-owned provider preset before preparing the request; the
+resolved argv is recorded in the request and must not contain secrets.
+
+Current read-only presets:
+
+- `claude_readonly_local`
+- `gemini_readonly_local`
+- `vibe_readonly_local`
 
 ```sh
 PYTHONPATH=src python3 -m shared_intake_governance.cli prepare-provider-request \
@@ -366,16 +372,15 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli prepare-provider-request 
   --run-id "$SIG_RUN_ID" \
   --request-id provider-request-1 \
   --mediation-record "$SIG_RUNTIME_ROOT/mediation/$SIG_RUN_ID/mediation-1.json" \
-  --provider claude \
-  --command path/to/provider-wrapper \
-  --arg=--safe-mode \
+  --preset claude_readonly_local \
   --context-ref profiles/code-intel-kernel/reports/report.json
 ```
 
 Expected output is one summary containing `provider_request_path` and the
 written `provider-request.v1` object. Provider request records intentionally
 omit full tool arguments, credentials, raw source text, and provider-specific
-policy truth. The bound command argv must exactly match any later invocation.
+policy truth. They include `preset_id`, `resolved_command`, and `command_hash`
+from the repo-owned preset allowlist.
 Current provider requests and capabilities are `read_only`-only.
 
 ## Record a provider result
@@ -405,9 +410,10 @@ written `provider-result.v1` object.
 ## Invoke a provider request
 
 Use this only for validated `read_only` provider requests and when an operator
-has chosen the exact local command recorded in the provider request. The core
-does not discover provider CLIs, load credentials, choose defaults, or execute
-the requested tool directly. For smoke checks, use a fake local command.
+has prepared the request from a repo-owned preset. The core does not accept
+invoke-time command overrides, discover provider CLIs, load credentials, choose
+defaults outside the preset allowlist, or execute the requested tool directly.
+For smoke checks, use a fixture request or patched local preset in tests.
 
 ```sh
 PYTHONPATH=src python3 -m shared_intake_governance.cli invoke-provider-request \
@@ -416,18 +422,17 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli invoke-provider-request \
   --result-id provider-result-1 \
   --provider-request "$SIG_RUNTIME_ROOT/provider-requests/$SIG_RUN_ID/provider-request-1.json" \
   --recorded-by local-operator \
-  --command path/to/provider-wrapper \
-  --arg=--safe-mode \
   --timeout-seconds 30 \
   --usage-key invocation_mode=explicit
 ```
 
-The supplied argv must exactly match `provider-request.v1` `command`. A
-mismatch records `blocked` and does not invoke the command. On a match, the
-command receives the `provider-request.v1` JSON on stdin. Stdout and stderr are
-written under `provider-results/<run-id>/` and referenced from the
-`provider-result.v1` record. A zero exit code records `succeeded`; a nonzero
-exit or timeout records `failed` with a compact error object.
+The request `provider`, `resolved_command`, and `command_hash` must match the
+request `preset_id` in the repo-owned allowlist. A mismatch records `blocked`
+and does not invoke the command. On a match, `resolved_command` receives the
+`provider-request.v1` JSON on stdin. Stdout and stderr are written under
+`provider-results/<run-id>/` and referenced from the `provider-result.v1`
+record. A zero exit code records `succeeded`; a nonzero exit or timeout
+records `failed` with a compact error object.
 
 ## Reset local runtime data
 

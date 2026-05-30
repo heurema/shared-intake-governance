@@ -577,10 +577,11 @@ See [../schemas/provider-request.schema.json](../schemas/provider-request.schema
 
 Provider requests are provider-neutral adapter boundary records. They are
 prepared from a ready execution mediation record and contain the provider name,
-the current `read_only` capability, the exact local provider command argv, and
-context references. They do not invoke a provider, execute tools, discover
-credentials, or grant capability by themselves. Side-effect action classes do
-not cross into the provider adapter boundary in the current contracts.
+the current `read_only` capability, the repo-owned preset id, resolved local
+provider command argv, command hash, and context references. They do not invoke
+a provider, execute tools, discover credentials, or grant capability by
+themselves. Side-effect action classes do not cross into the provider adapter
+boundary in the current contracts.
 
 Provider requests are written under:
 
@@ -596,6 +597,7 @@ run_id
 request_id
 prepared_at
 provider
+preset_id
 mediation_record_path
 mediation_id
 intent_id
@@ -605,18 +607,22 @@ tool_name
 policy_decision
 mediation_decision
 capabilities
-command
+resolved_command
+command_hash
 context_refs
 evidence_refs
 ```
 
 Provider request records should not include full tool arguments, credentials,
-raw source text, private payloads, or provider-specific policy truth. The bound
-`command` is argv only and must not carry secrets or private payloads.
+raw source text, private payloads, or provider-specific policy truth. The
+`resolved_command` field is argv resolved from the repo-owned preset allowlist
+only and must not carry secrets or private payloads.
+Current preset ids are `claude_readonly_local`, `gemini_readonly_local`, and
+`vibe_readonly_local`.
 Adapters must still enforce their own narrow translation boundary and must not
 expand capabilities beyond the governance-derived request.
-`run_id`, `request_id`, `mediation_id`, and `profile_id` must be safe runtime
-path segments.
+`run_id`, `request_id`, `preset_id`, `mediation_id`, and `profile_id` must be
+safe runtime path segments.
 Runtime code validates provider requests before writing them.
 Runtime code also validates the ready execution mediation record before
 preparing a provider request.
@@ -624,9 +630,10 @@ Denied policy decisions must not prepare provider requests.
 Only `read_only` provider requests and provider capabilities are valid in the
 current runtime. Provider-mediated side effects require a separate behavior
 decision before they can be added.
-The local invocation runner must validate that the operator-supplied argv
-exactly matches `provider-request.v1` `command`; mismatches produce a
-`blocked` provider result and must not invoke the supplied command.
+The local invocation runner must not accept operator-supplied command argv.
+It validates that `provider`, `resolved_command`, and `command_hash` still
+match `preset_id` in the repo-owned allowlist; mismatches produce a `blocked`
+provider result and must not invoke the request command.
 
 ## Provider result
 
@@ -679,8 +686,8 @@ must include a compact error object.
 safe runtime path segments.
 Runtime code validates provider results before writing them.
 Runtime code also validates provider requests before recording provider results
-or forwarding request JSON to the exact explicit local provider command bound
-in the request.
+or forwarding request JSON to the exact local provider command resolved from
+the preset in the request.
 
 ## Capability classes
 

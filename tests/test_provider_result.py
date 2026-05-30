@@ -6,6 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from shared_intake_governance.adapters import record_provider_result  # noqa: E402
+from shared_intake_governance.provider_presets import provider_command_hash  # noqa: E402
 
 
 RUN_ID = "20260529T123045Z-deadbeef"
@@ -96,6 +97,7 @@ def _provider_request():
         "request_id": "provider-request-1",
         "prepared_at": "2026-05-29T12:30:45Z",
         "provider": "claude",
+        "preset_id": "claude_readonly_local",
         "mediation_record_path": "mediation/20260529T123045Z-deadbeef/mediation-1.json",
         "mediation_id": "mediation-1",
         "intent_id": "intent-1",
@@ -105,7 +107,8 @@ def _provider_request():
         "policy_decision": "allowed",
         "mediation_decision": "ready",
         "capabilities": ["read_only"],
-        "command": ["provider-wrapper", "--safe-mode"],
+        "resolved_command": ["provider-wrapper", "--safe-mode"],
+        "command_hash": provider_command_hash(["provider-wrapper", "--safe-mode"]),
         "context_refs": ["profiles/code-intel-kernel/reports/report.json"],
         "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
     }

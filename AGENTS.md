@@ -37,16 +37,18 @@ decision, validated audit, validated approval,
 validated dry-run, validated mediation evidence input, validated execution
 mediation, validated tool execution mediation input, validated provider request,
 validated provider result, explicit governed tool execution with validated
-result writes, explicit provider command invocation runtime slices, validated
-tool-intent and governance-decision boundary checks, and validated provider
-adapter input boundaries. Read-only runtime inspection commands validate
-artifacts before returning summaries or full objects.
+result writes, repo-owned read-only provider preset allowlists, explicit
+provider command invocation runtime slices without invoke-time command
+overrides, validated tool-intent and governance-decision boundary checks, and
+validated provider adapter input boundaries. Read-only runtime inspection
+commands validate artifacts before returning summaries or full objects.
 
 No source collector family beyond `github_repo`, `github_search`, `arxiv_query`,
 `rss`, and `news`, sanitizer source mapping beyond those five source types,
 automatic or implicit profile-state updates beyond the explicit
 `--update-seen-state` gate, automatic command discovery, credential mapping,
-default provider/tool presets, or multi-profile report shaping exists yet.
+provider/tool presets beyond the repo-owned read-only provider allowlist, or
+multi-profile report shaping exists yet.
 The retired `arxiv_rss_keywords` family is not active source surface; use
 `arxiv_query` for arXiv API query transport or `rss` for explicit feed
 transport.

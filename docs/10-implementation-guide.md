@@ -183,22 +183,24 @@ JSON on stdin, stores stdout/stderr as runtime artifacts, and writes one
 validated `tool-execution-result.v1` artifact.
 The provider request command reads one ready `execution-mediation.v1` artifact
 with `action_class: read_only` and validates and writes one provider-neutral
-`provider-request.v1` artifact with exact bound provider command argv. It
-validates the input mediation record and does not invoke providers, discover
-credentials, execute tools, or translate side-effect mediations into provider
+`provider-request.v1` artifact with a repo-owned preset id, resolved provider
+command argv, and command hash. It validates the input mediation record and
+does not invoke providers, discover credentials, execute tools, accept
+arbitrary provider argv, or translate side-effect mediations into provider
 requests.
 The provider result command reads one `provider-request.v1` artifact and
 validates and writes one `provider-result.v1` artifact with response refs and
 usage metadata. It validates the input provider request and does not invoke
 providers or store full provider responses.
-The provider invocation command reads one `provider-request.v1` artifact, runs
-only the explicit local command supplied by the operator after confirming the
-argv exactly matches `provider-request.v1` `command`, validates the request
-before passing provider request JSON on stdin, stores stdout/stderr as runtime
-artifacts, and writes one `provider-result.v1` artifact. It does not discover
-provider CLIs, load credentials, choose default provider commands, or execute
-the requested tool directly. Current provider requests are `read_only`-only, so
-provider invocation is not a side-effect execution path.
+The provider invocation command reads one `provider-request.v1` artifact,
+rejects invoke-time command overrides, confirms the request still matches its
+repo-owned preset allowlist entry, validates the request before passing
+provider request JSON on stdin to `resolved_command`, stores stdout/stderr as
+runtime artifacts, and writes one `provider-result.v1` artifact. It does not
+discover provider CLIs, load credentials, choose provider commands outside the
+allowlist, or execute the requested tool directly. Current provider requests
+are `read_only`-only, so provider invocation is not a side-effect execution
+path.
 
 For current manual invocation examples, see [11-local-runbook.md](11-local-runbook.md).
 
@@ -420,18 +422,20 @@ Current provider adapter boundary:
 - `src/shared_intake_governance/adapters/provider_invocation.py`
 - `src/shared_intake_governance/adapters/provider_request.py`
 - `src/shared_intake_governance/adapters/provider_result.py`
+- `src/shared_intake_governance/provider_presets.py`
 - `tests/test_provider_invocation.py`
+- `tests/test_provider_presets.py`
 - `tests/test_provider_request.py`
 - `tests/test_provider_result.py`
 - `prepare-provider-request` writes a provider-neutral request record from one
-  ready `read_only` mediation record with exact bound provider command argv and
-  without invoking providers.
+  ready `read_only` mediation record with preset-resolved provider command argv
+  and without invoking providers.
 - `record-provider-result` writes provider response refs and usage metadata
   from one provider request without invoking providers.
-- `invoke-provider-request` runs one explicit local command with the provider
-  request JSON on stdin after validating the request and exact argv binding,
-  stores stdout/stderr as response refs, and records a provider result. This
-  boundary is currently `read_only`-only.
+- `invoke-provider-request` runs the request-bound `resolved_command` with the
+  provider request JSON on stdin after validating the request and preset
+  binding, stores stdout/stderr as response refs, and records a provider
+  result. This boundary is currently `read_only`-only.
 
 Still missing:
 
@@ -442,7 +446,8 @@ Still missing:
   `arxiv_query`, `rss`, and `news`;
 - sanitizer source mappings beyond `github_repo`, `github_search`,
   `arxiv_query`, `rss`, and `news`;
-- provider/tool command discovery, credential mapping, or default presets.
+- provider/tool command discovery, credential mapping, or presets beyond the
+  repo-owned read-only provider allowlist.
 
 ## Handoff rule for the next session
 
