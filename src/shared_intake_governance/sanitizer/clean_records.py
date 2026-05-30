@@ -187,8 +187,10 @@ def _github_search_clean_records(
     if not isinstance(payload, dict):
         raise ValueError("github_search raw body must be a JSON object")
     items = payload.get("items")
-    if not isinstance(items, list) or not items:
+    if not isinstance(items, list):
         raise ValueError("github_search raw body must include repository items")
+    if not items:
+        return []
     records = []
     for item in items:
         if not isinstance(item, dict):
@@ -258,7 +260,7 @@ def _arxiv_atom_clean_records(
 
     entries = _atom_entries(root)
     if not entries:
-        raise ValueError(f"{source_type} raw body must include at least one entry")
+        return []
 
     return [
         _arxiv_entry_clean_record(metadata, entry, source_type) for entry in entries

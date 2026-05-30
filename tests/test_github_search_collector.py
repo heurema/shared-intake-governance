@@ -1,10 +1,12 @@
 import hashlib
 import json
+import os
 import sys
 import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest import mock
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -102,6 +104,42 @@ class GitHubSearchCollectorTests(unittest.TestCase):
                     "collector_version": "github-search.v1",
                     "error": None,
                 },
+            )
+
+    def test_collect_uses_github_token_from_env_when_present(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            body = json.dumps(
+                {
+                    "total_count": 1,
+                    "incomplete_results": False,
+                    "items": [],
+                }
+            ).encode("utf-8")
+            seen_requests = []
+
+            def fake_http_get(request):
+                seen_requests.append(request)
+                return HttpResponse(
+                    url=request.url,
+                    status=200,
+                    headers={"Content-Type": "application/json; charset=utf-8"},
+                    body=body,
+                )
+
+            collector = GitHubSearchCollector(paths, http_get=fake_http_get)
+            source = GitHubSearchSource(
+                source_id="github-search-code-agents",
+                query="topic:coding-agent org:heurema",
+                max_results=5,
+            )
+
+            with mock.patch.dict(os.environ, {"GITHUB_TOKEN": "test-github-token"}, clear=False):
+                collector.collect(source, run_id=RUN_ID, fetched_at=FETCHED_AT)
+
+            self.assertEqual(
+                seen_requests[0].headers["Authorization"],
+                "Bearer test-github-token",
             )
 
     def test_collect_records_rate_limit_failure_without_success(self):
@@ -205,6 +243,15 @@ class GitHubSearchCollectorTests(unittest.TestCase):
             with self.subTest(case=case):
                 with self.assertRaises(ValueError):
                     GitHubSearchSource(**case)
+
+    def test_source_accepts_date_range_search_operators(self):
+        source = GitHubSearchSource(
+            source_id="github-search-code-agents",
+            query='("code intelligence" OR "coding agent") pushed:>=2026-05-23',
+            max_results=5,
+        )
+
+        self.assertIn("pushed%3A%3E%3D2026-05-23", source.request_url)
 
 
 if __name__ == "__main__":

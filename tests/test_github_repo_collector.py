@@ -1,10 +1,12 @@
 import hashlib
 import json
+import os
 import sys
 import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest import mock
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -88,6 +90,34 @@ class GitHubRepoCollectorTests(unittest.TestCase):
                     "error": None,
                 },
             )
+
+    def test_collect_uses_github_token_from_env_when_present(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            body = (
+                b'{"full_name":"heurema/signum",'
+                b'"html_url":"https://github.com/heurema/signum"}\n'
+            )
+            seen_requests = []
+
+            def fake_http_get(request):
+                seen_requests.append(request)
+                return HttpResponse(
+                    url=request.url,
+                    status=200,
+                    headers={"Content-Type": "application/json; charset=utf-8"},
+                    body=body,
+                )
+
+            collector = GitHubRepoCollector(paths, http_get=fake_http_get)
+            source = GitHubRepoSource(
+                source_id="github-signum", owner="heurema", repo="signum"
+            )
+
+            with mock.patch.dict(os.environ, {"GH_TOKEN": "test-gh-token"}, clear=False):
+                collector.collect(source, run_id=RUN_ID, fetched_at=FETCHED_AT)
+
+            self.assertEqual(seen_requests[0].headers["Authorization"], "Bearer test-gh-token")
 
     def test_collect_records_rate_limit_like_response_without_success(self):
         with tempfile.TemporaryDirectory() as tmp_dir:

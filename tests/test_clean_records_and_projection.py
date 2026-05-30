@@ -216,6 +216,15 @@ class CleanRecordEmitterTests(unittest.TestCase):
             for result in results:
                 validate_clean_record(result.record)
 
+    def test_emit_no_clean_records_from_empty_github_search_raw_metadata(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            metadata_path, _ = _write_github_search_raw(paths, [])
+
+            results = CleanRecordEmitter(paths).emit_all_from_raw_metadata(metadata_path)
+
+            self.assertEqual(results, [])
+
     def test_emit_clean_records_from_arxiv_query_atom_feed(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             paths = RuntimePaths(Path(tmp_dir) / "runtime")
@@ -268,6 +277,20 @@ class CleanRecordEmitterTests(unittest.TestCase):
 
             for result in results:
                 validate_clean_record(result.record)
+
+    def test_emit_no_clean_records_from_empty_arxiv_query_atom_feed(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            metadata_path, _ = _write_arxiv_raw(
+                paths,
+                [],
+                source_id="arxiv-query-code-agents",
+                source_type="arxiv_query",
+            )
+
+            results = CleanRecordEmitter(paths).emit_all_from_raw_metadata(metadata_path)
+
+            self.assertEqual(results, [])
 
     def test_arxiv_clean_records_flag_and_quarantine_instruction_like_text(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
