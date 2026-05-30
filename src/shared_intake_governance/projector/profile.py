@@ -20,7 +20,6 @@ _SOURCE_TYPES = {
     "github_repo",
     "github_search",
     "arxiv_query",
-    "arxiv_rss_keywords",
     "rss",
     "news",
     "custom",

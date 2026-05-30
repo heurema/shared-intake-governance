@@ -54,22 +54,6 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli run-source-config \
 Expected output is one JSON summary printed to stdout. The summary includes
 all clean record paths emitted from the GitHub repository search results.
 
-## arXiv keyword source
-
-```sh
-export SIG_RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-arxiv"
-
-PYTHONPATH=src python3 -m shared_intake_governance.cli run-source-config \
-  --runtime-root "$SIG_RUNTIME_ROOT" \
-  --profile profiles/examples/code-intel-kernel.json \
-  --source-config sources/examples/arxiv-code-agents.json \
-  --run-id "$SIG_RUN_ID" \
-  --output-id "$SIG_RUN_ID"
-```
-
-Expected output is one JSON summary printed to stdout. The summary includes
-all clean record paths emitted from the Atom feed.
-
 ## arXiv explicit query source
 
 ```sh
@@ -342,9 +326,11 @@ Both commands are read-only and should not create runtime files.
 
 ## Execute a tool intent
 
-Use this only after mediation is `ready` and an operator has chosen the exact
-local command. If mediation is blocked or does not match the intent scope, the
-command is not invoked and a `blocked` execution result is written.
+Use this only after mediation is `ready` and the exact local command is already
+recorded in `tool-intent.v1` `arguments.command`. If mediation is blocked, does
+not match the intent scope, or the supplied argv does not exactly match
+`arguments.command`, the command is not invoked and a `blocked` execution
+result is written.
 
 ```sh
 PYTHONPATH=src python3 -m shared_intake_governance.cli execute-tool-intent \
@@ -360,16 +346,18 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli execute-tool-intent \
   --metadata-key invocation_mode=explicit
 ```
 
-The command receives the `tool-intent.v1` JSON on stdin. The execution result
-omits full tool arguments and points at stdout/stderr artifacts under
-`tool-executions/<run-id>/`. A zero exit code records `succeeded`; a nonzero
-exit or timeout records `failed` with a compact error object.
+The command receives the `tool-intent.v1` JSON on stdin only after the argv
+binding check passes. The execution result omits full tool arguments and points
+at stdout/stderr artifacts under `tool-executions/<run-id>/`. A zero exit code
+records `succeeded`; a nonzero exit or timeout records `failed` with a compact
+error object.
 
 ## Prepare a provider request
 
-Use this after a mediation record is `ready`. It writes a provider-neutral
-adapter request only; it does not invoke the provider, execute tools, or read
-credentials.
+Use this after a `read_only` mediation record is `ready`. It writes a
+provider-neutral adapter request only; it does not invoke the provider, execute
+tools, read credentials, or translate side-effect mediations into provider
+requests.
 
 ```sh
 PYTHONPATH=src python3 -m shared_intake_governance.cli prepare-provider-request \
@@ -384,7 +372,7 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli prepare-provider-request 
 Expected output is one summary containing `provider_request_path` and the
 written `provider-request.v1` object. Provider request records intentionally
 omit full tool arguments, credentials, raw source text, and provider-specific
-policy truth.
+policy truth. Current provider requests and capabilities are `read_only`-only.
 
 ## Record a provider result
 
@@ -412,9 +400,10 @@ written `provider-result.v1` object.
 
 ## Invoke a provider request
 
-Use this only when an operator has chosen the exact local command. The core
-does not discover provider CLIs, load credentials, choose defaults, or execute
-the requested tool directly. For smoke checks, use a fake local command.
+Use this only for validated `read_only` provider requests and when an operator
+has chosen the exact local command. The core does not discover provider CLIs,
+load credentials, choose defaults, or execute the requested tool directly. For
+smoke checks, use a fake local command.
 
 ```sh
 PYTHONPATH=src python3 -m shared_intake_governance.cli invoke-provider-request \

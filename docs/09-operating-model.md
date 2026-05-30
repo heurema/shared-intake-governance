@@ -156,7 +156,6 @@ Current CLI behavior:
 
 - `run-github-repo` writes one run manifest under `runs/`;
 - `run-github-search` writes one run manifest under `runs/`;
-- `run-arxiv-rss-keywords` writes one run manifest under `runs/`;
 - `run-arxiv-query` writes one run manifest under `runs/`;
 - `run-rss-feed` writes one run manifest under `runs/`;
 - `run-news-feed` writes one run manifest under `runs/`;
@@ -209,16 +208,18 @@ Current CLI behavior:
 - `execute-tool-intent` reads one `tool-intent.v1` artifact plus one matching
   `execution-mediation.v1` artifact, refuses blocked or mismatched mediation
   without invoking the command, and otherwise runs only the explicit local
-  command supplied by the operator;
+  command supplied by the operator when it exactly matches `arguments.command`
+  in the intent;
 - `prepare-provider-request` reads one ready `execution-mediation.v1` artifact
-  and writes one `provider-request.v1` artifact without invoking providers;
+  with `action_class: read_only` and writes one `provider-request.v1` artifact
+  without invoking providers;
 - `record-provider-result` reads one `provider-request.v1` artifact and writes
   one `provider-result.v1` artifact with response refs and usage metadata
   without invoking providers;
 - `invoke-provider-request` reads one `provider-request.v1` artifact, invokes
   only the explicit local command supplied by the operator, stores stdout/stderr
   as provider-result runtime artifacts, and writes one `provider-result.v1`
-  artifact;
+  artifact; current provider requests are `read_only`-only;
 - all current run commands write one source health artifact under
   `source-health/`.
 
@@ -243,7 +244,7 @@ Operationally, assume:
 - clean records are safer, not "trusted";
 - risky items can still be quarantined and excluded;
 - no action may cross into side effects without governance mediation and an
-  explicit local command.
+  explicit local command bound to the tool intent.
 
 ## Failure handling
 

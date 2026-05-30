@@ -73,6 +73,23 @@ def execute_tool_intent(
             },
         )
 
+    command_error = _command_binding_error(intent, command)
+    if command_error is not None:
+        return _result(
+            run_id=run_id,
+            execution_id=execution_id,
+            intent=intent,
+            tool_intent_path=tool_intent_path,
+            mediation_record_path=mediation_record_path,
+            executed_by=executed_by,
+            executed_at=executed_at,
+            execution_status="blocked",
+            summary=command_error["message"],
+            output_refs=[],
+            execution_metadata=metadata,
+            error=command_error,
+        )
+
     intent_json = json.dumps(intent, sort_keys=True, ensure_ascii=False) + "\n"
     try:
         completed = subprocess.run(
@@ -224,6 +241,32 @@ def _same_intent_scope(intent: dict[str, Any], record: dict[str, Any]) -> bool:
         intent[field] == record.get(field)
         for field in ("intent_id", "profile_id", "action_class", "tool_name")
     )
+
+
+def _command_binding_error(
+    intent: dict[str, Any], command: Sequence[str]
+) -> dict[str, str] | None:
+    expected = intent["arguments"].get("command")
+    if (
+        not isinstance(expected, list)
+        or not expected
+        or any(not isinstance(item, str) or not item for item in expected)
+    ):
+        return {
+            "kind": "tool_command_not_bound",
+            "message": (
+                "tool intent arguments.command must be a non-empty string array"
+            ),
+        }
+
+    actual = [str(item) for item in command]
+    if expected != actual:
+        return {
+            "kind": "tool_command_mismatch",
+            "message": "supplied command does not match tool intent arguments.command",
+        }
+
+    return None
 
 
 def _write_output_artifacts(

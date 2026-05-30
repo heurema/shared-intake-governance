@@ -4,8 +4,7 @@
   "accepted_sources": [
     "github_repo",
     "github_search",
-    "arxiv_query",
-    "arxiv_rss_keywords"
+    "arxiv_query"
   ],
   "keywords": [
     "repository-level",

@@ -84,7 +84,8 @@ run(request, capabilities, context) -> result
 Where:
 
 - `request` is provider-neutral;
-- `capabilities` comes from governance, not the adapter;
+- `capabilities` comes from governance, not the adapter; in the current runtime
+  this boundary accepts only `read_only`;
 - `context` points to clean records and profile outputs only.
 
 The first runtime boundary for this interface is the local

@@ -71,7 +71,7 @@ The first runtime slice should prove:
 Start with these because they are both practical and already motivated by existing consumers:
 
 1. `github_repo`
-2. `arxiv_rss_keywords`
+2. `arxiv_query`
 
 Why these first:
 
@@ -102,7 +102,6 @@ Current CLI implementation:
 
 - `python -m shared_intake_governance.cli run-github-repo`
 - `python -m shared_intake_governance.cli run-github-search`
-- `python -m shared_intake_governance.cli run-arxiv-rss-keywords`
 - `python -m shared_intake_governance.cli run-arxiv-query`
 - `python -m shared_intake_governance.cli run-rss-feed`
 - `python -m shared_intake_governance.cli run-news-feed`
@@ -131,7 +130,6 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli show-source-health`
 - `sources/examples/github-signum.json`
 - `sources/examples/github-search-code-agents.json`
-- `sources/examples/arxiv-code-agents.json`
 - `sources/examples/arxiv-query-code-agents.json`
 - `sources/examples/news-openai-blog.json`
 - `sources/examples/rss-github-blog.json`
@@ -139,7 +137,7 @@ Current CLI implementation:
 - `tests/test_cli_pipeline.py`
 
 These commands intentionally cover only the implemented `github_repo`,
-`github_search`, `arxiv_rss_keywords`, `arxiv_query`, `rss`, and `news` paths.
+`github_search`, `arxiv_query`, `rss`, and `news` paths.
 They require explicit runtime root, profile path, source-specific inputs or one
 validated `source-config.v1` file, and run/output identifiers. The smoke
 command may allocate an isolated temporary runtime root when none is provided.
@@ -179,13 +177,15 @@ artifacts only and do not write runtime data.
 The tool execution command reads one `tool-intent.v1` artifact plus one matching
 validated `execution-mediation.v1` artifact. It refuses blocked or mismatched
 mediation without invoking the command. When mediation is ready, it runs only
-the explicit local command supplied by the operator, passes the tool intent JSON
-on stdin, stores stdout/stderr as runtime artifacts, and writes one validated
-`tool-execution-result.v1` artifact.
+the explicit local command supplied by the operator after confirming the argv
+exactly matches `tool-intent.v1` `arguments.command`, passes the tool intent
+JSON on stdin, stores stdout/stderr as runtime artifacts, and writes one
+validated `tool-execution-result.v1` artifact.
 The provider request command reads one ready `execution-mediation.v1` artifact
-and validates and writes one provider-neutral `provider-request.v1` artifact.
-It validates the input mediation record and does not invoke providers, discover
-credentials, or execute tools.
+with `action_class: read_only` and validates and writes one provider-neutral
+`provider-request.v1` artifact. It validates the input mediation record and
+does not invoke providers, discover credentials, execute tools, or translate
+side-effect mediations into provider requests.
 The provider result command reads one `provider-request.v1` artifact and
 validates and writes one `provider-result.v1` artifact with response refs and
 usage metadata. It validates the input provider request and does not invoke
@@ -195,7 +195,8 @@ only the explicit local command supplied by the operator, validates the request
 before passing provider request JSON on stdin, stores stdout/stderr as runtime
 artifacts, and writes one `provider-result.v1` artifact. It does not discover
 provider CLIs, load credentials, choose default provider commands, or execute
-the requested tool directly.
+the requested tool directly. Current provider requests are `read_only`-only, so
+provider invocation is not a side-effect execution path.
 
 For current manual invocation examples, see [11-local-runbook.md](11-local-runbook.md).
 
@@ -273,7 +274,7 @@ Current implementation:
 
 ### Step 4: implement one source collector family
 
-Start with `github_repo` or `arxiv_rss_keywords`.
+Start with `github_repo` or `arxiv_query`.
 
 The collector should:
 
@@ -288,13 +289,11 @@ Current implementation:
 
 - `src/shared_intake_governance/collector/github_repo.py`
 - `src/shared_intake_governance/collector/github_search.py`
-- `src/shared_intake_governance/collector/arxiv_rss_keywords.py`
 - `src/shared_intake_governance/collector/arxiv_query.py`
 - `src/shared_intake_governance/collector/news_feed.py`
 - `src/shared_intake_governance/collector/rss_feed.py`
 - `tests/test_github_repo_collector.py`
 - `tests/test_github_search_collector.py`
-- `tests/test_arxiv_rss_keywords_collector.py`
 - `tests/test_arxiv_query_collector.py`
 - `tests/test_news_feed_collector.py`
 - `tests/test_rss_feed_collector.py`
@@ -319,7 +318,6 @@ Current implementation:
 - `github_repo` raw JSON maps to one clean record.
 - `github_search` raw JSON repository search results map to one clean record
   per repository item.
-- `arxiv_rss_keywords` raw Atom feeds map to one clean record per entry.
 - `arxiv_query` raw Atom feeds map to one clean record per entry.
 - `rss` raw XML feeds map to one clean record per item.
 - `news` raw XML feeds map to one clean record per item.
@@ -411,7 +409,7 @@ Current governance runtime:
   returning summaries or full objects.
 - `execute-tool-intent` writes one `tool-execution-result.v1` artifact after
   validating and checking ready mediation, then running only an explicit local
-  command.
+  command that exactly matches `tool-intent.v1` `arguments.command`.
 - tool intents, optional mediation evidence, and governance decisions are
   validated before the governance runtime consumes or returns them.
 
@@ -424,12 +422,13 @@ Current provider adapter boundary:
 - `tests/test_provider_request.py`
 - `tests/test_provider_result.py`
 - `prepare-provider-request` writes a provider-neutral request record from one
-  ready mediation record without invoking providers.
+  ready `read_only` mediation record without invoking providers.
 - `record-provider-result` writes provider response refs and usage metadata
   from one provider request without invoking providers.
 - `invoke-provider-request` runs one explicit local command with the provider
   request JSON on stdin after validating the request, stores stdout/stderr as
-  response refs, and records a provider result.
+  response refs, and records a provider result. This boundary is currently
+  `read_only`-only.
 
 Still missing:
 
@@ -437,9 +436,9 @@ Still missing:
   of current scope unless a new behavior decision replaces the explicit
   `--update-seen-state` gate;
 - source collector families beyond `github_repo`, `github_search`,
-  `arxiv_rss_keywords`, `arxiv_query`, `rss`, and `news`;
+  `arxiv_query`, `rss`, and `news`;
 - sanitizer source mappings beyond `github_repo`, `github_search`,
-  `arxiv_rss_keywords`, `arxiv_query`, `rss`, and `news`;
+  `arxiv_query`, `rss`, and `news`;
 - provider/tool command discovery, credential mapping, or default presets.
 
 ## Handoff rule for the next session
