@@ -111,14 +111,15 @@ What exists now:
   explicit governed local command execution with validated result records after
   validated ready mediation and exact argv binding from the tool intent.
 - provider-request contract and local `prepare-provider-request` CLI for
-  validated `read_only` provider-neutral adapter request records without
-  provider invocation.
+  validated `read_only` provider-neutral adapter request records with exact
+  bound provider command argv and without provider invocation.
 - provider-result contract and local `record-provider-result` CLI for validated
   provider response refs and usage metadata without provider invocation.
 - local `invoke-provider-request` CLI for running an explicit provider command
-  with validated provider-request JSON on stdin, storing stdout/stderr as
-  runtime artifacts, and recording `provider-result.v1`. Current provider
-  invocation is `read_only`-only.
+  only when the supplied argv exactly matches the validated provider request,
+  passing provider-request JSON on stdin, storing stdout/stderr as runtime
+  artifacts, and recording `provider-result.v1`. Current provider invocation
+  is `read_only`-only.
 
 What does not exist yet:
 

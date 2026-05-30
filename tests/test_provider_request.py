@@ -13,12 +13,14 @@ RUN_ID = "20260529T123045Z-deadbeef"
 
 class ProviderRequestTests(unittest.TestCase):
     def test_ready_read_only_mediation_becomes_provider_request_without_arguments(self):
+        command = ["provider-wrapper", "--safe-mode"]
         request = prepare_provider_request(
             run_id=RUN_ID,
             request_id="provider-request-1",
             provider="claude",
             mediation_record=_mediation_record(mediation_decision="ready"),
             mediation_record_path="mediation/20260529T123045Z-deadbeef/mediation-1.json",
+            command=command,
             context_refs=["profiles/code-intel-kernel/reports/report.json"],
             prepared_at="2026-05-29T12:30:45Z",
         )
@@ -28,6 +30,7 @@ class ProviderRequestTests(unittest.TestCase):
         self.assertEqual(request["mediation_decision"], "ready")
         self.assertEqual(request["action_class"], "read_only")
         self.assertEqual(request["capabilities"], ["read_only"])
+        self.assertEqual(request["command"], command)
         self.assertEqual(
             request["context_refs"],
             ["profiles/code-intel-kernel/reports/report.json"],
@@ -47,6 +50,7 @@ class ProviderRequestTests(unittest.TestCase):
                     policy_decision="gated",
                 ),
                 mediation_record_path="mediation/20260529T123045Z-deadbeef/mediation-1.json",
+                command=["provider-wrapper"],
                 context_refs=[],
                 prepared_at="2026-05-29T12:30:45Z",
             )
@@ -59,6 +63,7 @@ class ProviderRequestTests(unittest.TestCase):
                 provider="claude",
                 mediation_record=_mediation_record(mediation_decision="blocked"),
                 mediation_record_path="mediation/20260529T123045Z-deadbeef/mediation-1.json",
+                command=["provider-wrapper"],
                 context_refs=[],
                 prepared_at="2026-05-29T12:30:45Z",
             )
@@ -71,6 +76,7 @@ class ProviderRequestTests(unittest.TestCase):
                 provider="unknown",
                 mediation_record=_mediation_record(mediation_decision="ready"),
                 mediation_record_path="mediation/20260529T123045Z-deadbeef/mediation-1.json",
+                command=["provider-wrapper"],
                 context_refs=[],
                 prepared_at="2026-05-29T12:30:45Z",
             )
@@ -86,6 +92,7 @@ class ProviderRequestTests(unittest.TestCase):
                 provider="claude",
                 mediation_record=mediation_record,
                 mediation_record_path="mediation/20260529T123045Z-deadbeef/mediation-1.json",
+                command=["provider-wrapper"],
                 context_refs=[],
                 prepared_at="2026-05-29T12:30:45Z",
             )

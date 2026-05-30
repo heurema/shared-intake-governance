@@ -198,6 +198,7 @@ _PROVIDER_REQUEST_REQUIRED = {
     "policy_decision",
     "mediation_decision",
     "capabilities",
+    "command",
     "context_refs",
     "evidence_refs",
 }
@@ -716,6 +717,13 @@ def validate_provider_request(request: dict[str, Any]) -> None:
     )
     if request["capabilities"] != [_PROVIDER_ACTION_CLASS]:
         raise ValueError("provider requests currently support read_only capabilities")
+    _require_string_list(
+        request,
+        "command",
+        "provider request command",
+    )
+    if not request["command"]:
+        raise ValueError("provider request command must not be empty")
     _require_string_array(
         request,
         "context_refs",

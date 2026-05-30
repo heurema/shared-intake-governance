@@ -19,6 +19,7 @@
     "policy_decision",
     "mediation_decision",
     "capabilities",
+    "command",
     "context_refs",
     "evidence_refs"
   ],
@@ -97,6 +98,14 @@
         "enum": [
           "read_only"
         ]
+      }
+    },
+    "command": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
       }
     },
     "context_refs": {

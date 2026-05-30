@@ -1177,6 +1177,7 @@ def _prepare_provider_request(args: argparse.Namespace, stdout: TextIO) -> int:
         provider=args.provider,
         mediation_record=mediation_record,
         mediation_record_path=str(mediation_record_path),
+        command=[args.provider_command] + (args.provider_args or []),
         context_refs=args.context_refs or [],
         prepared_at=_format_utc(datetime.now(timezone.utc)),
     )
@@ -1844,6 +1845,8 @@ def _parser() -> argparse.ArgumentParser:
     provider_request.add_argument(
         "--provider", choices=["claude", "gemini", "vibe"], required=True
     )
+    provider_request.add_argument("--command", dest="provider_command", required=True)
+    provider_request.add_argument("--arg", dest="provider_args", action="append")
     provider_request.add_argument(
         "--context-ref", dest="context_refs", action="append"
     )

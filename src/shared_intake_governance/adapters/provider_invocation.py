@@ -26,17 +26,35 @@ def invoke_provider_request(
 ) -> dict[str, Any]:
     """Run an explicit command with provider-request JSON on stdin."""
     validate_provider_request(provider_request)
-    if not command:
+    supplied_command = [str(item) for item in command]
+    if not supplied_command:
         raise ValueError("provider command must not be empty")
 
     request_json = json.dumps(
         provider_request, sort_keys=True, ensure_ascii=False
     ) + "\n"
     metadata = dict(usage_metadata)
+    if provider_request["command"] != supplied_command:
+        return record_provider_result(
+            run_id=run_id,
+            result_id=result_id,
+            provider_request=provider_request,
+            provider_request_path=provider_request_path,
+            result_status="blocked",
+            recorded_by=recorded_by,
+            summary="Supplied command does not match provider request command.",
+            response_refs=[],
+            usage_metadata=metadata,
+            error={
+                "kind": "provider_command_mismatch",
+                "message": "supplied command does not match provider request command",
+            },
+            recorded_at=recorded_at,
+        )
 
     try:
         completed = subprocess.run(
-            [str(item) for item in command],
+            supplied_command,
             input=request_json,
             text=True,
             capture_output=True,

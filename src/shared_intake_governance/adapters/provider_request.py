@@ -21,6 +21,7 @@ def prepare_provider_request(
     provider: str,
     mediation_record: dict[str, Any],
     mediation_record_path: str,
+    command: list[str],
     context_refs: list[str],
     prepared_at: str,
 ) -> dict[str, Any]:
@@ -49,6 +50,7 @@ def prepare_provider_request(
         "policy_decision": mediation_record["policy_decision"],
         "mediation_decision": mediation_record["mediation_decision"],
         "capabilities": [action_class],
+        "command": list(command),
         "context_refs": context_refs,
         "evidence_refs": mediation_record["evidence_refs"],
     }
