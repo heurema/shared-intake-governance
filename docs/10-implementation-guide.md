@@ -183,15 +183,17 @@ JSON on stdin, stores stdout/stderr as runtime artifacts, and writes one
 validated `tool-execution-result.v1` artifact.
 The provider request command reads one ready `execution-mediation.v1` artifact
 with `action_class: read_only` and validates and writes one provider-neutral
-`provider-request.v1` artifact. It validates the input mediation record and
-does not invoke providers, discover credentials, execute tools, or translate
-side-effect mediations into provider requests.
+`provider-request.v1` artifact with exact bound provider command argv. It
+validates the input mediation record and does not invoke providers, discover
+credentials, execute tools, or translate side-effect mediations into provider
+requests.
 The provider result command reads one `provider-request.v1` artifact and
 validates and writes one `provider-result.v1` artifact with response refs and
 usage metadata. It validates the input provider request and does not invoke
 providers or store full provider responses.
 The provider invocation command reads one `provider-request.v1` artifact, runs
-only the explicit local command supplied by the operator, validates the request
+only the explicit local command supplied by the operator after confirming the
+argv exactly matches `provider-request.v1` `command`, validates the request
 before passing provider request JSON on stdin, stores stdout/stderr as runtime
 artifacts, and writes one `provider-result.v1` artifact. It does not discover
 provider CLIs, load credentials, choose default provider commands, or execute
@@ -422,13 +424,14 @@ Current provider adapter boundary:
 - `tests/test_provider_request.py`
 - `tests/test_provider_result.py`
 - `prepare-provider-request` writes a provider-neutral request record from one
-  ready `read_only` mediation record without invoking providers.
+  ready `read_only` mediation record with exact bound provider command argv and
+  without invoking providers.
 - `record-provider-result` writes provider response refs and usage metadata
   from one provider request without invoking providers.
 - `invoke-provider-request` runs one explicit local command with the provider
-  request JSON on stdin after validating the request, stores stdout/stderr as
-  response refs, and records a provider result. This boundary is currently
-  `read_only`-only.
+  request JSON on stdin after validating the request and exact argv binding,
+  stores stdout/stderr as response refs, and records a provider result. This
+  boundary is currently `read_only`-only.
 
 Still missing:
 

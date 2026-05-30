@@ -90,8 +90,8 @@ Where:
 
 The first runtime boundary for this interface is the local
 `provider-request.v1` artifact. It is prepared from a ready mediation record and
-contains provider, capability, context, and evidence references only. It does
-not invoke the provider.
+contains provider, capability, bound command argv, context, and evidence
+references only. It does not invoke the provider.
 
 The paired `provider-result.v1` artifact records response references, summary,
 usage metadata, and compact errors after a provider attempt is externally
@@ -99,9 +99,9 @@ performed or simulated. It should not embed full provider responses.
 
 The current local invocation runner is deliberately narrower than a provider
 SDK adapter. It consumes one validated `provider-request.v1` file, runs only
-the explicit command supplied by the operator, passes the request JSON on
-stdin, stores stdout/stderr as runtime artifacts, and writes a
-`provider-result.v1` record.
+the explicit command supplied by the operator when it exactly matches the
+request-bound command argv, passes the request JSON on stdin, stores
+stdout/stderr as runtime artifacts, and writes a `provider-result.v1` record.
 It does not discover provider CLIs, load credentials, choose defaults, or
 execute requested tools directly.
 

@@ -2572,6 +2572,9 @@ class CliPipelineTests(unittest.TestCase):
                     str(mediation_path),
                     "--provider",
                     "claude",
+                    "--command",
+                    "provider-wrapper",
+                    "--arg=--safe-mode",
                     "--context-ref",
                     "profiles/code-intel-kernel/reports/report.json",
                 ],
@@ -2596,6 +2599,7 @@ class CliPipelineTests(unittest.TestCase):
             self.assertEqual(request["policy_decision"], "allowed")
             self.assertEqual(request["mediation_decision"], "ready")
             self.assertEqual(request["capabilities"], ["read_only"])
+            self.assertEqual(request["command"], ["provider-wrapper", "--safe-mode"])
             self.assertEqual(
                 request["context_refs"],
                 ["profiles/code-intel-kernel/reports/report.json"],
@@ -2628,6 +2632,8 @@ class CliPipelineTests(unittest.TestCase):
                         str(mediation_path),
                         "--provider",
                         "claude",
+                        "--command",
+                        "provider-wrapper",
                     ],
                     stdout=io.StringIO(),
                 )
@@ -2656,6 +2662,8 @@ class CliPipelineTests(unittest.TestCase):
                         str(mediation_path),
                         "--provider",
                         "claude",
+                        "--command",
+                        "provider-wrapper",
                     ],
                     stdout=io.StringIO(),
                 )
@@ -2748,12 +2756,17 @@ class CliPipelineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
             paths = RuntimePaths(root / "runtime")
-            request_path = _write_provider_request(paths, "provider-request-1")
             script_path = _write_fake_provider_script(
                 root,
                 "import json, sys\n"
                 "request = json.load(sys.stdin)\n"
                 "print('handled ' + request['provider'])\n",
+            )
+            command = [sys.executable, str(script_path)]
+            request_path = _write_provider_request(
+                paths,
+                "provider-request-1",
+                command=command,
             )
             stdout = io.StringIO()
 
@@ -2801,13 +2814,18 @@ class CliPipelineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
             paths = RuntimePaths(root / "runtime")
-            request_path = _write_provider_request(paths, "provider-request-1")
             script_path = _write_fake_provider_script(
                 root,
                 "import sys\n"
                 "print('partial response')\n"
                 "print('provider failed', file=sys.stderr)\n"
                 "sys.exit(7)\n",
+            )
+            command = [sys.executable, str(script_path)]
+            request_path = _write_provider_request(
+                paths,
+                "provider-request-1",
+                command=command,
             )
             stdout = io.StringIO()
 
@@ -2849,6 +2867,63 @@ class CliPipelineTests(unittest.TestCase):
                 },
             )
             self.assertEqual(stderr_path.read_text(encoding="utf-8"), "provider failed\n")
+
+    def test_invoke_provider_request_blocks_mismatched_command(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            paths = RuntimePaths(root / "runtime")
+            script_path = _write_fake_provider_script(
+                root,
+                "print('expected command')\n",
+            )
+            request_path = _write_provider_request(
+                paths,
+                "provider-request-1",
+                command=[sys.executable, str(script_path)],
+            )
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "invoke-provider-request",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--run-id",
+                    RUN_ID,
+                    "--result-id",
+                    "provider-result-1",
+                    "--provider-request",
+                    str(request_path),
+                    "--recorded-by",
+                    "local-operator",
+                    "--command",
+                    sys.executable,
+                    "--arg=-c",
+                    "--arg",
+                    "raise SystemExit(99)",
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            result = summary["provider_result"]
+            stdout_path = paths.provider_result_artifact_path(
+                RUN_ID, "provider-result-1", "stdout.txt"
+            )
+
+            self.assertEqual(exit_code, 1)
+            self.assertEqual(result["result_status"], "blocked")
+            self.assertEqual(result["response_refs"], [])
+            self.assertEqual(
+                result["error"],
+                {
+                    "kind": "provider_command_mismatch",
+                    "message": (
+                        "supplied command does not match provider request command"
+                    ),
+                },
+            )
+            self.assertFalse(stdout_path.exists())
 
     def test_execute_tool_intent_runs_explicit_command_and_records_result(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -3601,7 +3676,9 @@ def _write_mediation_record(
     return path
 
 
-def _write_provider_request(paths, request_id):
+def _write_provider_request(paths, request_id, command=None):
+    if command is None:
+        command = ["provider-wrapper", "--safe-mode"]
     request = {
         "schema_version": "provider-request.v1",
         "run_id": RUN_ID,
@@ -3617,6 +3694,7 @@ def _write_provider_request(paths, request_id):
         "policy_decision": "allowed",
         "mediation_decision": "ready",
         "capabilities": ["read_only"],
+        "command": list(command),
         "context_refs": ["profiles/code-intel-kernel/reports/report.json"],
         "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
     }

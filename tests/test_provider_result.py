@@ -105,6 +105,7 @@ def _provider_request():
         "policy_decision": "allowed",
         "mediation_decision": "ready",
         "capabilities": ["read_only"],
+        "command": ["provider-wrapper", "--safe-mode"],
         "context_refs": ["profiles/code-intel-kernel/reports/report.json"],
         "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
     }

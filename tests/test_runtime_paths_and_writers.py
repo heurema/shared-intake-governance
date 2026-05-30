@@ -1083,6 +1083,16 @@ class RuntimeWriterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_provider_request(bad_context)
 
+        bad_command = dict(valid_request)
+        bad_command["command"] = []
+        with self.assertRaisesRegex(ValueError, "provider request command"):
+            validate_provider_request(bad_command)
+
+        bad_command_item = dict(valid_request)
+        bad_command_item["command"] = ["provider-wrapper", ""]
+        with self.assertRaisesRegex(ValueError, "provider request command"):
+            validate_provider_request(bad_command_item)
+
     def test_provider_request_schema_tracks_runtime_id_constraints(self):
         schema = _read_schema("provider-request.schema.json")
 
@@ -1106,6 +1116,12 @@ class RuntimeWriterTests(unittest.TestCase):
         self.assertEqual(
             schema["properties"]["capabilities"]["items"].get("enum"),
             ["read_only"],
+        )
+        self.assertIn("command", schema["required"])
+        self.assertEqual(schema["properties"]["command"].get("minItems"), 1)
+        self.assertEqual(
+            schema["properties"]["command"]["items"].get("minLength"),
+            1,
         )
 
     def test_tool_execution_writer_writes_result_deterministically(self):
@@ -1635,6 +1651,7 @@ def _provider_request():
         "policy_decision": "allowed",
         "mediation_decision": "ready",
         "capabilities": ["read_only"],
+        "command": ["provider-wrapper", "--safe-mode"],
         "context_refs": ["profiles/code-intel-kernel/reports/report.json"],
         "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
     }
