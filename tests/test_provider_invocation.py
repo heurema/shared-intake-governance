@@ -3,11 +3,17 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from shared_intake_governance.adapters import invoke_provider_request  # noqa: E402
+from shared_intake_governance.provider_presets import (  # noqa: E402
+    ProviderPreset,
+    provider_command_hash,
+)
+import shared_intake_governance.provider_presets as provider_presets  # noqa: E402
 from shared_intake_governance.runtime import RuntimePaths  # noqa: E402
 
 
@@ -27,18 +33,18 @@ class ProviderInvocationTests(unittest.TestCase):
                     "print('handled ' + request['provider'])"
                 ),
             ]
-            result = invoke_provider_request(
-                paths=paths,
-                run_id=RUN_ID,
-                result_id="provider-result-1",
-                provider_request=_provider_request(command=command),
-                provider_request_path="provider-requests/provider-request-1.json",
-                command=command,
-                recorded_by="local-operator",
-                timeout_seconds=5.0,
-                usage_metadata={"test_run": "true"},
-                recorded_at="2026-05-29T12:30:45Z",
-            )
+            with _provider_preset(command):
+                result = invoke_provider_request(
+                    paths=paths,
+                    run_id=RUN_ID,
+                    result_id="provider-result-1",
+                    provider_request=_provider_request(command=command),
+                    provider_request_path="provider-requests/provider-request-1.json",
+                    recorded_by="local-operator",
+                    timeout_seconds=5.0,
+                    usage_metadata={"test_run": "true"},
+                    recorded_at="2026-05-29T12:30:45Z",
+                )
 
             stdout_path = paths.provider_result_artifact_path(
                 RUN_ID, "provider-result-1", "stdout.txt"
@@ -66,18 +72,18 @@ class ProviderInvocationTests(unittest.TestCase):
                     "sys.exit(7)"
                 ),
             ]
-            result = invoke_provider_request(
-                paths=paths,
-                run_id=RUN_ID,
-                result_id="provider-result-1",
-                provider_request=_provider_request(command=command),
-                provider_request_path="provider-requests/provider-request-1.json",
-                command=command,
-                recorded_by="local-operator",
-                timeout_seconds=5.0,
-                usage_metadata={},
-                recorded_at="2026-05-29T12:30:45Z",
-            )
+            with _provider_preset(command):
+                result = invoke_provider_request(
+                    paths=paths,
+                    run_id=RUN_ID,
+                    result_id="provider-result-1",
+                    provider_request=_provider_request(command=command),
+                    provider_request_path="provider-requests/provider-request-1.json",
+                    recorded_by="local-operator",
+                    timeout_seconds=5.0,
+                    usage_metadata={},
+                    recorded_at="2026-05-29T12:30:45Z",
+                )
 
             stdout_path = paths.provider_result_artifact_path(
                 RUN_ID, "provider-result-1", "stdout.txt"
@@ -111,18 +117,18 @@ class ProviderInvocationTests(unittest.TestCase):
                     "time.sleep(2)"
                 ),
             ]
-            result = invoke_provider_request(
-                paths=paths,
-                run_id=RUN_ID,
-                result_id="provider-result-1",
-                provider_request=_provider_request(command=command),
-                provider_request_path="provider-requests/provider-request-1.json",
-                command=command,
-                recorded_by="local-operator",
-                timeout_seconds=0.2,
-                usage_metadata={},
-                recorded_at="2026-05-29T12:30:45Z",
-            )
+            with _provider_preset(command):
+                result = invoke_provider_request(
+                    paths=paths,
+                    run_id=RUN_ID,
+                    result_id="provider-result-1",
+                    provider_request=_provider_request(command=command),
+                    provider_request_path="provider-requests/provider-request-1.json",
+                    recorded_by="local-operator",
+                    timeout_seconds=0.2,
+                    usage_metadata={},
+                    recorded_at="2026-05-29T12:30:45Z",
+                )
 
             stdout_path = paths.provider_result_artifact_path(
                 RUN_ID, "provider-result-1", "stdout.txt"
@@ -163,7 +169,6 @@ class ProviderInvocationTests(unittest.TestCase):
                     result_id="provider-result-1",
                     provider_request=provider_request,
                     provider_request_path="provider-requests/provider-request-1.json",
-                    command=command,
                     recorded_by="local-operator",
                     timeout_seconds=5.0,
                     usage_metadata={},
@@ -195,7 +200,6 @@ class ProviderInvocationTests(unittest.TestCase):
                     result_id="provider-result-1",
                     provider_request=provider_request,
                     provider_request_path="provider-requests/provider-request-1.json",
-                    command=command,
                     recorded_by="local-operator",
                     timeout_seconds=5.0,
                     usage_metadata={},
@@ -204,32 +208,31 @@ class ProviderInvocationTests(unittest.TestCase):
 
             self.assertFalse(stdout_path.exists())
 
-    def test_mismatched_provider_command_is_blocked_before_invocation(self):
+    def test_tampered_provider_request_command_is_blocked_before_invocation(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             paths = RuntimePaths(Path(tmp_dir) / "runtime")
-            command = [
+            expected_command = [
+                sys.executable,
+                "-c",
+                "print('expected command')",
+            ]
+            tampered_command = [
                 sys.executable,
                 "-c",
                 "raise SystemExit(99)",
             ]
-            result = invoke_provider_request(
-                paths=paths,
-                run_id=RUN_ID,
-                result_id="provider-result-1",
-                provider_request=_provider_request(
-                    command=[
-                        sys.executable,
-                        "-c",
-                        "print('expected command')",
-                    ]
-                ),
-                provider_request_path="provider-requests/provider-request-1.json",
-                command=command,
-                recorded_by="local-operator",
-                timeout_seconds=5.0,
-                usage_metadata={},
-                recorded_at="2026-05-29T12:30:45Z",
-            )
+            with _provider_preset(expected_command):
+                result = invoke_provider_request(
+                    paths=paths,
+                    run_id=RUN_ID,
+                    result_id="provider-result-1",
+                    provider_request=_provider_request(command=tampered_command),
+                    provider_request_path="provider-requests/provider-request-1.json",
+                    recorded_by="local-operator",
+                    timeout_seconds=5.0,
+                    usage_metadata={},
+                    recorded_at="2026-05-29T12:30:45Z",
+                )
 
             stdout_path = paths.provider_result_artifact_path(
                 RUN_ID, "provider-result-1", "stdout.txt"
@@ -240,10 +243,8 @@ class ProviderInvocationTests(unittest.TestCase):
             self.assertEqual(
                 result["error"],
                 {
-                    "kind": "provider_command_mismatch",
-                    "message": (
-                        "supplied command does not match provider request command"
-                    ),
+                    "kind": "provider_preset_mismatch",
+                    "message": "provider request does not match provider preset",
                 },
             )
             self.assertFalse(stdout_path.exists())
@@ -256,6 +257,7 @@ def _provider_request(*, command):
         "request_id": "provider-request-1",
         "prepared_at": "2026-05-29T12:30:45Z",
         "provider": "claude",
+        "preset_id": "claude_readonly_local",
         "mediation_record_path": "mediation/20260529T123045Z-deadbeef/mediation-1.json",
         "mediation_id": "mediation-1",
         "intent_id": "intent-1",
@@ -265,7 +267,21 @@ def _provider_request(*, command):
         "policy_decision": "allowed",
         "mediation_decision": "ready",
         "capabilities": ["read_only"],
-        "command": list(command),
+        "resolved_command": list(command),
+        "command_hash": provider_command_hash(command),
         "context_refs": ["profiles/code-intel-kernel/reports/report.json"],
         "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
     }
+
+
+def _provider_preset(command):
+    return patch.dict(
+        provider_presets._PROVIDER_PRESETS,
+        {
+            "claude_readonly_local": ProviderPreset(
+                preset_id="claude_readonly_local",
+                provider="claude",
+                resolved_command=tuple(command),
+            )
+        },
+    )

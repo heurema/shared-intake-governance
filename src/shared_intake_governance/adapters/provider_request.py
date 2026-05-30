@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
+from shared_intake_governance.provider_presets import resolve_provider_preset
 from shared_intake_governance.runtime import (
     validate_execution_mediation,
     validate_provider_request,
 )
 
 
-_PROVIDERS = {"claude", "gemini", "vibe"}
 _PROVIDER_ACTION_CLASS = "read_only"
 
 
@@ -18,17 +18,15 @@ def prepare_provider_request(
     *,
     run_id: str,
     request_id: str,
-    provider: str,
+    preset_id: str,
     mediation_record: dict[str, Any],
     mediation_record_path: str,
-    command: list[str],
     context_refs: list[str],
     prepared_at: str,
 ) -> dict[str, Any]:
     """Return a provider request record without invoking the provider."""
     validate_execution_mediation(mediation_record)
-    if provider not in _PROVIDERS:
-        raise ValueError(f"unsupported provider: {provider}")
+    preset = resolve_provider_preset(preset_id)
     if mediation_record["mediation_decision"] != "ready":
         raise ValueError("provider request requires ready mediation")
     if mediation_record["action_class"] != _PROVIDER_ACTION_CLASS:
@@ -40,7 +38,8 @@ def prepare_provider_request(
         "run_id": run_id,
         "request_id": request_id,
         "prepared_at": prepared_at,
-        "provider": provider,
+        "provider": preset["provider"],
+        "preset_id": preset["preset_id"],
         "mediation_record_path": mediation_record_path,
         "mediation_id": mediation_record["mediation_id"],
         "intent_id": mediation_record["intent_id"],
@@ -50,7 +49,8 @@ def prepare_provider_request(
         "policy_decision": mediation_record["policy_decision"],
         "mediation_decision": mediation_record["mediation_decision"],
         "capabilities": [action_class],
-        "command": list(command),
+        "resolved_command": preset["resolved_command"],
+        "command_hash": preset["command_hash"],
         "context_refs": context_refs,
         "evidence_refs": mediation_record["evidence_refs"],
     }

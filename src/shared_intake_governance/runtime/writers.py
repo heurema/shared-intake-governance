@@ -10,12 +10,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from shared_intake_governance.provider_presets import provider_preset_ids
 from shared_intake_governance.validation import require_absolute_uri, require_date_time
 
 from .paths import RuntimePaths
 
 
 _BODY_HASH = re.compile(r"^[a-f0-9]{64}$")
+_COMMAND_HASH = re.compile(r"^sha256:[0-9a-f]{64}$")
 _SAFE_SEGMENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _SOURCE_TYPES = {
     "github_repo",
@@ -189,6 +191,7 @@ _PROVIDER_REQUEST_REQUIRED = {
     "request_id",
     "prepared_at",
     "provider",
+    "preset_id",
     "mediation_record_path",
     "mediation_id",
     "intent_id",
@@ -198,7 +201,8 @@ _PROVIDER_REQUEST_REQUIRED = {
     "policy_decision",
     "mediation_decision",
     "capabilities",
-    "command",
+    "resolved_command",
+    "command_hash",
     "context_refs",
     "evidence_refs",
 }
@@ -683,6 +687,7 @@ def validate_provider_request(request: dict[str, Any]) -> None:
         "run_id",
         "request_id",
         "prepared_at",
+        "preset_id",
         "mediation_record_path",
         "mediation_id",
         "intent_id",
@@ -692,11 +697,14 @@ def validate_provider_request(request: dict[str, Any]) -> None:
         _require_text(request, field)
     _require_safe_segment(request, "run_id")
     _require_safe_segment(request, "request_id")
+    _require_safe_segment(request, "preset_id")
     _require_safe_segment(request, "mediation_id")
     _require_safe_segment(request, "profile_id")
     require_date_time(request["prepared_at"], "prepared_at")
     if request["provider"] not in _PROVIDERS:
         raise ValueError("provider request has unsupported provider")
+    if request["preset_id"] not in provider_preset_ids():
+        raise ValueError("provider request has unsupported preset_id")
     if request["action_class"] not in _ACTION_CLASSES:
         raise ValueError("provider request has unsupported action_class")
     if request["action_class"] != _PROVIDER_ACTION_CLASS:
@@ -719,11 +727,14 @@ def validate_provider_request(request: dict[str, Any]) -> None:
         raise ValueError("provider requests currently support read_only capabilities")
     _require_string_list(
         request,
-        "command",
-        "provider request command",
+        "resolved_command",
+        "provider request resolved_command",
     )
-    if not request["command"]:
-        raise ValueError("provider request command must not be empty")
+    if not request["resolved_command"]:
+        raise ValueError("provider request resolved_command must not be empty")
+    _require_text(request, "command_hash")
+    if not _COMMAND_HASH.fullmatch(request["command_hash"]):
+        raise ValueError("provider request command_hash must be sha256-prefixed hex")
     _require_string_array(
         request,
         "context_refs",

@@ -212,15 +212,17 @@ Current CLI behavior:
   in the intent;
 - `prepare-provider-request` reads one ready `execution-mediation.v1` artifact
   with `action_class: read_only` and writes one `provider-request.v1` artifact
-  with exact bound provider command argv and without invoking providers;
+  with a repo-owned preset id, resolved provider command argv, and command hash
+  without invoking providers;
 - `record-provider-result` reads one `provider-request.v1` artifact and writes
   one `provider-result.v1` artifact with response refs and usage metadata
   without invoking providers;
-- `invoke-provider-request` reads one `provider-request.v1` artifact, invokes
-  only the explicit local command supplied by the operator when it exactly
-  matches the request-bound command argv, stores stdout/stderr as
-  provider-result runtime artifacts, and writes one `provider-result.v1`
-  artifact; current provider requests are `read_only`-only;
+- `invoke-provider-request` reads one `provider-request.v1` artifact, refuses
+  invoke-time command overrides, verifies the request still matches its
+  repo-owned preset, invokes only the request-bound `resolved_command`, stores
+  stdout/stderr as provider-result runtime artifacts, and writes one
+  `provider-result.v1` artifact; current provider requests are
+  `read_only`-only;
 - all current run commands write one source health artifact under
   `source-health/`.
 

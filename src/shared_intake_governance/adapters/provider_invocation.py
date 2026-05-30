@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import json
 import subprocess
-from typing import Any, Sequence
+from typing import Any
 
+from shared_intake_governance.provider_presets import provider_request_matches_preset
 from shared_intake_governance.runtime import RuntimePaths, validate_provider_request
 
 from .provider_result import record_provider_result
@@ -18,23 +19,19 @@ def invoke_provider_request(
     result_id: str,
     provider_request: dict[str, Any],
     provider_request_path: str,
-    command: Sequence[str],
     recorded_by: str,
     timeout_seconds: float,
     usage_metadata: dict[str, str],
     recorded_at: str,
 ) -> dict[str, Any]:
-    """Run an explicit command with provider-request JSON on stdin."""
+    """Run the request-bound provider command with provider-request JSON on stdin."""
     validate_provider_request(provider_request)
-    supplied_command = [str(item) for item in command]
-    if not supplied_command:
-        raise ValueError("provider command must not be empty")
 
     request_json = json.dumps(
         provider_request, sort_keys=True, ensure_ascii=False
     ) + "\n"
     metadata = dict(usage_metadata)
-    if provider_request["command"] != supplied_command:
+    if not provider_request_matches_preset(provider_request):
         return record_provider_result(
             run_id=run_id,
             result_id=result_id,
@@ -42,19 +39,19 @@ def invoke_provider_request(
             provider_request_path=provider_request_path,
             result_status="blocked",
             recorded_by=recorded_by,
-            summary="Supplied command does not match provider request command.",
+            summary="Provider request does not match provider preset.",
             response_refs=[],
             usage_metadata=metadata,
             error={
-                "kind": "provider_command_mismatch",
-                "message": "supplied command does not match provider request command",
+                "kind": "provider_preset_mismatch",
+                "message": "provider request does not match provider preset",
             },
             recorded_at=recorded_at,
         )
 
     try:
         completed = subprocess.run(
-            supplied_command,
+            [str(item) for item in provider_request["resolved_command"]],
             input=request_json,
             text=True,
             capture_output=True,

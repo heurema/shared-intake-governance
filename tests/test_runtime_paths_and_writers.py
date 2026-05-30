@@ -9,6 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from shared_intake_governance.provider_presets import provider_command_hash  # noqa: E402
 from shared_intake_governance.runtime import (  # noqa: E402
     AuditWriter,
     ApprovalWriter,
@@ -1083,15 +1084,25 @@ class RuntimeWriterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_provider_request(bad_context)
 
-        bad_command = dict(valid_request)
-        bad_command["command"] = []
-        with self.assertRaisesRegex(ValueError, "provider request command"):
-            validate_provider_request(bad_command)
+        bad_preset_id = dict(valid_request)
+        bad_preset_id["preset_id"] = "../claude_readonly_local"
+        with self.assertRaisesRegex(ValueError, "preset_id must be a safe path segment"):
+            validate_provider_request(bad_preset_id)
+
+        bad_resolved_command = dict(valid_request)
+        bad_resolved_command["resolved_command"] = []
+        with self.assertRaisesRegex(ValueError, "provider request resolved_command"):
+            validate_provider_request(bad_resolved_command)
 
         bad_command_item = dict(valid_request)
-        bad_command_item["command"] = ["provider-wrapper", ""]
-        with self.assertRaisesRegex(ValueError, "provider request command"):
+        bad_command_item["resolved_command"] = ["provider-wrapper", ""]
+        with self.assertRaisesRegex(ValueError, "provider request resolved_command"):
             validate_provider_request(bad_command_item)
+
+        bad_command_hash = dict(valid_request)
+        bad_command_hash["command_hash"] = "not-a-sha256"
+        with self.assertRaisesRegex(ValueError, "provider request command_hash"):
+            validate_provider_request(bad_command_hash)
 
     def test_provider_request_schema_tracks_runtime_id_constraints(self):
         schema = _read_schema("provider-request.schema.json")
@@ -1117,11 +1128,30 @@ class RuntimeWriterTests(unittest.TestCase):
             schema["properties"]["capabilities"]["items"].get("enum"),
             ["read_only"],
         )
-        self.assertIn("command", schema["required"])
-        self.assertEqual(schema["properties"]["command"].get("minItems"), 1)
+        self.assertIn("preset_id", schema["required"])
+        self.assertIn("resolved_command", schema["required"])
+        self.assertIn("command_hash", schema["required"])
+        self.assertNotIn("command", schema["properties"])
         self.assertEqual(
-            schema["properties"]["command"]["items"].get("minLength"),
+            schema["properties"]["preset_id"].get("enum"),
+            [
+                "claude_readonly_local",
+                "gemini_readonly_local",
+                "vibe_readonly_local",
+            ],
+        )
+        self.assertEqual(
+            schema["properties"]["preset_id"].get("pattern"),
+            SAFE_SEGMENT_PATTERN,
+        )
+        self.assertEqual(schema["properties"]["resolved_command"].get("minItems"), 1)
+        self.assertEqual(
+            schema["properties"]["resolved_command"]["items"].get("minLength"),
             1,
+        )
+        self.assertEqual(
+            schema["properties"]["command_hash"].get("pattern"),
+            "^sha256:[0-9a-f]{64}$",
         )
 
     def test_tool_execution_writer_writes_result_deterministically(self):
@@ -1642,6 +1672,7 @@ def _provider_request():
         "request_id": "provider-request-1",
         "prepared_at": "2026-05-29T12:30:45Z",
         "provider": "claude",
+        "preset_id": "claude_readonly_local",
         "mediation_record_path": "mediation/20260529T123045Z-deadbeef/mediation-1.json",
         "mediation_id": "mediation-1",
         "intent_id": "intent-1",
@@ -1651,7 +1682,8 @@ def _provider_request():
         "policy_decision": "allowed",
         "mediation_decision": "ready",
         "capabilities": ["read_only"],
-        "command": ["provider-wrapper", "--safe-mode"],
+        "resolved_command": ["provider-wrapper", "--safe-mode"],
+        "command_hash": provider_command_hash(["provider-wrapper", "--safe-mode"]),
         "context_refs": ["profiles/code-intel-kernel/reports/report.json"],
         "evidence_refs": ["profiles/code-intel-kernel/reports/report.json"],
     }
