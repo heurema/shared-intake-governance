@@ -73,6 +73,10 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli run-source-config \
 
 Expected output is one JSON summary printed to stdout. The summary includes
 all clean record paths emitted from the GitHub release results.
+If you need a live non-empty GitHub releases smoke, use
+`sources/examples/github-releases-repo-governance.json`; the
+`shared-intake-governance` repository may legitimately return an empty releases
+array.
 
 ## arXiv explicit query source
 

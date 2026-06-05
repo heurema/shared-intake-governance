@@ -25,6 +25,7 @@ class SourceConfigExampleTests(unittest.TestCase):
             [path.name for path in example_paths],
             [
                 "arxiv-query-code-agents.json",
+                "github-releases-repo-governance.json",
                 "github-releases-shared-intake.json",
                 "github-search-code-agents.json",
                 "github-signum.json",
@@ -44,12 +45,14 @@ class SourceConfigExampleTests(unittest.TestCase):
                 "source-config.v1",
                 "source-config.v1",
                 "source-config.v1",
+                "source-config.v1",
             ],
         )
         self.assertEqual(
             [config["source_type"] for config in configs],
             [
                 "arxiv_query",
+                "github_releases",
                 "github_releases",
                 "github_search",
                 "github_repo",
@@ -61,6 +64,7 @@ class SourceConfigExampleTests(unittest.TestCase):
             [config["source_id"] for config in configs],
             [
                 "arxiv-query-code-agents",
+                "github-releases-repo-governance",
                 "github-releases-shared-intake",
                 "github-search-code-agents",
                 "github-signum",
