@@ -25,7 +25,7 @@ _SOURCE_TYPES = {
     "custom",
 }
 _SOURCE_TRUST = {"official", "maintainer", "platform", "secondary", "social", "unknown"}
-_PROVIDERS = {"claude", "gemini", "vibe"}
+_PROVIDERS = {"claude", "gemini", "agy", "vibe"}
 _PROFILE_REQUIRED = {
     "profile_id",
     "description",

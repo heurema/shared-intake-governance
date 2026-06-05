@@ -617,8 +617,8 @@ Provider request records should not include full tool arguments, credentials,
 raw source text, private payloads, or provider-specific policy truth. The
 `resolved_command` field is argv resolved from the repo-owned preset allowlist
 only and must not carry secrets or private payloads.
-Current preset ids are `claude_readonly_local`, `gemini_readonly_local`, and
-`vibe_readonly_local`.
+Current preset ids are `claude_readonly_local`, `gemini_readonly_local`,
+`agy_readonly_local`, and `vibe_readonly_local`.
 Adapters must still enforce their own narrow translation boundary and must not
 expand capabilities beyond the governance-derived request.
 `run_id`, `request_id`, `preset_id`, `mediation_id`, and `profile_id` must be

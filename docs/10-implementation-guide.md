@@ -123,6 +123,8 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli list-mediation-records`
 - `python -m shared_intake_governance.cli inspect-mediation-record`
 - `python -m shared_intake_governance.cli execute-tool-intent`
+- `python -m shared_intake_governance.cli list-provider-presets`
+- `python -m shared_intake_governance.cli inspect-provider-preset`
 - `python -m shared_intake_governance.cli prepare-provider-request`
 - `python -m shared_intake_governance.cli record-provider-result`
 - `python -m shared_intake_governance.cli invoke-provider-request`
@@ -188,6 +190,9 @@ command argv, and command hash. It validates the input mediation record and
 does not invoke providers, discover credentials, execute tools, accept
 arbitrary provider argv, or translate side-effect mediations into provider
 requests.
+The provider preset inspection commands resolve the repo-owned read-only
+allowlist into JSON without invoking providers, discovering commands, reading
+credentials, or writing runtime artifacts.
 The provider result command reads one `provider-request.v1` artifact and
 validates and writes one `provider-result.v1` artifact with response refs and
 usage metadata. It validates the input provider request and does not invoke
@@ -430,6 +435,8 @@ Current provider adapter boundary:
 - `prepare-provider-request` writes a provider-neutral request record from one
   ready `read_only` mediation record with preset-resolved provider command argv
   and without invoking providers.
+- `list-provider-presets` and `inspect-provider-preset` expose the repo-owned
+  read-only preset allowlist without invoking providers.
 - `record-provider-result` writes provider response refs and usage metadata
   from one provider request without invoking providers.
 - `invoke-provider-request` runs the request-bound `resolved_command` with the

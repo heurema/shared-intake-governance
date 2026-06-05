@@ -105,6 +105,8 @@ stdout/stderr as runtime artifacts, and writes a `provider-result.v1` record.
 It does not accept invoke-time command overrides, discover provider CLIs, load
 credentials, choose defaults outside the allowlist, or execute requested tools
 directly.
+The allowlist can be inspected through read-only CLI commands, but inspection
+does not discover local commands, read credentials, or invoke providers.
 
 ## Hard rules
 

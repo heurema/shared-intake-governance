@@ -64,6 +64,7 @@
         "enum": [
           "claude",
           "gemini",
+          "agy",
           "vibe"
         ]
       }

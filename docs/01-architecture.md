@@ -116,6 +116,7 @@ Adapters are thin translation layers only:
 
 - `claude`
 - `gemini`
+- `agy`
 - `vibe`
 
 They must not hold policy truth or widen capabilities.

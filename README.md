@@ -114,6 +114,8 @@ What exists now:
   validated `read_only` provider-neutral adapter request records that resolve
   exact provider command argv from a repo-owned preset allowlist without
   provider invocation.
+- local `list-provider-presets` and `inspect-provider-preset` CLI commands for
+  read-only inspection of the repo-owned provider preset allowlist.
 - provider-result contract and local `record-provider-result` CLI for validated
   provider response refs and usage metadata without provider invocation.
 - local `invoke-provider-request` CLI for running only the request-bound
