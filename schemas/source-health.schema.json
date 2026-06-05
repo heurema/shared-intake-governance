@@ -38,6 +38,7 @@
       "type": "string",
       "enum": [
         "github_repo",
+        "github_releases",
         "github_search",
         "arxiv_query",
         "rss",

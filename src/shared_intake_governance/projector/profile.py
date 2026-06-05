@@ -18,6 +18,7 @@ _SAFE_SEGMENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _OUTPUT_MODES = {"research_digest", "benchmark_brief", "news_brief", "custom"}
 _SOURCE_TYPES = {
     "github_repo",
+    "github_releases",
     "github_search",
     "arxiv_query",
     "rss",

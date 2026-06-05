@@ -1,0 +1,8 @@
+{
+  "schema_version": "source-config.v1",
+  "source_type": "github_releases",
+  "source_id": "github-releases-shared-intake",
+  "owner": "heurema",
+  "repo": "shared-intake-governance",
+  "max_results": 5
+}

@@ -23,6 +23,7 @@ SANITIZER_VERSION = "clean-record.v1"
 SUMMARY_MAX_LENGTH = 500
 _SOURCE_TYPES = {
     "github_repo",
+    "github_releases",
     "github_search",
     "arxiv_query",
     "rss",
@@ -117,6 +118,8 @@ class CleanRecordEmitter:
 
         if metadata["source_type"] == "github_repo":
             return [_github_repo_clean_record(metadata, body)]
+        if metadata["source_type"] == "github_releases":
+            return _github_releases_clean_records(metadata, body)
         if metadata["source_type"] == "github_search":
             return _github_search_clean_records(metadata, body)
         if metadata["source_type"] == "arxiv_query":
@@ -197,6 +200,58 @@ def _github_search_clean_records(
             raise ValueError("github_search repository item must be a JSON object")
         records.append(_github_repository_clean_record(metadata, item, "github_search"))
     return records
+
+
+def _github_releases_clean_records(
+    metadata: dict[str, Any], body: bytes
+) -> list[dict[str, Any]]:
+    payload = json.loads(body.decode("utf-8"))
+    if not isinstance(payload, list):
+        raise ValueError("github_releases raw body must be a JSON array")
+    if not payload:
+        return []
+    records = []
+    for item in payload:
+        if not isinstance(item, dict):
+            raise ValueError("github_releases release item must be a JSON object")
+        records.append(_github_release_clean_record(metadata, item))
+    return records
+
+
+def _github_release_clean_record(
+    metadata: dict[str, Any], payload: dict[str, Any]
+) -> dict[str, Any]:
+    canonical_url = _clean_text(payload.get("html_url"))
+    if not canonical_url:
+        raise ValueError("github_releases item must include html_url")
+
+    tag_name = _clean_text(payload.get("tag_name"))
+    title = _clean_text(payload.get("name") or tag_name or canonical_url)
+    body = _clean_text(payload.get("body") or "")
+    summary_parts = [f"Tag: {tag_name}" if tag_name else "", body]
+    summary = _cap_length(
+        _clean_text(" ".join(part for part in summary_parts if part))
+    )
+    published_at = _normalize_optional_source_date_time(
+        payload.get("published_at") or payload.get("created_at")
+    )
+    risk_flags = _risk_flags(" ".join([title, tag_name, body]))
+
+    return {
+        "record_id": _record_id("github_releases", canonical_url),
+        "source_id": metadata["source_id"],
+        "source_type": "github_releases",
+        "canonical_url": canonical_url,
+        "title": title,
+        "sanitized_summary": summary,
+        "published_at": published_at,
+        "license_or_terms_note": None,
+        "source_trust": "platform",
+        "risk_flags": risk_flags,
+        "quarantined": bool(set(risk_flags) & _QUARANTINE_FLAGS),
+        "raw_hash": metadata["body_hash"],
+        "sanitizer_version": SANITIZER_VERSION,
+    }
 
 
 def _github_repository_clean_record(
