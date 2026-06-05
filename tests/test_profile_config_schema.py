@@ -29,6 +29,19 @@ class ProfileConfigSchemaTests(unittest.TestCase):
             clean_record_schema["properties"]["source_type"]["enum"],
         )
 
+    def test_schema_tracks_supported_provider_preferences(self):
+        schema = _read_schema("profile.schema.json")
+
+        self.assertEqual(
+            schema["properties"]["provider_preferences"]["items"].get("enum"),
+            [
+                "claude",
+                "gemini",
+                "agy",
+                "vibe",
+            ],
+        )
+
     def test_example_profile_sources_are_schema_supported(self):
         schema = _read_schema("profile.schema.json")
         supported_sources = set(

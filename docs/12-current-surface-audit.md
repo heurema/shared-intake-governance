@@ -13,7 +13,7 @@ It is not a roadmap and not a release note. Use it to distinguish:
 
 ## Audit date
 
-2026-05-30
+2026-06-05
 
 ## Current completion boundary
 
@@ -66,6 +66,7 @@ Current runtime code covers:
 - approval, dry-run, mediation, and local tool-execution records;
 - provider-neutral request and result records with preset-resolved provider
   command argv;
+- read-only provider preset inspection;
 - explicit local provider command invocation.
 
 The runtime remains local-first and file-based. Runtime data belongs outside
@@ -93,6 +94,9 @@ runtime paths consume them:
   `tool-intent.v1` `arguments.command` before invocation;
 - provider requests resolve command argv from a repo-owned read-only preset
   allowlist;
+- provider preset inspection resolves only repo-owned allowlist entries and does
+  not invoke providers, discover commands, read credentials, or write runtime
+  artifacts;
 - provider invocation rejects invoke-time command overrides and blocks requests
   whose provider command fields no longer match the allowlist preset;
 - provider request, provider result, and provider invocation boundaries are
@@ -120,6 +124,17 @@ Do not treat these as missing bugs without a new behavior decision:
 - SQLite, daemon, web UI, cloud service, dashboard, or scheduler.
 
 ## Latest verification evidence
+
+Local verification on 2026-06-05:
+
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 210 tests
+  after adding read-only provider preset inspection commands and
+  `agy_readonly_local`.
+- `jq empty schemas/*.json profiles/examples/*.json sources/examples/*.json`
+  passed.
+- `git diff --check` passed.
+- `PYTHONPATH=src python3 -m compileall -q src tests` passed.
+- `PYTHONPATH=src python3 -m shared_intake_governance.cli --help` passed.
 
 Local verification on 2026-05-30:
 

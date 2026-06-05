@@ -725,6 +725,27 @@ class ProfileProjectorTests(unittest.TestCase):
 
             self.assertEqual(profile["required_risk_flags_absent"], [])
 
+    def test_profile_loader_accepts_agy_provider_preference(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            profile_path = Path(tmp_dir) / "profile.json"
+            profile_path.write_text(
+                json.dumps(
+                    {
+                        "profile_id": "pulse",
+                        "description": "Pulse profile.",
+                        "accepted_sources": ["news"],
+                        "keywords": ["agents"],
+                        "output_mode": "news_brief",
+                        "provider_preferences": ["agy"],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            profile = load_profile(profile_path)
+
+            self.assertEqual(profile["provider_preferences"], ["agy"])
+
 
 def _write_github_raw(paths, payload, source_id="github-signum"):
     writer = RawWriter(paths)

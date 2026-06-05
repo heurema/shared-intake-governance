@@ -48,7 +48,10 @@ from shared_intake_governance.governance import (
     validate_tool_intent,
 )
 from shared_intake_governance.executor import execute_tool_intent
-from shared_intake_governance.provider_presets import provider_preset_ids
+from shared_intake_governance.provider_presets import (
+    provider_preset_ids,
+    resolve_provider_preset,
+)
 from shared_intake_governance.projector import (
     ProfileProjector,
     load_profile,
@@ -156,6 +159,10 @@ def main(
         return _inspect_mediation_record(args, stdout)
     if args.command == "execute-tool-intent":
         return _execute_tool_intent(args, stdout)
+    if args.command == "list-provider-presets":
+        return _list_provider_presets(stdout)
+    if args.command == "inspect-provider-preset":
+        return _inspect_provider_preset(args, stdout)
     if args.command == "prepare-provider-request":
         return _prepare_provider_request(args, stdout)
     if args.command == "record-provider-result":
@@ -1192,6 +1199,30 @@ def _prepare_provider_request(args: argparse.Namespace, stdout: TextIO) -> int:
     return 0
 
 
+def _list_provider_presets(stdout: TextIO) -> int:
+    presets = [
+        resolve_provider_preset(preset_id) for preset_id in provider_preset_ids()
+    ]
+    _print_json(
+        stdout,
+        {
+            "provider_preset_count": len(presets),
+            "provider_presets": presets,
+        },
+    )
+    return 0
+
+
+def _inspect_provider_preset(args: argparse.Namespace, stdout: TextIO) -> int:
+    _print_json(
+        stdout,
+        {
+            "provider_preset": resolve_provider_preset(args.preset_id),
+        },
+    )
+    return 0
+
+
 def _record_provider_result(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     provider_request_path = Path(args.provider_request)
@@ -1849,6 +1880,22 @@ def _parser() -> argparse.ArgumentParser:
     )
     provider_request.add_argument(
         "--context-ref", dest="context_refs", action="append"
+    )
+
+    subparsers.add_parser(
+        "list-provider-presets",
+        help="List repo-owned read-only provider presets without invoking providers.",
+    )
+
+    inspect_provider_preset = subparsers.add_parser(
+        "inspect-provider-preset",
+        help="Read one repo-owned provider preset without invoking providers.",
+    )
+    inspect_provider_preset.add_argument(
+        "--preset",
+        dest="preset_id",
+        choices=provider_preset_ids(),
+        required=True,
     )
 
     provider_result = subparsers.add_parser(

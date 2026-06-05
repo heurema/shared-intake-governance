@@ -1137,6 +1137,7 @@ class RuntimeWriterTests(unittest.TestCase):
             [
                 "claude_readonly_local",
                 "gemini_readonly_local",
+                "agy_readonly_local",
                 "vibe_readonly_local",
             ],
         )

@@ -184,7 +184,7 @@ _TOOL_EXECUTION_RESULT_REQUIRED = {
     "error",
     "evidence_refs",
 }
-_PROVIDERS = {"claude", "gemini", "vibe"}
+_PROVIDERS = {"claude", "gemini", "agy", "vibe"}
 _PROVIDER_REQUEST_REQUIRED = {
     "schema_version",
     "run_id",

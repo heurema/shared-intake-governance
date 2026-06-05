@@ -20,6 +20,7 @@ class ProviderPresetTests(unittest.TestCase):
             (
                 "claude_readonly_local",
                 "gemini_readonly_local",
+                "agy_readonly_local",
                 "vibe_readonly_local",
             ),
         )
@@ -33,6 +34,20 @@ class ProviderPresetTests(unittest.TestCase):
         self.assertEqual(
             preset["command_hash"],
             provider_command_hash(preset["resolved_command"]),
+        )
+
+        agy_preset = resolve_provider_preset("agy_readonly_local")
+
+        self.assertEqual(agy_preset["provider"], "agy")
+        self.assertEqual(agy_preset["preset_id"], "agy_readonly_local")
+        self.assertEqual(
+            agy_preset["resolved_command"][:2],
+            ["agy", "--sandbox"],
+        )
+        self.assertIn("--print", agy_preset["resolved_command"])
+        self.assertEqual(
+            agy_preset["command_hash"],
+            provider_command_hash(agy_preset["resolved_command"]),
         )
 
     def test_provider_request_must_match_repo_owned_preset(self):

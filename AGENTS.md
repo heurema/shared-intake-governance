@@ -39,8 +39,9 @@ mediation, validated tool execution mediation input, validated provider request,
 validated provider result, explicit governed tool execution with validated
 result writes, repo-owned read-only provider preset allowlists, explicit
 provider command invocation runtime slices without invoke-time command
-overrides, validated tool-intent and governance-decision boundary checks, and
-validated provider adapter input boundaries. Read-only runtime inspection
+overrides, read-only provider preset inspection, validated tool-intent and
+governance-decision boundary checks, and validated provider adapter input
+boundaries. Read-only runtime inspection
 commands validate artifacts before returning summaries or full objects.
 
 No source collector family beyond `github_repo`, `github_search`, `arxiv_query`,

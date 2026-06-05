@@ -368,12 +368,26 @@ Current read-only presets:
 
 - `claude_readonly_local`
 - `gemini_readonly_local`
+- `agy_readonly_local`
 - `vibe_readonly_local`
 
 `claude_readonly_local` intentionally includes a preset-owned instruction
 prompt in `resolved_command`. Current Claude CLI behavior is reliable when the
 raw `provider-request.v1` JSON arrives on stdin as explicitly labeled
 untrusted data; sending the JSON without that framing caused local timeouts.
+`agy_readonly_local` targets the local Google `agy` CLI in sandboxed print
+mode and also includes preset-owned untrusted-data framing.
+
+Inspect the repo-owned allowlist before preparing a request:
+
+```sh
+PYTHONPATH=src python3 -m shared_intake_governance.cli list-provider-presets
+PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-provider-preset \
+  --preset agy_readonly_local
+```
+
+These commands do not invoke providers, read credentials, write runtime
+artifacts, or discover local commands.
 
 ```sh
 PYTHONPATH=src python3 -m shared_intake_governance.cli prepare-provider-request \

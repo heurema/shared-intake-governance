@@ -49,6 +49,7 @@
       "enum": [
         "claude",
         "gemini",
+        "agy",
         "vibe"
       ]
     },
@@ -57,6 +58,7 @@
       "enum": [
         "claude_readonly_local",
         "gemini_readonly_local",
+        "agy_readonly_local",
         "vibe_readonly_local"
       ],
       "minLength": 1,

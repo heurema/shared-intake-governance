@@ -45,6 +45,49 @@ RUN_ID = "20260529T123045Z-deadbeef"
 
 
 class CliPipelineTests(unittest.TestCase):
+    def test_list_provider_presets_outputs_resolved_allowlist(self):
+        stdout = io.StringIO()
+
+        exit_code = main(["list-provider-presets"], stdout=stdout)
+
+        summary = json.loads(stdout.getvalue())
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(summary["provider_preset_count"], 4)
+        self.assertEqual(
+            [preset["preset_id"] for preset in summary["provider_presets"]],
+            [
+                "claude_readonly_local",
+                "gemini_readonly_local",
+                "agy_readonly_local",
+                "vibe_readonly_local",
+            ],
+        )
+        self.assertEqual(
+            summary["provider_presets"][2],
+            provider_presets.resolve_provider_preset("agy_readonly_local"),
+        )
+
+    def test_inspect_provider_preset_outputs_one_resolved_preset(self):
+        stdout = io.StringIO()
+
+        exit_code = main(
+            [
+                "inspect-provider-preset",
+                "--preset",
+                "agy_readonly_local",
+            ],
+            stdout=stdout,
+        )
+
+        summary = json.loads(stdout.getvalue())
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(
+            summary["provider_preset"],
+            provider_presets.resolve_provider_preset("agy_readonly_local"),
+        )
+
     def test_run_github_repo_pipeline_collects_sanitizes_and_projects(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
