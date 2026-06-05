@@ -21,6 +21,7 @@ _COMMAND_HASH = re.compile(r"^sha256:[0-9a-f]{64}$")
 _SAFE_SEGMENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _SOURCE_TYPES = {
     "github_repo",
+    "github_releases",
     "github_search",
     "arxiv_query",
     "rss",

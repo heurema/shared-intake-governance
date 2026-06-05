@@ -185,6 +185,7 @@ arguments.
 Supported Phase 1 source configs:
 
 - `github_repo`
+- `github_releases`
 - `github_search`
 - `arxiv_query`
 - `rss`

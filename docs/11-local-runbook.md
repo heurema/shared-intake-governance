@@ -58,6 +58,22 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli run-source-config \
 Expected output is one JSON summary printed to stdout. The summary includes
 all clean record paths emitted from the GitHub repository search results.
 
+## GitHub releases source
+
+```sh
+export SIG_RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-github-releases"
+
+PYTHONPATH=src python3 -m shared_intake_governance.cli run-source-config \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --profile profiles/examples/code-intel-kernel.json \
+  --source-config sources/examples/github-releases-shared-intake.json \
+  --run-id "$SIG_RUN_ID" \
+  --output-id "$SIG_RUN_ID"
+```
+
+Expected output is one JSON summary printed to stdout. The summary includes
+all clean record paths emitted from the GitHub release results.
+
 ## arXiv explicit query source
 
 ```sh

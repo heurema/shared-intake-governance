@@ -14,6 +14,7 @@ _SAFE_SEGMENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _SOURCE_TRUST = {"official", "maintainer", "platform", "secondary", "social", "unknown"}
 _SOURCE_TYPES = {
     "github_repo",
+    "github_releases",
     "github_search",
     "arxiv_query",
     "news",
@@ -40,6 +41,8 @@ def validate_source_config(config: dict[str, Any]) -> dict[str, Any]:
         raise ValueError(f"unsupported source_type: {source_type}")
     if source_type == "github_repo":
         return _validate_github_repo_config(config)
+    if source_type == "github_releases":
+        return _validate_github_releases_config(config)
     if source_type == "github_search":
         return _validate_query_config(
             config,
@@ -70,6 +73,29 @@ def _validate_github_repo_config(config: dict[str, Any]) -> dict[str, Any]:
     )
     _require_text(config, "owner")
     _require_text(config, "repo")
+    result = dict(config)
+    result.setdefault("api_base_url", "https://api.github.com")
+    _require_https_url(result, "api_base_url")
+    return result
+
+
+def _validate_github_releases_config(config: dict[str, Any]) -> dict[str, Any]:
+    _require_fields(config, {"owner", "repo", "max_results"})
+    _reject_unknown(
+        config,
+        {
+            "schema_version",
+            "source_type",
+            "source_id",
+            "owner",
+            "repo",
+            "max_results",
+            "api_base_url",
+        },
+    )
+    _require_text(config, "owner")
+    _require_text(config, "repo")
+    _require_max_results(config)
     result = dict(config)
     result.setdefault("api_base_url", "https://api.github.com")
     _require_https_url(result, "api_base_url")

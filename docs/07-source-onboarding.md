@@ -25,6 +25,7 @@ If the source is specific to one project's private business logic, keep it in th
 The current contract surface already anticipates these `source_type` values:
 
 - `github_repo`
+- `github_releases`
 - `github_search`
 - `arxiv_query`
 - `rss`
@@ -37,6 +38,8 @@ Current runtime implementation:
 
 - `github_repo` has a minimal read-only collector that calls the GitHub REST
   repository endpoint and writes raw evidence only.
+- `github_releases` has a minimal read-only collector that calls the GitHub
+  REST releases endpoint for one repository and writes raw JSON evidence only.
 - `github_search` has a minimal read-only collector that calls the GitHub REST
   repository search endpoint and writes raw JSON evidence only.
 - `arxiv_query` has a minimal read-only collector that calls the official
@@ -46,9 +49,9 @@ Current runtime implementation:
   URL and writes raw XML evidence only.
 - `news` has a minimal read-only collector that fetches one explicit HTTPS feed
   URL and writes raw XML evidence only.
-- clean-record emission exists for `github_repo` raw JSON, `github_search`
-  raw repository search items, `arxiv_query` raw Atom entries, `rss` XML
-  items, and `news` XML items.
+- clean-record emission exists for `github_repo` raw JSON, `github_releases`
+  raw release items, `github_search` raw repository search items,
+  `arxiv_query` raw Atom entries, `rss` XML items, and `news` XML items.
 
 ## Source selection rules
 
@@ -96,9 +99,9 @@ If you cannot answer these, do not start runtime code yet.
 Decide whether the source can reuse an existing family:
 
 - GitHub repo metadata
+- GitHub releases for one repository
 - GitHub search or activity
 - arXiv query
-- arXiv RSS keywords
 - generic RSS
 - generic news
 - custom

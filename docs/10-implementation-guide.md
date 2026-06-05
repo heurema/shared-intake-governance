@@ -101,6 +101,7 @@ Do not start with a mega-command that hides every phase.
 Current CLI implementation:
 
 - `python -m shared_intake_governance.cli run-github-repo`
+- `python -m shared_intake_governance.cli run-github-releases`
 - `python -m shared_intake_governance.cli run-github-search`
 - `python -m shared_intake_governance.cli run-arxiv-query`
 - `python -m shared_intake_governance.cli run-rss-feed`
@@ -131,6 +132,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli inspect-run`
 - `python -m shared_intake_governance.cli show-source-health`
 - `sources/examples/github-signum.json`
+- `sources/examples/github-releases-shared-intake.json`
 - `sources/examples/github-search-code-agents.json`
 - `sources/examples/arxiv-query-code-agents.json`
 - `sources/examples/news-openai-blog.json`
@@ -139,7 +141,7 @@ Current CLI implementation:
 - `tests/test_cli_pipeline.py`
 
 These commands intentionally cover only the implemented `github_repo`,
-`github_search`, `arxiv_query`, `rss`, and `news` paths.
+`github_releases`, `github_search`, `arxiv_query`, `rss`, and `news` paths.
 They require explicit runtime root, profile path, source-specific inputs or one
 validated `source-config.v1` file, and run/output identifiers. The smoke
 command may allocate an isolated temporary runtime root when none is provided.
@@ -297,11 +299,13 @@ It should not sanitize or score inline.
 Current implementation:
 
 - `src/shared_intake_governance/collector/github_repo.py`
+- `src/shared_intake_governance/collector/github_releases.py`
 - `src/shared_intake_governance/collector/github_search.py`
 - `src/shared_intake_governance/collector/arxiv_query.py`
 - `src/shared_intake_governance/collector/news_feed.py`
 - `src/shared_intake_governance/collector/rss_feed.py`
 - `tests/test_github_repo_collector.py`
+- `tests/test_github_releases_collector.py`
 - `tests/test_github_search_collector.py`
 - `tests/test_arxiv_query_collector.py`
 - `tests/test_news_feed_collector.py`
@@ -325,6 +329,8 @@ Current implementation:
 - raw metadata is validated before sanitizer consumption.
 - sanitizer raw body reads are bounded to the configured runtime raw root.
 - `github_repo` raw JSON maps to one clean record.
+- `github_releases` raw JSON release results map to one clean record per
+  release item.
 - `github_search` raw JSON repository search results map to one clean record
   per repository item.
 - `arxiv_query` raw Atom feeds map to one clean record per entry.
@@ -449,10 +455,10 @@ Still missing:
 - consumer-specific dedupe behavior; implicit profile-state updates remain out
   of current scope unless a new behavior decision replaces the explicit
   `--update-seen-state` gate;
-- source collector families beyond `github_repo`, `github_search`,
-  `arxiv_query`, `rss`, and `news`;
-- sanitizer source mappings beyond `github_repo`, `github_search`,
-  `arxiv_query`, `rss`, and `news`;
+- source collector families beyond `github_repo`, `github_releases`,
+  `github_search`, `arxiv_query`, `rss`, and `news`;
+- sanitizer source mappings beyond `github_repo`, `github_releases`,
+  `github_search`, `arxiv_query`, `rss`, and `news`;
 - provider/tool command discovery, credential mapping, or presets beyond the
   repo-owned read-only provider allowlist.
 

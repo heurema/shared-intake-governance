@@ -155,6 +155,7 @@ If a source is degraded, the system should say so explicitly instead of hiding i
 Current CLI behavior:
 
 - `run-github-repo` writes one run manifest under `runs/`;
+- `run-github-releases` writes one run manifest under `runs/`;
 - `run-github-search` writes one run manifest under `runs/`;
 - `run-arxiv-query` writes one run manifest under `runs/`;
 - `run-rss-feed` writes one run manifest under `runs/`;

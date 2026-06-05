@@ -12,6 +12,11 @@ from .github_repo import (
     HttpRequest,
     HttpResponse,
 )
+from .github_releases import (
+    GitHubReleasesCollectionResult,
+    GitHubReleasesCollector,
+    GitHubReleasesSource,
+)
 from .github_search import (
     GitHubSearchCollectionResult,
     GitHubSearchCollector,
@@ -35,6 +40,9 @@ __all__ = [
     "GitHubRepoCollectionResult",
     "GitHubRepoCollector",
     "GitHubRepoSource",
+    "GitHubReleasesCollectionResult",
+    "GitHubReleasesCollector",
+    "GitHubReleasesSource",
     "GitHubSearchCollectionResult",
     "GitHubSearchCollector",
     "GitHubSearchSource",

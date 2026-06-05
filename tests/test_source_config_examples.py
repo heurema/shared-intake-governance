@@ -25,6 +25,7 @@ class SourceConfigExampleTests(unittest.TestCase):
             [path.name for path in example_paths],
             [
                 "arxiv-query-code-agents.json",
+                "github-releases-shared-intake.json",
                 "github-search-code-agents.json",
                 "github-signum.json",
                 "news-openai-blog.json",
@@ -42,12 +43,14 @@ class SourceConfigExampleTests(unittest.TestCase):
                 "source-config.v1",
                 "source-config.v1",
                 "source-config.v1",
+                "source-config.v1",
             ],
         )
         self.assertEqual(
             [config["source_type"] for config in configs],
             [
                 "arxiv_query",
+                "github_releases",
                 "github_search",
                 "github_repo",
                 "news",
@@ -58,6 +61,7 @@ class SourceConfigExampleTests(unittest.TestCase):
             [config["source_id"] for config in configs],
             [
                 "arxiv-query-code-agents",
+                "github-releases-shared-intake",
                 "github-search-code-agents",
                 "github-signum",
                 "news-openai-blog",
@@ -99,6 +103,25 @@ class SourceConfigExampleTests(unittest.TestCase):
             )
 
             with self.assertRaises(ValueError):
+                load_source_config(config_path)
+
+    def test_github_releases_source_config_requires_owner_repo_and_max_results(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            config_path = Path(tmp_dir) / "source-config.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": "source-config.v1",
+                        "source_type": "github_releases",
+                        "source_id": "github-releases-shared-intake",
+                        "owner": "heurema",
+                        "repo": "shared-intake-governance",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "missing required fields"):
                 load_source_config(config_path)
 
     def test_rss_source_config_requires_feed_url(self):
@@ -226,6 +249,7 @@ class SourceConfigExampleTests(unittest.TestCase):
             [(source_type, field) for source_type, field, _ in url_fields],
             [
                 ("github_repo", "api_base_url"),
+                ("github_releases", "api_base_url"),
                 ("github_search", "api_base_url"),
                 ("arxiv_query", "api_base_url"),
                 ("rss", "feed_url"),
@@ -253,6 +277,7 @@ class SourceConfigExampleTests(unittest.TestCase):
             ],
             [
                 ("github_repo", SAFE_SEGMENT_PATTERN),
+                ("github_releases", SAFE_SEGMENT_PATTERN),
                 ("github_search", SAFE_SEGMENT_PATTERN),
                 ("arxiv_query", SAFE_SEGMENT_PATTERN),
                 ("rss", SAFE_SEGMENT_PATTERN),

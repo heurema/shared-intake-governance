@@ -32,7 +32,7 @@ This repository is not:
 
 Several local projects already consume overlapping upstream signals such as:
 
-- GitHub repositories and searches;
+- GitHub repositories, releases, and searches;
 - arXiv feeds and queries;
 - RSS and news sources;
 - official project sites.
@@ -69,12 +69,13 @@ What exists now:
 - minimal runtime path helpers and raw payload, validated and raw-root bounded
   raw metadata, and validated run manifest writers;
 - minimal read-only `github_repo` collector that writes raw evidence only;
+- minimal read-only `github_releases` collector that writes raw evidence only;
 - minimal read-only `github_search` collector that writes raw evidence only;
 - minimal read-only `arxiv_query` collector that writes raw evidence only;
 - minimal read-only `rss` collector that writes raw evidence only;
 - minimal read-only `news` collector that writes raw evidence only;
 - minimal clean-record emitter with validated raw metadata input and raw-root
-  bounded body reads for `github_repo`, `github_search`,
+  bounded body reads for `github_repo`, `github_releases`, `github_search`,
   `arxiv_query`, `rss`, and `news` raw evidence;
 - profile-projection contract for deterministic per-profile report artifacts;
 - minimal explicit-profile projector that writes deterministic JSON reports;
@@ -83,8 +84,9 @@ What exists now:
 - profile-state contract and validator for profile-local runtime state artifacts;
 - explicit `update-profile-seen-state` CLI that merges one profile report into
   a profile-local `seen_records` state artifact;
-- narrow local CLI commands for `github_repo`, `github_search`, `arxiv_query`,
-  `rss`, and `news` collect, sanitize, and project paths;
+- narrow local CLI commands for `github_repo`, `github_releases`,
+  `github_search`, `arxiv_query`, `rss`, and `news` collect, sanitize, and
+  project paths;
 - multi-profile CLI command that projects existing clean cache into multiple
   explicit profile reports;
 - explicit `project-profiles --update-seen-state` flag that merges each
@@ -125,10 +127,10 @@ What exists now:
 
 What does not exist yet:
 
-- source collector families beyond `github_repo`, `github_search`,
-  `arxiv_query`, `rss`, and `news`;
-- sanitizer source mappings beyond `github_repo`, `github_search`,
-  `arxiv_query`, `rss`, and `news`;
+- source collector families beyond `github_repo`, `github_releases`,
+  `github_search`, `arxiv_query`, `rss`, and `news`;
+- sanitizer source mappings beyond `github_repo`, `github_releases`,
+  `github_search`, `arxiv_query`, `rss`, and `news`;
 - the retired `arxiv_rss_keywords` family; use `arxiv_query` for arXiv query
   transport or `rss` for explicit feed transport;
 - multi-profile report shaping beyond deterministic per-profile JSON;

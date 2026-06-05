@@ -39,6 +39,7 @@ clean-record emission, projection support, source-health output, and run
 manifest output for:
 
 - `github_repo`
+- `github_releases`
 - `github_search`
 - `arxiv_query`
 - `rss`
@@ -127,6 +128,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-05:
 
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 220 tests
+  after adding the read-only `github_releases` source family.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 210 tests
   after adding read-only provider preset inspection commands and
   `agy_readonly_local`.
