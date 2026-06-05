@@ -250,6 +250,8 @@ safe runtime path segments.
 `generated_at` must follow the shared `date-time` validation rule.
 `items_written` must match the number of emitted `items`, and
 `clean_records_seen` must equal `items_written` plus all exclusion counts.
+Current exclusion counts are `excluded_by_source`, `excluded_by_keyword`,
+`excluded_by_risk`, `excluded_quarantined`, and `excluded_seen`.
 
 ## Profile state
 
@@ -285,9 +287,11 @@ define consumer publication or ranking dedupe policy.
 The current `seen_records` update paths are explicit: `update-profile-seen-state`
 merges record ids from one `profile-projection.v1` report into one
 profile-local state file, and `project-profiles --update-seen-state` applies
-the same merge to each generated profile report. Projection does not update
-state unless that flag is provided, and the core still does not define consumer
-publication or dedupe policy.
+the same merge to each generated profile report. `project-profiles
+--exclude-seen-state` can read the same profile-local `seen_records` state and
+omit matching record ids from a new projection report without updating state.
+Projection does not update state unless the update flag is provided, and the
+core still does not define consumer publication or dedupe policy.
 
 ## Profile loading rules
 

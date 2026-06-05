@@ -1598,6 +1598,7 @@ class CliPipelineTests(unittest.TestCase):
                         "projection_path": str(code_report_path),
                         "clean_records_seen": 3,
                         "items_written": 2,
+                        "excluded_seen": 0,
                     },
                     {
                         "profile_id": "agent-bench-lab",
@@ -1605,6 +1606,7 @@ class CliPipelineTests(unittest.TestCase):
                         "projection_path": str(bench_report_path),
                         "clean_records_seen": 3,
                         "items_written": 1,
+                        "excluded_seen": 0,
                     },
                 ],
             )
@@ -1745,6 +1747,7 @@ class CliPipelineTests(unittest.TestCase):
                         "projection_path": str(code_report_path),
                         "clean_records_seen": 2,
                         "items_written": 2,
+                        "excluded_seen": 0,
                         "profile_state_id": "seen-records",
                         "profile_state_path": str(code_state_path),
                         "profile_state_record_count": 3,
@@ -1755,6 +1758,7 @@ class CliPipelineTests(unittest.TestCase):
                         "projection_path": str(bench_report_path),
                         "clean_records_seen": 2,
                         "items_written": 1,
+                        "excluded_seen": 0,
                         "profile_state_id": "seen-records",
                         "profile_state_path": str(bench_state_path),
                         "profile_state_record_count": 1,
@@ -1770,6 +1774,144 @@ class CliPipelineTests(unittest.TestCase):
                 ],
             )
             self.assertEqual(bench_state["record_ids"], ["arxiv_query-good"])
+
+    def test_project_profiles_can_exclude_seen_state_without_updating_state(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            paths = RuntimePaths(root / "runtime")
+            _write_clean_record(
+                paths,
+                {
+                    "record_id": "github_repo-good",
+                    "source_id": "github-signum",
+                    "source_type": "github_repo",
+                    "canonical_url": "https://github.com/heurema/signum",
+                    "title": "heurema/signum",
+                    "sanitized_summary": "Coding agent benchmark toolkit.",
+                    "published_at": "2025-01-02T03:04:05Z",
+                    "license_or_terms_note": "license: Apache-2.0",
+                    "source_trust": "platform",
+                    "risk_flags": [],
+                    "quarantined": False,
+                    "raw_hash": "raw-github",
+                    "sanitizer_version": "clean-record.v1",
+                },
+            )
+            _write_clean_record(
+                paths,
+                {
+                    "record_id": "arxiv_query-good",
+                    "source_id": "arxiv-code-agents",
+                    "source_type": "arxiv_query",
+                    "canonical_url": "http://arxiv.org/abs/2605.00001v1",
+                    "title": "Coding Agent Benchmark",
+                    "sanitized_summary": "Benchmark for coding agents.",
+                    "published_at": "2026-05-28T10:00:00Z",
+                    "license_or_terms_note": None,
+                    "source_trust": "official",
+                    "risk_flags": [],
+                    "quarantined": False,
+                    "raw_hash": "raw-arxiv-good",
+                    "sanitizer_version": "clean-record.v1",
+                },
+            )
+            code_profile_path = _write_profile_file(
+                root,
+                "code-profile.json",
+                {
+                    "profile_id": "code-intel-kernel",
+                    "description": "Code intelligence research intake.",
+                    "accepted_sources": ["github_repo", "arxiv_query"],
+                    "keywords": ["coding agent"],
+                    "required_risk_flags_absent": ["instruction_like_content"],
+                    "output_mode": "research_digest",
+                },
+            )
+            bench_profile_path = _write_profile_file(
+                root,
+                "bench-profile.json",
+                {
+                    "profile_id": "agent-bench-lab",
+                    "description": "Benchmark tracking.",
+                    "accepted_sources": ["arxiv_query"],
+                    "keywords": ["benchmark"],
+                    "required_risk_flags_absent": ["instruction_like_content"],
+                    "output_mode": "benchmark_brief",
+                },
+            )
+            code_state_path = _write_profile_state(
+                paths,
+                profile_id="code-intel-kernel",
+                state_id="seen-records",
+                state_kind="seen_records",
+                record_ids=["github_repo-good"],
+            )
+            original_code_state = json.loads(
+                code_state_path.read_text(encoding="utf-8")
+            )
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "project-profiles",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--profile",
+                    str(code_profile_path),
+                    "--profile",
+                    str(bench_profile_path),
+                    "--output-id",
+                    RUN_ID,
+                    "--exclude-seen-state",
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            code_report_path = paths.profile_reports_dir("code-intel-kernel") / (
+                f"{RUN_ID}.json"
+            )
+            bench_report_path = paths.profile_reports_dir("agent-bench-lab") / (
+                f"{RUN_ID}.json"
+            )
+            code_report = json.loads(code_report_path.read_text(encoding="utf-8"))
+            bench_report = json.loads(bench_report_path.read_text(encoding="utf-8"))
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(
+                summary["projections"],
+                [
+                    {
+                        "profile_id": "code-intel-kernel",
+                        "output_mode": "research_digest",
+                        "projection_path": str(code_report_path),
+                        "clean_records_seen": 2,
+                        "items_written": 1,
+                        "excluded_seen": 1,
+                    },
+                    {
+                        "profile_id": "agent-bench-lab",
+                        "output_mode": "benchmark_brief",
+                        "projection_path": str(bench_report_path),
+                        "clean_records_seen": 2,
+                        "items_written": 1,
+                        "excluded_seen": 0,
+                    },
+                ],
+            )
+            self.assertEqual(
+                [item["record_id"] for item in code_report["items"]],
+                ["arxiv_query-good"],
+            )
+            self.assertEqual(code_report["counts"]["excluded_seen"], 1)
+            self.assertEqual(bench_report["counts"]["excluded_seen"], 0)
+            self.assertEqual(
+                json.loads(code_state_path.read_text(encoding="utf-8")),
+                original_code_state,
+            )
+            self.assertFalse(
+                paths.profile_state_path("agent-bench-lab", "seen-records").exists()
+            )
 
     def test_list_profile_reports_summarizes_reports_without_writes(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -3830,6 +3972,7 @@ def _write_profile_report(paths, *, profile_id, output_id, output_mode, items):
             "excluded_by_keyword": 0,
             "excluded_by_risk": 0,
             "excluded_quarantined": 0,
+            "excluded_seen": 0,
         },
         "items": report_items,
     }

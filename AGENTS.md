@@ -29,7 +29,7 @@ collectors, clean-record emitters
 for `github_repo`, `github_releases`, `github_search`, `arxiv_query`, `rss`,
 and `news`,
 one validated explicit-profile JSON projector, explicit validated profile
-seen-state updates, and
+seen-state filtering and updates, and
 narrow local CLI commands for the current `github_repo`, `github_releases`,
 `github_search`, `arxiv_query`, `rss`, `news`, and `source-config.v1` paths with
 validated source config input, raw-root bounded raw metadata, run manifest, and
@@ -50,7 +50,9 @@ No source collector family beyond `github_repo`, `github_releases`,
 `github_search`, `arxiv_query`, `rss`, and `news`, sanitizer source mapping
 beyond those six source types,
 automatic or implicit profile-state updates beyond the explicit
-`--update-seen-state` gate, automatic command discovery, credential mapping,
+`--update-seen-state` gate, profile-state filtering beyond the explicit
+`project-profiles --exclude-seen-state` gate, automatic command discovery,
+credential mapping,
 provider/tool presets beyond the repo-owned read-only provider allowlist, or
 multi-profile report shaping exists yet.
 The retired `arxiv_rss_keywords` family is not active source surface; use

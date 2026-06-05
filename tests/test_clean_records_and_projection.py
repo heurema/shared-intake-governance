@@ -686,6 +686,7 @@ class ProfileProjectorTests(unittest.TestCase):
                     "excluded_by_keyword": 1,
                     "excluded_by_risk": 1,
                     "excluded_quarantined": 1,
+                    "excluded_seen": 0,
                 },
             )
             self.assertEqual(len(first.report["items"]), 1)
@@ -695,6 +696,65 @@ class ProfileProjectorTests(unittest.TestCase):
                 "https://example.test/github_repo-good",
             )
             validate_profile_projection(first.report)
+
+    def test_projector_can_exclude_explicit_seen_record_ids(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            _write_clean(
+                paths,
+                _clean_record(
+                    "github_repo",
+                    "Coding agent benchmark",
+                    record_id="github_repo-seen",
+                ),
+            )
+            _write_clean(
+                paths,
+                _clean_record(
+                    "github_repo",
+                    "Coding agent benchmark",
+                    record_id="github_repo-new",
+                ),
+            )
+            profile_path = Path(tmp_dir) / "profile.json"
+            profile_path.write_text(
+                json.dumps(
+                    {
+                        "profile_id": "code-intel-kernel",
+                        "description": "Code intelligence research intake.",
+                        "accepted_sources": ["github_repo"],
+                        "keywords": ["coding agent"],
+                        "required_risk_flags_absent": ["instruction_like_content"],
+                        "output_mode": "research_digest",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            projection = ProfileProjector(paths).project(
+                profile_path,
+                output_id=RUN_ID,
+                generated_at=FETCHED_AT,
+                exclude_record_ids={"github_repo-seen"},
+            )
+
+            self.assertEqual(
+                projection.report["counts"],
+                {
+                    "clean_records_seen": 2,
+                    "items_written": 1,
+                    "excluded_by_source": 0,
+                    "excluded_by_keyword": 0,
+                    "excluded_by_risk": 0,
+                    "excluded_quarantined": 0,
+                    "excluded_seen": 1,
+                },
+            )
+            self.assertEqual(
+                [item["record_id"] for item in projection.report["items"]],
+                ["github_repo-new"],
+            )
+            validate_profile_projection(projection.report)
 
     def test_profile_projection_validation_rejects_contract_drift(self):
         valid_report = _profile_projection_report()
@@ -1087,6 +1147,7 @@ def _profile_projection_report():
             "excluded_by_keyword": 0,
             "excluded_by_risk": 0,
             "excluded_quarantined": 0,
+            "excluded_seen": 0,
         },
         "items": [
             {

@@ -89,6 +89,9 @@ What exists now:
   project paths;
 - multi-profile CLI command that projects existing clean cache into multiple
   explicit profile reports;
+- explicit `project-profiles --exclude-seen-state` flag that reads each
+  profile's `seen_records` state artifact and omits already-seen record ids
+  from that projection report without updating state;
 - explicit `project-profiles --update-seen-state` flag that merges each
   generated report into that profile's `seen_records` state artifact;
 - config-driven one-source CLI command for source definitions stored in JSON;
@@ -134,9 +137,9 @@ What does not exist yet:
 - the retired `arxiv_rss_keywords` family; use `arxiv_query` for arXiv query
   transport or `rss` for explicit feed transport;
 - multi-profile report shaping beyond deterministic per-profile JSON;
-- consumer-specific dedupe behavior; implicit profile-state updates remain out
-  of current scope unless a new behavior decision replaces the explicit
-  `--update-seen-state` gate;
+- consumer-specific dedupe behavior beyond explicit seen-record filtering;
+  implicit profile-state updates remain out of current scope unless a new
+  behavior decision replaces the explicit `--update-seen-state` gate;
 - automatic command discovery, credential mapping, or provider/tool presets
   beyond the repo-owned read-only provider allowlist;
 - SQLite;

@@ -58,6 +58,7 @@ from shared_intake_governance.provider_presets import (
 )
 from shared_intake_governance.projector import (
     ProfileProjector,
+    load_seen_records_state,
     load_profile,
     update_seen_records_state,
     validate_profile_projection,
@@ -880,10 +881,21 @@ def _project_profiles(args: argparse.Namespace, stdout: TextIO) -> int:
     projections = []
     projector = ProfileProjector(paths)
     for profile_path in profile_paths:
+        profile = load_profile(profile_path)
+        exclude_record_ids: set[str] = set()
+        if args.exclude_seen_state:
+            seen_state = load_seen_records_state(
+                paths=paths,
+                profile_id=profile["profile_id"],
+                state_id=args.state_id,
+            )
+            if seen_state is not None:
+                exclude_record_ids = set(seen_state.state["record_ids"])
         projection = projector.project(
             profile_path,
             output_id=output_id,
             generated_at=generated_at,
+            exclude_record_ids=exclude_record_ids,
         )
         projection_summary = {
             "profile_id": projection.report["profile_id"],
@@ -893,6 +905,7 @@ def _project_profiles(args: argparse.Namespace, stdout: TextIO) -> int:
                 "clean_records_seen"
             ],
             "items_written": projection.report["counts"]["items_written"],
+            "excluded_seen": projection.report["counts"]["excluded_seen"],
         }
         if args.update_seen_state:
             profile_state = update_seen_records_state(
@@ -1849,9 +1862,16 @@ def _parser() -> argparse.ArgumentParser:
         help="Explicitly merge projected item IDs into profile-local seen state.",
     )
     project_profiles.add_argument(
+        "--exclude-seen-state",
+        action="store_true",
+        help="Exclude records already present in profile-local seen state.",
+    )
+    project_profiles.add_argument(
         "--state-id",
         default="seen-records",
-        help="Profile state id to update when --update-seen-state is set.",
+        help=(
+            "Profile state id to read or update when seen-state flags are set."
+        ),
     )
 
     list_runs = subparsers.add_parser(

@@ -216,6 +216,7 @@ def _profile_report(profile_id):
             "excluded_by_keyword": 0,
             "excluded_by_risk": 0,
             "excluded_quarantined": 0,
+            "excluded_seen": 0,
         },
         "items": [
             _projection_item(

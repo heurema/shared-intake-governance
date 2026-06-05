@@ -61,6 +61,7 @@ Current runtime code covers:
 - source-config validation and examples;
 - clean-record emission from implemented source families;
 - deterministic profile projection from the clean cache;
+- explicit profile seen-state filtering during multi-profile projection;
 - explicit profile seen-state updates;
 - read-only runtime inspection commands;
 - governance decision evaluation and optional audit logging;
@@ -83,6 +84,8 @@ runtime paths consume them:
 - source health counts must match success/failure counts;
 - terminal run manifests must carry matching source-health refs;
 - projection counts must match emitted and excluded records;
+- projection counts include explicit `excluded_seen` records when a profile
+  seen-state filter is applied;
 - profile seen-state record ids must be safe path segments, sorted, and unique;
 - GitHub `source-config.v1` `owner` and `repo` values are rejected unless they
   are safe GitHub path segments before collectors derive request URLs;
@@ -120,7 +123,7 @@ Do not treat these as missing bugs without a new behavior decision:
 - source collector families beyond the implemented families listed above;
 - sanitizer mappings beyond the implemented families listed above;
 - consumer-specific ranking, editorial shaping, or dedupe policy;
-- implicit profile-state updates without an explicit gate;
+- implicit profile-state reads or updates without an explicit gate;
 - automatic command discovery;
 - credential mapping or provider/tool presets beyond the repo-owned read-only
   provider allowlist;
@@ -130,6 +133,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-05:
 
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 224 tests
+  after adding explicit seen-state filtering to `project-profiles`.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 222 tests
   after hardening GitHub `owner` and `repo` source-config validation.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 220 tests
@@ -216,6 +221,18 @@ Live isolated source smoke on 2026-06-05:
   `https://github.com/heurema/repo-governance/releases`;
 - read-only inspection commands validated the smoke run manifest, source
   health artifact, profile report, and clean record summaries.
+
+Local profile-state filtering receipt on 2026-06-05:
+
+- command: `project-profiles` with a temporary runtime root outside the
+  repository, a temporary profile, and `--exclude-seen-state`;
+- input: 2 validated clean records and one profile-local
+  `seen-records.json` containing `github_repo-seen`;
+- result: `clean_records_seen=2`, `excluded_seen=1`, `items_written=1`;
+- output item: `github_repo-new`;
+- read-only `inspect-profile-report` validated the generated
+  `profile-projection.v1` report;
+- the existing `seen-records.json` state artifact was not modified.
 
 ## Verification commands
 

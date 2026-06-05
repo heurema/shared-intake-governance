@@ -44,7 +44,8 @@
         "excluded_by_source",
         "excluded_by_keyword",
         "excluded_by_risk",
-        "excluded_quarantined"
+        "excluded_quarantined",
+        "excluded_seen"
       ],
       "properties": {
         "clean_records_seen": {
@@ -68,6 +69,10 @@
           "minimum": 0
         },
         "excluded_quarantined": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "excluded_seen": {
           "type": "integer",
           "minimum": 0
         }
