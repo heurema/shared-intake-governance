@@ -84,6 +84,8 @@ runtime paths consume them:
 - terminal run manifests must carry matching source-health refs;
 - projection counts must match emitted and excluded records;
 - profile seen-state record ids must be safe path segments, sorted, and unique;
+- GitHub `source-config.v1` `owner` and `repo` values are rejected unless they
+  are safe GitHub path segments before collectors derive request URLs;
 - governance, tool-execution, and provider adapter artifacts reject unsafe
   `profile_id` values before those profile-scoped identities move across
   policy, mediation, execution, or provider boundaries;
@@ -128,6 +130,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-05:
 
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 222 tests
+  after hardening GitHub `owner` and `repo` source-config validation.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 220 tests
   after adding the read-only `github_releases` source family.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 210 tests

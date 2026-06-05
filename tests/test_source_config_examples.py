@@ -193,6 +193,42 @@ class SourceConfigExampleTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "between 1 and 100"):
             validate_source_config(bad_max_results)
 
+    def test_github_source_configs_reject_unsafe_owner_or_repo_segments(self):
+        valid_configs = [
+            {
+                "schema_version": "source-config.v1",
+                "source_type": "github_repo",
+                "source_id": "github-signum",
+                "owner": "heurema",
+                "repo": "signum",
+            },
+            {
+                "schema_version": "source-config.v1",
+                "source_type": "github_releases",
+                "source_id": "github-releases-shared-intake",
+                "owner": "heurema",
+                "repo": "shared-intake-governance",
+                "max_results": 5,
+            },
+        ]
+        invalid_values = ["../heurema", "heurema/project", "bad space", ""]
+
+        for valid in valid_configs:
+            for field in ("owner", "repo"):
+                for invalid_value in invalid_values:
+                    config = dict(valid)
+                    config[field] = invalid_value
+                    with self.subTest(
+                        source_type=valid["source_type"],
+                        field=field,
+                        invalid_value=invalid_value,
+                    ):
+                        with self.assertRaisesRegex(
+                            ValueError,
+                            f"{field} must be a safe GitHub path segment",
+                        ):
+                            validate_source_config(config)
+
     def test_rss_source_config_rejects_unsupported_source_trust(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             config_path = Path(tmp_dir) / "source-config.json"
@@ -282,6 +318,30 @@ class SourceConfigExampleTests(unittest.TestCase):
                 ("arxiv_query", SAFE_SEGMENT_PATTERN),
                 ("rss", SAFE_SEGMENT_PATTERN),
                 ("news", SAFE_SEGMENT_PATTERN),
+            ],
+        )
+
+    def test_source_config_schema_tracks_github_owner_repo_constraints(self):
+        schema = json.loads(
+            (ROOT / "schemas" / "source-config.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+
+        self.assertEqual(
+            [
+                (
+                    variant["properties"]["source_type"]["const"],
+                    variant["properties"].get("owner", {}).get("pattern"),
+                    variant["properties"].get("repo", {}).get("pattern"),
+                )
+                for variant in schema["oneOf"]
+                if variant["properties"]["source_type"]["const"]
+                in {"github_repo", "github_releases"}
+            ],
+            [
+                ("github_repo", SAFE_SEGMENT_PATTERN, SAFE_SEGMENT_PATTERN),
+                ("github_releases", SAFE_SEGMENT_PATTERN, SAFE_SEGMENT_PATTERN),
             ],
         )
 

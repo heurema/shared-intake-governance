@@ -11,6 +11,7 @@ from shared_intake_governance.validation import require_https_url
 
 
 _SAFE_SEGMENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+_GITHUB_PATH_SEGMENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _SOURCE_TRUST = {"official", "maintainer", "platform", "secondary", "social", "unknown"}
 _SOURCE_TYPES = {
     "github_repo",
@@ -71,8 +72,8 @@ def _validate_github_repo_config(config: dict[str, Any]) -> dict[str, Any]:
             "api_base_url",
         },
     )
-    _require_text(config, "owner")
-    _require_text(config, "repo")
+    _github_path_segment(config.get("owner"), "owner")
+    _github_path_segment(config.get("repo"), "repo")
     result = dict(config)
     result.setdefault("api_base_url", "https://api.github.com")
     _require_https_url(result, "api_base_url")
@@ -93,8 +94,8 @@ def _validate_github_releases_config(config: dict[str, Any]) -> dict[str, Any]:
             "api_base_url",
         },
     )
-    _require_text(config, "owner")
-    _require_text(config, "repo")
+    _github_path_segment(config.get("owner"), "owner")
+    _github_path_segment(config.get("repo"), "repo")
     _require_max_results(config)
     result = dict(config)
     result.setdefault("api_base_url", "https://api.github.com")
@@ -178,6 +179,12 @@ def _require_text(config: dict[str, Any], field: str) -> None:
 def _safe_segment(value: str, label: str) -> str:
     if not _SAFE_SEGMENT.fullmatch(value):
         raise ValueError(f"{label} must be a safe path segment")
+    return value
+
+
+def _github_path_segment(value: Any, label: str) -> str:
+    if not isinstance(value, str) or not _GITHUB_PATH_SEGMENT.fullmatch(value):
+        raise ValueError(f"{label} must be a safe GitHub path segment")
     return value
 
 
