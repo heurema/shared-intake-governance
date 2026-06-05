@@ -183,6 +183,24 @@ Live isolated source smoke on 2026-06-05:
 - read-only inspection commands validated the smoke run manifest, source
   health artifact, and profile report.
 
+Live isolated source smoke on 2026-06-05:
+
+- command: `smoke-source-config` with
+  `sources/examples/github-releases-repo-governance.json` and
+  `profiles/examples/code-intel-kernel.json`;
+- runtime policy: temporary runtime root outside the repository with
+  `SMOKE_RUNTIME_DO_NOT_COMMIT.txt`;
+- result: `status=completed`, `fetch_status=success`, `http_status=200`;
+- output: 1 raw payload, 1 raw metadata artifact, 3 clean records, 1
+  projection report, 0 projected items, 1 run manifest, and 1 healthy source
+  health artifact;
+- upstream payload was a valid JSON array with 3 release items at smoke time;
+- projected items were 0 because the example profile does not accept
+  `github_releases`; this smoke proves the non-empty collection and
+  clean-record emission path;
+- read-only inspection commands validated the smoke run manifest, source
+  health artifact, and profile report.
+
 ## Verification commands
 
 Use these checks after runtime or contract changes:

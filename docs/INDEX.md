@@ -88,6 +88,7 @@ Use this file as the main navigation layer.
 - [../profiles/examples/agent-bench-lab.json](../profiles/examples/agent-bench-lab.json)
 - [../profiles/examples/pulse.json](../profiles/examples/pulse.json)
 - [../sources/examples/github-signum.json](../sources/examples/github-signum.json)
+- [../sources/examples/github-releases-repo-governance.json](../sources/examples/github-releases-repo-governance.json)
 - [../sources/examples/github-releases-shared-intake.json](../sources/examples/github-releases-shared-intake.json)
 - [../sources/examples/github-search-code-agents.json](../sources/examples/github-search-code-agents.json)
 - [../sources/examples/arxiv-query-code-agents.json](../sources/examples/arxiv-query-code-agents.json)

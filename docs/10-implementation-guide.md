@@ -132,6 +132,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli inspect-run`
 - `python -m shared_intake_governance.cli show-source-health`
 - `sources/examples/github-signum.json`
+- `sources/examples/github-releases-repo-governance.json`
 - `sources/examples/github-releases-shared-intake.json`
 - `sources/examples/github-search-code-agents.json`
 - `sources/examples/arxiv-query-code-agents.json`
