@@ -52,6 +52,7 @@ _PROJECTION_COUNT_REQUIRED = {
     "excluded_by_keyword",
     "excluded_by_risk",
     "excluded_quarantined",
+    "excluded_seen",
 }
 _PROJECTION_ITEM_REQUIRED = {
     "record_id",
@@ -84,10 +85,12 @@ class ProfileProjector:
         *,
         output_id: str,
         generated_at: datetime | None = None,
+        exclude_record_ids: set[str] | None = None,
     ) -> ProfileProjectionWrite:
         profile = load_profile(profile_path)
         generated_at_text = _format_utc(generated_at or datetime.now(timezone.utc))
         output_segment = _safe_segment(output_id, "output_id")
+        seen_record_ids = _normalize_record_ids(exclude_record_ids or set())
 
         counts = {
             "clean_records_seen": 0,
@@ -96,6 +99,7 @@ class ProfileProjector:
             "excluded_by_keyword": 0,
             "excluded_by_risk": 0,
             "excluded_quarantined": 0,
+            "excluded_seen": 0,
         }
         items = []
 
@@ -115,6 +119,9 @@ class ProfileProjector:
                 continue
             if record["quarantined"]:
                 counts["excluded_quarantined"] += 1
+                continue
+            if record["record_id"] in seen_record_ids:
+                counts["excluded_seen"] += 1
                 continue
 
             items.append(_project_item(record))
@@ -219,6 +226,7 @@ def validate_profile_projection(report: dict[str, Any]) -> None:
         + counts["excluded_by_keyword"]
         + counts["excluded_by_risk"]
         + counts["excluded_quarantined"]
+        + counts["excluded_seen"]
     )
     if counts["clean_records_seen"] != counted_records:
         raise ValueError(
@@ -265,6 +273,15 @@ def _matches_keywords(record: dict[str, Any], keywords: list[str]) -> bool:
         return True
     haystack = f"{record['title']} {record['sanitized_summary']}".lower()
     return any(keyword.lower() in haystack for keyword in keywords)
+
+
+def _normalize_record_ids(record_ids: set[str]) -> set[str]:
+    normalized = set()
+    for record_id in record_ids:
+        if not isinstance(record_id, str) or not record_id:
+            raise ValueError("record_id must be a non-empty string")
+        normalized.add(_safe_segment(record_id, "record_id"))
+    return normalized
 
 
 def _project_item(record: dict[str, Any]) -> dict[str, Any]:

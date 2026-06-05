@@ -31,6 +31,34 @@ class ProfileStateWrite:
     path: Path
 
 
+@dataclass(frozen=True)
+class ProfileStateRead:
+    state: dict[str, Any]
+    path: Path
+
+
+def load_seen_records_state(
+    *,
+    paths: RuntimePaths,
+    profile_id: str,
+    state_id: str,
+) -> ProfileStateRead | None:
+    """Read a profile-local seen-records state without creating it."""
+    path = paths.profile_state_path(profile_id, state_id)
+    if not path.exists():
+        return None
+
+    state = _read_json(path)
+    validate_profile_state(state)
+    if state["profile_id"] != profile_id:
+        raise ValueError("profile state does not match profile_id")
+    if state["state_id"] != state_id:
+        raise ValueError("profile state does not match state_id")
+    if state["state_kind"] != "seen_records":
+        raise ValueError("profile state must be seen_records")
+    return ProfileStateRead(state=state, path=path)
+
+
 def update_seen_records_state(
     *,
     paths: RuntimePaths,

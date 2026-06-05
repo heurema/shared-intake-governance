@@ -157,11 +157,14 @@ The `project-profiles` command reads the shared clean cache and writes one
 deterministic report per explicit profile path. With `--update-seen-state`, it
 also merges each generated report into that profile's local `seen_records`
 state artifact.
+With `--exclude-seen-state`, it reads each profile's local `seen_records`
+state artifact and omits already-seen record ids from that report without
+updating state.
 The profile-state inspection commands read existing `profile-state.v1`
 artifacts only. The profile seen-state update command explicitly merges record
 ids from one `profile-projection.v1` report into one `seen_records` state
 artifact, validating existing and updated profile state. `project-profiles`
-still does not update seen state implicitly or change projection behavior.
+still does not update seen state implicitly.
 The governance evaluator reads one `tool-intent.v1` file and prints one
 `governance-decision.v1` decision; when `--runtime-root` and `--run-id` are
 provided together, it validates and appends one `governance-audit-event.v1`
@@ -361,6 +364,9 @@ Current implementation:
   updates consume them.
 - `project-profiles` CLI can run the same projector for multiple explicit
   profile paths from one clean cache.
+- `project-profiles --exclude-seen-state` can explicitly read each generated
+  profile's local `seen_records` state file and omit matching record ids from
+  the projection report without updating state.
 - `project-profiles --update-seen-state` can explicitly merge each generated
   projection report into that profile's local `seen_records` state file.
 - `update-profile-seen-state` CLI can explicitly merge one projection report
