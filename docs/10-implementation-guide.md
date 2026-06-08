@@ -166,6 +166,10 @@ The repo-local `scripts/check_source_type_consistency.py` guard compares
 source type lists across code, schemas, and
 `docs/12-current-surface-audit.md`. Run it after adding, removing, or retiring a
 source type so contract/runtime/docs drift is caught before review.
+The repo-local `scripts/check_provider_surface_consistency.py` guard compares
+provider and provider-preset lists across the repo-owned allowlist, schemas,
+runtime validators, and docs. Run it after adding, removing, or retiring a
+provider preset so contract/runtime/docs drift is caught before review.
 The `project-profiles` command reads the shared clean cache and writes one
 deterministic report per explicit profile path. With `--update-seen-state`, it
 also merges each generated report into that profile's local `seen_records`
