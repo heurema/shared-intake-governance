@@ -28,6 +28,7 @@ deferred scope and require a new behavior decision before implementation.
 
 - `README.md`
 - `docs/INDEX.md`
+- `docs/08-consumer-onboarding.md`
 - `docs/10-implementation-guide.md`
 - `docs/11-local-runbook.md`
 - `docs/13-source-config-recipes.md`
@@ -82,6 +83,13 @@ are documentation-only. They describe explicit `run-source-config` and
 `smoke-source-config` command shapes for consumers, but do not add a scheduler,
 wrapper script, daemon, runtime command, publication workflow, or consumer
 ranking policy.
+
+The consumer onboarding handoff in `docs/08-consumer-onboarding.md` is also
+documentation-only. It names the profile path, source-config path, runtime root,
+profile-local `seen_records` ownership, and smoke preflight boundary that a
+consumer should carry into its own repo or local runtime setup, but it does not
+centralize consumer profiles, runtime state, scheduling, scoring, reporting, or
+publication behavior in this shared core.
 
 ## Contract hardening already in place
 
@@ -142,6 +150,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 230 tests
+  after linking consumer onboarding to the source-config recipe handoff.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 229 tests
   after adding the canonical source-config recipe doc and navigation guard.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 228 tests
