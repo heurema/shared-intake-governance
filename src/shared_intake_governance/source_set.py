@@ -45,6 +45,7 @@ def validate_source_set(source_set: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(sources, list) or not sources:
         raise ValueError("sources must be a non-empty array")
 
+    seen_source_ids: set[str] = set()
     seen_refs: set[tuple[str, str]] = set()
     normalized_sources = []
     for index, source_ref in enumerate(sources):
@@ -58,6 +59,12 @@ def validate_source_set(source_set: dict[str, Any]) -> dict[str, Any]:
             source_ref["source_config_path"],
             f"sources[{index}].source_config_path",
         )
+        if source_ref["source_id"] in seen_source_ids:
+            raise ValueError(
+                "sources must not contain duplicate source_id: "
+                + source_ref["source_id"]
+            )
+        seen_source_ids.add(source_ref["source_id"])
         ref_key = (source_ref["source_id"], source_ref["source_config_path"])
         if ref_key in seen_refs:
             raise ValueError("sources must not contain duplicate refs")

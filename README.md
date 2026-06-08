@@ -99,8 +99,8 @@ What exists now:
   --update-seen-state`, and `smoke-source-config --update-seen-state` flags
   that merge generated report items into that profile's `seen_records` state
   artifact;
-- source-set contract and example for grouping tracked `source-config.v1`
-  refs without executing them;
+- source-set contract and example for grouping unique tracked
+  `source-config.v1` refs without executing them;
 - read-only `list-profiles` CLI command for validating and listing tracked
   example profile configs without projecting them;
 - read-only `inspect-profile` CLI command for validating one profile config
@@ -113,9 +113,10 @@ What exists now:
 - read-only `inspect-source-config` CLI command for validating one
   `source-config.v1` file without running it;
 - read-only `list-source-sets` CLI command for validating and listing the
-  tracked source-set catalog without running sources;
+  tracked source-set catalog, including unique source ids, without running
+  sources;
 - read-only `inspect-source-set` CLI command for validating one source-set file
-  and its referenced source-config files without running sources;
+  and its unique referenced source-config files without running sources;
 - repo-local surface consistency guard for keeping the CLI command list in
   `docs/10-implementation-guide.md` aligned with the actual argparse surface;
 - repo-local source-type consistency guard for keeping source type lists aligned

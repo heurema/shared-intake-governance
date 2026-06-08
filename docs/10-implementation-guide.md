@@ -202,9 +202,11 @@ state, or writing runtime data.
 The `list-source-sets` command validates tracked `source-set.v1` files under
 `sources/sets/` and every referenced `source-config.v1` file without
 collecting, projecting, scheduling, batching sources, or writing runtime data.
+It rejects duplicate `source_id` values inside one source set before resolving
+source config refs.
 The `inspect-source-set` command validates one `source-set.v1` file and every
 referenced `source-config.v1` file without collecting, projecting, scheduling,
-or batching sources.
+or batching sources. It applies the same unique `source_id` boundary.
 The `list-profiles` command validates tracked profile configs under
 `profiles/examples/` and returns a deterministic catalog without collecting,
 projecting, reading profile state, or writing runtime data. Profile validation

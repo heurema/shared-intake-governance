@@ -226,7 +226,9 @@ sources[].source_config_path
 The current tracked example is
 [../sources/sets/code-intel-source-set.json](../sources/sets/code-intel-source-set.json).
 Each `sources[]` entry names the expected `source_id` and the repo-relative
-`source_config_path` for one tracked source config.
+`source_config_path` for one tracked source config. Runtime validation rejects
+duplicate `source_id` values inside one source set so one logical source cannot
+be referenced through multiple config files.
 
 Source sets must not contain credentials, runtime roots, profile state,
 profiles, schedules, scoring rules, report templates, publication targets, or
