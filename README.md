@@ -102,7 +102,8 @@ What exists now:
 - source-set contract and example for grouping unique tracked
   `source-config.v1` refs without executing them;
 - read-only `list-profiles` CLI command for validating and listing tracked
-  example profile configs without projecting them;
+  example profile configs, including unique profile ids, without projecting
+  them;
 - read-only `inspect-profile` CLI command for validating one profile config
   without projecting it or reading profile state;
 - read-only `check-source-set-profiles` CLI command for validating

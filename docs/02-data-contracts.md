@@ -264,6 +264,9 @@ Profiles must not define:
 `profile_id` must be a safe runtime path segment. `accepted_sources` must be
 non-empty and must come from the supported shared source families in the
 profile schema.
+`list-profiles` validates the tracked `profiles/examples/*.json` catalog,
+rejects duplicate `profile_id` values across that catalog, and returns a
+deterministic inventory without projecting profiles or reading profile state.
 
 ## Profile projection
 

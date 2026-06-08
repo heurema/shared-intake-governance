@@ -1106,6 +1106,42 @@ class CliPipelineTests(unittest.TestCase):
                     stdout=io.StringIO(),
                 )
 
+    def test_list_profiles_rejects_duplicate_profile_ids(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            _write_repo_profile(
+                root,
+                "code-intel-kernel.json",
+                {
+                    "profile_id": "code-intel-kernel",
+                    "description": "Code intelligence research intake.",
+                    "accepted_sources": ["github_repo"],
+                    "keywords": ["coding agent"],
+                    "output_mode": "research_digest",
+                },
+            )
+            _write_repo_profile(
+                root,
+                "code-intel-kernel-copy.json",
+                {
+                    "profile_id": "code-intel-kernel",
+                    "description": "Code intelligence research intake copy.",
+                    "accepted_sources": ["github_search"],
+                    "keywords": ["benchmark"],
+                    "output_mode": "research_digest",
+                },
+            )
+
+            with self.assertRaisesRegex(ValueError, "duplicate profile_id"):
+                main(
+                    [
+                        "list-profiles",
+                        "--repo-root",
+                        str(root),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
     def test_list_profiles_rejects_unsupported_source_type(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)

@@ -198,8 +198,15 @@ def list_profiles(repo_root: str | Path = ".") -> dict[str, Any]:
     root = Path(repo_root).resolve()
     profile_root = root / "profiles" / "examples"
     profiles = []
+    seen_profile_ids: set[str] = set()
     for profile_path in sorted(profile_root.glob("*.json")):
         profile = load_profile(profile_path)
+        if profile["profile_id"] in seen_profile_ids:
+            raise ValueError(
+                "profile catalog has duplicate profile_id: "
+                + profile["profile_id"]
+            )
+        seen_profile_ids.add(profile["profile_id"])
         profiles.append(_profile_summary(profile, profile_path.resolve()))
     profiles.sort(
         key=lambda profile: (profile["profile_id"], profile["profile_ref"])
