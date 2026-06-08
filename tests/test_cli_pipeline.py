@@ -556,6 +556,188 @@ class CliPipelineTests(unittest.TestCase):
                     stdout=io.StringIO(),
                 )
 
+    def test_inspect_profile_validates_one_profile_without_writes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            profile_path = _write_repo_profile(
+                root,
+                "code-intel-kernel.json",
+                {
+                    "profile_id": "code-intel-kernel",
+                    "description": "Code intelligence research intake.",
+                    "accepted_sources": [
+                        "github_repo",
+                        "github_search",
+                        "arxiv_query",
+                    ],
+                    "keywords": ["coding agent", "benchmark"],
+                    "output_mode": "research_digest",
+                    "provider_preferences": ["claude", "agy"],
+                },
+            )
+            before_paths = _all_files(root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "inspect-profile",
+                    "--profile",
+                    str(profile_path),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(root), before_paths)
+            self.assertEqual(summary["profile_path"], str(profile_path.resolve()))
+            self.assertEqual(
+                summary["profile_ref"],
+                "profiles/examples/code-intel-kernel.json",
+            )
+            self.assertEqual(summary["profile_id"], "code-intel-kernel")
+            self.assertEqual(
+                summary["description"],
+                "Code intelligence research intake.",
+            )
+            self.assertEqual(
+                summary["accepted_sources"],
+                ["github_repo", "github_search", "arxiv_query"],
+            )
+            self.assertEqual(summary["keywords"], ["coding agent", "benchmark"])
+            self.assertEqual(summary["keyword_count"], 2)
+            self.assertEqual(summary["required_risk_flags_absent"], [])
+            self.assertEqual(summary["output_mode"], "research_digest")
+            self.assertEqual(summary["provider_preferences"], ["claude", "agy"])
+
+    def test_inspect_profile_rejects_malformed_profile(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            profile_path = _write_repo_profile(
+                root,
+                "code-intel-kernel.json",
+                {
+                    "profile_id": "code-intel-kernel",
+                    "description": "Code intelligence research intake.",
+                    "accepted_sources": ["github_repo"],
+                    "keywords": ["coding agent"],
+                    "output_mode": "research_digest",
+                },
+            )
+            _add_unknown_field(profile_path)
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
+                main(
+                    [
+                        "inspect-profile",
+                        "--profile",
+                        str(profile_path),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
+    def test_list_profiles_validates_catalog_without_writes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            agent_bench_path = _write_repo_profile(
+                root,
+                "agent-bench-lab.json",
+                {
+                    "profile_id": "agent-bench-lab",
+                    "description": "Benchmark intake.",
+                    "accepted_sources": ["github_search", "arxiv_query"],
+                    "keywords": ["benchmark", "verifier"],
+                    "required_risk_flags_absent": ["instruction_like_content"],
+                    "output_mode": "benchmark_brief",
+                    "provider_preferences": ["claude", "gemini"],
+                },
+            )
+            pulse_path = _write_repo_profile(
+                root,
+                "pulse.json",
+                {
+                    "profile_id": "pulse",
+                    "description": "AI market pulse.",
+                    "accepted_sources": ["rss", "news", "custom"],
+                    "keywords": ["agents"],
+                    "output_mode": "news_brief",
+                },
+            )
+            before_paths = _all_files(root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "list-profiles",
+                    "--repo-root",
+                    str(root),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(root), before_paths)
+            self.assertEqual(summary["repo_root"], str(root.resolve()))
+            self.assertEqual(summary["profile_count"], 2)
+            self.assertEqual(
+                summary["profiles"],
+                [
+                    {
+                        "profile_path": str(agent_bench_path.resolve()),
+                        "profile_ref": "profiles/examples/agent-bench-lab.json",
+                        "profile_id": "agent-bench-lab",
+                        "description": "Benchmark intake.",
+                        "accepted_sources": ["github_search", "arxiv_query"],
+                        "keyword_count": 2,
+                        "required_risk_flags_absent": [
+                            "instruction_like_content"
+                        ],
+                        "output_mode": "benchmark_brief",
+                        "provider_preferences": ["claude", "gemini"],
+                    },
+                    {
+                        "profile_path": str(pulse_path.resolve()),
+                        "profile_ref": "profiles/examples/pulse.json",
+                        "profile_id": "pulse",
+                        "description": "AI market pulse.",
+                        "accepted_sources": ["rss", "news", "custom"],
+                        "keyword_count": 1,
+                        "required_risk_flags_absent": [],
+                        "output_mode": "news_brief",
+                        "provider_preferences": [],
+                    },
+                ],
+            )
+
+    def test_list_profiles_rejects_malformed_catalog_entry(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            malformed_profile_path = _write_repo_profile(
+                root,
+                "code-intel-kernel.json",
+                {
+                    "profile_id": "code-intel-kernel",
+                    "description": "Code intelligence research intake.",
+                    "accepted_sources": ["github_repo"],
+                    "keywords": ["coding agent"],
+                    "output_mode": "research_digest",
+                },
+            )
+            _add_unknown_field(malformed_profile_path)
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
+                main(
+                    [
+                        "list-profiles",
+                        "--repo-root",
+                        str(root),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
     def test_run_github_repo_pipeline_collects_sanitizes_and_projects(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
@@ -4668,6 +4850,13 @@ def _write_repo_source_config(root, filename, payload):
     source_config_path.parent.mkdir(parents=True, exist_ok=True)
     source_config_path.write_text(json.dumps(payload), encoding="utf-8")
     return source_config_path
+
+
+def _write_repo_profile(root, filename, payload):
+    profile_path = root / "profiles" / "examples" / filename
+    profile_path.parent.mkdir(parents=True, exist_ok=True)
+    profile_path.write_text(json.dumps(payload), encoding="utf-8")
+    return profile_path
 
 
 def _write_source_set(root, payload, *, filename="code-intel-source-set.json"):

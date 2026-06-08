@@ -112,6 +112,8 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli inspect-source-config`
 - `python -m shared_intake_governance.cli list-source-sets`
 - `python -m shared_intake_governance.cli inspect-source-set`
+- `python -m shared_intake_governance.cli list-profiles`
+- `python -m shared_intake_governance.cli inspect-profile`
 - `python -m shared_intake_governance.cli project-profiles`
 - `python -m shared_intake_governance.cli list-runs`
 - `python -m shared_intake_governance.cli list-clean-records`
@@ -202,8 +204,15 @@ collecting, projecting, scheduling, batching sources, or writing runtime data.
 The `inspect-source-set` command validates one `source-set.v1` file and every
 referenced `source-config.v1` file without collecting, projecting, scheduling,
 or batching sources.
-With `--update-seen-state`, those commands also explicitly merge generated
-report items into the profile's local `seen_records` state artifact.
+The `list-profiles` command validates tracked profile configs under
+`profiles/examples/` and returns a deterministic catalog without collecting,
+projecting, reading profile state, or writing runtime data.
+The `inspect-profile` command validates one profile config and returns its
+normalized object without collecting, projecting, reading profile state, or
+writing runtime data.
+With `--update-seen-state`, `project-profiles`, `run-source-config`, and
+`smoke-source-config` also explicitly merge generated report items into the
+profile's local `seen_records` state artifact.
 The profile-state inspection commands read existing `profile-state.v1`
 artifacts only. The profile seen-state init command explicitly creates one
 empty `seen_records` state artifact and refuses to overwrite an existing state.
