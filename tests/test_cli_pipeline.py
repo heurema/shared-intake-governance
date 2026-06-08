@@ -399,6 +399,52 @@ class CliPipelineTests(unittest.TestCase):
                     stdout=io.StringIO(),
                 )
 
+    def test_inspect_source_set_rejects_tracked_filename_mismatch(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            _write_repo_source_config(
+                root,
+                "github-search-code-agents.json",
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_search",
+                    "source_id": "github-search-code-agents",
+                    "query": "topic:agents language:python",
+                    "max_results": 10,
+                },
+            )
+            source_set_path = _write_source_set(
+                root,
+                {
+                    "schema_version": "source-set.v1",
+                    "source_set_id": "code-intel-source-set",
+                    "sources": [
+                        {
+                            "source_id": "github-search-code-agents",
+                            "source_config_path": (
+                                "sources/examples/github-search-code-agents.json"
+                            ),
+                        }
+                    ],
+                },
+                filename="code-intel-source-set-copy.json",
+            )
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "source_set_id must match filename",
+            ):
+                main(
+                    [
+                        "inspect-source-set",
+                        "--repo-root",
+                        str(root),
+                        "--source-set",
+                        str(source_set_path),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
     def test_inspect_source_set_rejects_duplicate_source_ids(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
@@ -1371,6 +1417,7 @@ class CliPipelineTests(unittest.TestCase):
                         }
                     ],
                 },
+                filename="rss-source-set.json",
             )
             profile_path = _write_repo_profile(
                 root,
@@ -1433,6 +1480,7 @@ class CliPipelineTests(unittest.TestCase):
                         }
                     ],
                 },
+                filename="rss-source-set.json",
             )
             profile_path = _write_repo_profile(
                 root,
@@ -1488,6 +1536,7 @@ class CliPipelineTests(unittest.TestCase):
                         }
                     ],
                 },
+                filename="rss-source-set.json",
             )
             profile_path = _write_repo_profile(
                 root,

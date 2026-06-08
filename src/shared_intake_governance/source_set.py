@@ -87,6 +87,12 @@ def inspect_source_set(
     source_set_file = Path(source_set_path).resolve()
     root = Path(repo_root).resolve()
     source_set = load_source_set(source_set_file)
+    source_set_ref = _tracked_source_set_ref(source_set_file, root)
+    if (
+        source_set_ref is not None
+        and source_set_file.stem != source_set["source_set_id"]
+    ):
+        raise ValueError("source_set_id must match filename for " + source_set_ref)
     inspected_sources = []
 
     for source_ref in source_set["sources"]:
@@ -133,10 +139,6 @@ def list_source_sets(repo_root: str | Path = ".") -> dict[str, Any]:
     for source_set_path in sorted(source_set_root.glob("*.json")):
         source_set_ref = source_set_path.relative_to(root).as_posix()
         source_set = inspect_source_set(source_set_path, repo_root=root)
-        if source_set_path.stem != source_set["source_set_id"]:
-            raise ValueError(
-                "source_set_id must match filename for " + source_set_ref
-            )
         if source_set["source_set_id"] in seen_source_set_ids:
             raise ValueError(
                 "source set catalog has duplicate source_set_id: "
@@ -150,6 +152,13 @@ def list_source_sets(repo_root: str | Path = ".") -> dict[str, Any]:
         "source_set_count": len(source_sets),
         "source_sets": source_sets,
     }
+
+
+def _tracked_source_set_ref(source_set_file: Path, root: Path) -> str | None:
+    source_set_root = root / "sources" / "sets"
+    if source_set_file.parent != source_set_root:
+        return None
+    return source_set_file.relative_to(root).as_posix()
 
 
 def check_source_set_profiles(
