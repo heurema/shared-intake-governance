@@ -256,8 +256,9 @@ Profiles must not define:
 - credential material;
 - adapter internals.
 
-`profile_id` must be a safe runtime path segment, and `accepted_sources` must
-come from the supported shared source families in the profile schema.
+`profile_id` must be a safe runtime path segment. `accepted_sources` must be
+non-empty and must come from the supported shared source families in the
+profile schema.
 
 ## Profile projection
 

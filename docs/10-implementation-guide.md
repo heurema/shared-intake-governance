@@ -208,7 +208,8 @@ or batching sources.
 The `list-profiles` command validates tracked profile configs under
 `profiles/examples/` and returns a deterministic catalog without collecting,
 projecting, reading profile state, or writing runtime data. Profile validation
-rejects accepted source types that are not in the profile schema allowlist.
+rejects empty accepted source lists and source types that are not in the
+profile schema allowlist.
 The `inspect-profile` command validates one profile config and returns its
 normalized object without collecting, projecting, reading profile state, or
 writing runtime data.
