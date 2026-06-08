@@ -126,6 +126,27 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli run-source-config \
 Expected output is one JSON summary printed to stdout. The summary includes
 all clean record paths emitted from the news feed.
 
+## Run one source with seen-state filtering
+
+Use this when a profile-local `seen-records.json` already exists and you want a
+one-source run to project only records not already present in that state.
+
+```sh
+export SIG_RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-new-only"
+
+PYTHONPATH=src python3 -m shared_intake_governance.cli run-source-config \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --profile profiles/examples/code-intel-kernel.json \
+  --source-config sources/examples/github-search-code-agents.json \
+  --run-id "$SIG_RUN_ID" \
+  --output-id "$SIG_RUN_ID" \
+  --exclude-seen-state
+```
+
+This reads `profiles/<profile-id>/state/seen-records.json` when it exists and
+counts filtered records as `excluded_seen` in the projection report. It does
+not create or update profile state by itself.
+
 ## Project multiple profiles
 
 Use this after one or more runs have written clean records:
@@ -195,6 +216,8 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli smoke-source-config \
 
 Expected output is one JSON summary printed to stdout. The summary includes
 `smoke_runtime_root`, `smoke_runtime_policy`, and `runtime_boundary_path`.
+If you pass an explicit smoke runtime root that already contains profile-local
+seen state, you may also add `--exclude-seen-state`.
 
 ## Inspect output
 

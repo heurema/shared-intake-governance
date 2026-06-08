@@ -161,9 +161,12 @@ Current CLI behavior:
 - `run-rss-feed` writes one run manifest under `runs/`;
 - `run-news-feed` writes one run manifest under `runs/`;
 - `run-source-config` reads one `source-config.v1` JSON file and writes one
-  run manifest under `runs/`;
+  run manifest under `runs/`; when `--exclude-seen-state` is provided, it
+  reads the profile's local `seen_records` state artifact and omits matching
+  record ids from the projection report;
 - `smoke-source-config` runs one `source-config.v1` JSON file with a smoke
-  runtime root outside the repository and writes a do-not-commit marker;
+  runtime root outside the repository and writes a do-not-commit marker; it
+  supports the same explicit seen-state filter as `run-source-config`;
 - `project-profiles` reads existing clean records and writes one deterministic
   report per explicit profile path; when `--exclude-seen-state` is provided,
   it reads that profile's local `seen_records` state artifact and omits

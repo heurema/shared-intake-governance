@@ -288,10 +288,12 @@ The current `seen_records` update paths are explicit: `update-profile-seen-state
 merges record ids from one `profile-projection.v1` report into one
 profile-local state file, and `project-profiles --update-seen-state` applies
 the same merge to each generated profile report. `project-profiles
---exclude-seen-state` can read the same profile-local `seen_records` state and
-omit matching record ids from a new projection report without updating state.
-Projection does not update state unless the update flag is provided, and the
-core still does not define consumer publication or dedupe policy.
+--exclude-seen-state`, `run-source-config --exclude-seen-state`, and
+`smoke-source-config --exclude-seen-state` can read the same profile-local
+`seen_records` state and omit matching record ids from a new projection report
+without updating state. Projection does not update state unless the update flag
+is provided, and the core still does not define consumer publication or dedupe
+policy.
 
 ## Profile loading rules
 
