@@ -32,6 +32,14 @@ class ProfileConfigSchemaTests(unittest.TestCase):
             clean_record_schema["properties"]["source_type"]["enum"],
         )
 
+    def test_schema_requires_at_least_one_accepted_source(self):
+        schema = _read_schema("profile.schema.json")
+
+        self.assertEqual(
+            schema["properties"]["accepted_sources"].get("minItems"),
+            1,
+        )
+
     def test_schema_tracks_supported_provider_preferences(self):
         schema = _read_schema("profile.schema.json")
 
@@ -74,6 +82,28 @@ class ProfileConfigSchemaTests(unittest.TestCase):
             with self.assertRaisesRegex(
                 ValueError,
                 "profile has unsupported accepted source",
+            ):
+                load_profile(profile_path)
+
+    def test_runtime_rejects_empty_accepted_sources(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            profile_path = Path(tmp_dir) / "profile.json"
+            profile_path.write_text(
+                json.dumps(
+                    {
+                        "profile_id": "code-intel-kernel",
+                        "description": "Code intelligence research intake.",
+                        "accepted_sources": [],
+                        "keywords": ["coding agent"],
+                        "output_mode": "research_digest",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "accepted_sources must be a non-empty list",
             ):
                 load_profile(profile_path)
 

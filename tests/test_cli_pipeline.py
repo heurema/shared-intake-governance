@@ -665,6 +665,34 @@ class CliPipelineTests(unittest.TestCase):
                     stdout=io.StringIO(),
                 )
 
+    def test_inspect_profile_rejects_empty_accepted_sources(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            profile_path = _write_repo_profile(
+                root,
+                "code-intel-kernel.json",
+                {
+                    "profile_id": "code-intel-kernel",
+                    "description": "Code intelligence research intake.",
+                    "accepted_sources": [],
+                    "keywords": ["coding agent"],
+                    "output_mode": "research_digest",
+                },
+            )
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "accepted_sources must be a non-empty list",
+            ):
+                main(
+                    [
+                        "inspect-profile",
+                        "--profile",
+                        str(profile_path),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
     def test_list_profiles_validates_catalog_without_writes(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
@@ -784,6 +812,34 @@ class CliPipelineTests(unittest.TestCase):
             with self.assertRaisesRegex(
                 ValueError,
                 "unsupported accepted source",
+            ):
+                main(
+                    [
+                        "list-profiles",
+                        "--repo-root",
+                        str(root),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
+    def test_list_profiles_rejects_empty_accepted_sources(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            _write_repo_profile(
+                root,
+                "code-intel-kernel.json",
+                {
+                    "profile_id": "code-intel-kernel",
+                    "description": "Code intelligence research intake.",
+                    "accepted_sources": [],
+                    "keywords": ["coding agent"],
+                    "output_mode": "research_digest",
+                },
+            )
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "accepted_sources must be a non-empty list",
             ):
                 main(
                     [

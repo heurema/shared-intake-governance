@@ -158,6 +158,8 @@ def load_profile(profile_path: str | Path) -> dict[str, Any]:
     _safe_segment(profile["profile_id"], "profile_id")
     _require_text(profile, "description")
     _require_string_list(profile, "accepted_sources")
+    if not profile["accepted_sources"]:
+        raise ValueError("accepted_sources must be a non-empty list")
     unsupported_sources = sorted(
         source
         for source in profile["accepted_sources"]
