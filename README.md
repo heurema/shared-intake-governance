@@ -97,6 +97,8 @@ What exists now:
   --update-seen-state`, and `smoke-source-config --update-seen-state` flags
   that merge generated report items into that profile's `seen_records` state
   artifact;
+- source-set contract and example for grouping tracked `source-config.v1`
+  refs without executing them;
 - config-driven one-source CLI command for source definitions stored in JSON;
 - isolated smoke CLI command for live one-source checks with runtime data
   outside git;
@@ -145,6 +147,7 @@ What does not exist yet:
 - consumer-specific dedupe behavior beyond explicit seen-record filtering;
   implicit profile-state updates remain out of current scope unless a new
   behavior decision replaces the explicit `--update-seen-state` gate;
+- source-set runtime execution or batch runner;
 - automatic command discovery, credential mapping, or provider/tool presets
   beyond the repo-owned read-only provider allowlist;
 - SQLite;

@@ -1,0 +1,27 @@
+{
+  "schema_version": "source-set.v1",
+  "source_set_id": "code-intel-source-set",
+  "description": "Contract-only reusable source-config refs for code-intelligence intake.",
+  "sources": [
+    {
+      "source_id": "github-search-code-agents",
+      "source_config_path": "sources/examples/github-search-code-agents.json"
+    },
+    {
+      "source_id": "github-releases-repo-governance",
+      "source_config_path": "sources/examples/github-releases-repo-governance.json"
+    },
+    {
+      "source_id": "arxiv-query-code-agents",
+      "source_config_path": "sources/examples/arxiv-query-code-agents.json"
+    },
+    {
+      "source_id": "rss-github-blog",
+      "source_config_path": "sources/examples/rss-github-blog.json"
+    },
+    {
+      "source_id": "news-openai-blog",
+      "source_config_path": "sources/examples/news-openai-blog.json"
+    }
+  ]
+}

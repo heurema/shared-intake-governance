@@ -122,6 +122,12 @@ The profile-local `seen_records` artifact remains runtime state under
 `profiles/<profile-id>/state/seen-records.json` inside `SIG_RUNTIME_ROOT`. Do
 not move that state into this repository or into a source config.
 
+If a consumer needs to name several reusable source configs, use a
+`source-set.v1` file such as
+[../sources/sets/code-intel-source-set.json](../sources/sets/code-intel-source-set.json).
+That file is only a contract-level list of source-config refs. It is not a
+scheduler or batch runner.
+
 Before wiring a persistent daily caller, run `smoke-source-config` with the same
 profile and source config. A smoke run proves fetch, sanitize, projection, and
 state-update wiring inside its smoke runtime root only; it does not prove that

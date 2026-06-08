@@ -61,6 +61,7 @@ Current runtime code covers:
 - runtime path helpers for local file-based artifacts;
 - validated raw payload metadata, run manifests, and source health;
 - source-config validation and examples;
+- contract-only source-set schema and example source-config refs;
 - clean-record emission from implemented source families;
 - deterministic profile projection from the clean cache;
 - explicit profile seen-state filtering during multi-profile and one-source
@@ -90,6 +91,11 @@ profile-local `seen_records` ownership, and smoke preflight boundary that a
 consumer should carry into its own repo or local runtime setup, but it does not
 centralize consumer profiles, runtime state, scheduling, scoring, reporting, or
 publication behavior in this shared core.
+
+The `source-set.v1` contract and
+`sources/sets/code-intel-source-set.json` example are contract-only grouping
+surfaces. They list repo-tracked source-config refs, but no current runtime
+command reads, dispatches, schedules, or batches source sets.
 
 ## Contract hardening already in place
 
@@ -141,6 +147,7 @@ Do not treat these as missing bugs without a new behavior decision:
 - sanitizer mappings beyond the implemented families listed above;
 - consumer-specific ranking, editorial shaping, or dedupe policy;
 - implicit profile-state reads or updates without an explicit gate;
+- source-set runtime execution or batch runners;
 - automatic command discovery;
 - credential mapping or provider/tool presets beyond the repo-owned read-only
   provider allowlist;
@@ -150,6 +157,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 233 tests
+  after adding the contract-only `source-set.v1` schema and example.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 230 tests
   after linking consumer onboarding to the source-config recipe handoff.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 229 tests

@@ -48,6 +48,8 @@ Use this file as the main navigation layer.
 ### Run reusable source-config recipes
 
 - [13-source-config-recipes.md](13-source-config-recipes.md)
+- [../schemas/source-set.schema.json](../schemas/source-set.schema.json)
+- [../sources/sets/code-intel-source-set.json](../sources/sets/code-intel-source-set.json)
 - [11-local-runbook.md](11-local-runbook.md)
 - [09-operating-model.md](09-operating-model.md)
 
@@ -80,6 +82,7 @@ Use this file as the main navigation layer.
 - [../schemas/run-manifest.schema.json](../schemas/run-manifest.schema.json)
 - [../schemas/source-health.schema.json](../schemas/source-health.schema.json)
 - [../schemas/source-config.schema.json](../schemas/source-config.schema.json)
+- [../schemas/source-set.schema.json](../schemas/source-set.schema.json)
 - [../schemas/profile.schema.json](../schemas/profile.schema.json)
 - [../schemas/profile-projection.schema.json](../schemas/profile-projection.schema.json)
 - [../schemas/profile-state.schema.json](../schemas/profile-state.schema.json)
@@ -102,6 +105,7 @@ Use this file as the main navigation layer.
 - [../sources/examples/arxiv-query-code-agents.json](../sources/examples/arxiv-query-code-agents.json)
 - [../sources/examples/news-openai-blog.json](../sources/examples/news-openai-blog.json)
 - [../sources/examples/rss-github-blog.json](../sources/examples/rss-github-blog.json)
+- [../sources/sets/code-intel-source-set.json](../sources/sets/code-intel-source-set.json)
 
 ## Runtime code
 
@@ -130,6 +134,7 @@ Use this file as the main navigation layer.
 - [../tests/test_docs_index.py](../tests/test_docs_index.py)
 - [../tests/test_runtime_paths_and_writers.py](../tests/test_runtime_paths_and_writers.py)
 - [../tests/test_source_config_examples.py](../tests/test_source_config_examples.py)
+- [../tests/test_source_set_contract.py](../tests/test_source_set_contract.py)
 - [../tests/test_profile_config_schema.py](../tests/test_profile_config_schema.py)
 - [../tests/test_profile_projection_schema.py](../tests/test_profile_projection_schema.py)
 - [../tests/test_profile_state.py](../tests/test_profile_state.py)

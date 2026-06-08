@@ -35,6 +35,8 @@ narrow local CLI commands for the current `github_repo`, `github_releases`,
 `github_search`, `arxiv_query`, `rss`, `news`, and `source-config.v1` paths with
 validated source config input, raw-root bounded raw metadata, run manifest, and
 source health output.
+It includes a contract-only `source-set.v1` schema and example source set for
+grouping tracked source-config refs without executing them.
 It also includes validated and raw-root bounded sanitizer input, governance
 decision, validated audit, validated approval,
 validated dry-run, validated mediation evidence input, validated execution
@@ -62,7 +64,8 @@ automatic or implicit profile-state updates beyond the explicit
 profile-state filtering beyond the explicit
 `project-profiles --exclude-seen-state`, `run-source-config
 --exclude-seen-state`, and `smoke-source-config --exclude-seen-state` gates,
-automatic command discovery, credential mapping,
+source-set runtime execution or batch runners, automatic command discovery,
+credential mapping,
 provider/tool presets beyond the repo-owned read-only provider allowlist, or
 multi-profile report shaping exists yet.
 The retired `arxiv_rss_keywords` family is not active source surface; use
