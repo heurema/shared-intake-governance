@@ -170,6 +170,10 @@ Current CLI behavior:
   runtime root outside the repository and writes a do-not-commit marker; it
   supports the same explicit seen-state filter and update gates as
   `run-source-config`;
+- `list-source-configs` validates tracked `source-config.v1` files under
+  `sources/examples/` and returns a deterministic inventory without fetching
+  upstream sources, writing runtime data, reading profile state, or projecting
+  profiles;
 - `inspect-source-config` validates one `source-config.v1` file and returns a
   normalized summary without fetching upstream sources, writing runtime data,
   reading profile state, or projecting profiles;

@@ -59,6 +59,8 @@ Consumer repos should usually replace only these values:
 Do not put credentials, scoring logic, publication targets, or consumer-owned
 seen state into a `source-config.v1` file.
 
+Use `list-source-configs` when you need to inspect the tracked catalog before
+choosing one reusable source config.
 Run `inspect-source-config` before wiring a source config into a consumer loop
 when you only need to validate the file and inspect normalized defaults.
 

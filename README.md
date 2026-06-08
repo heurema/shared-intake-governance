@@ -99,6 +99,8 @@ What exists now:
   artifact;
 - source-set contract and example for grouping tracked `source-config.v1`
   refs without executing them;
+- read-only `list-source-configs` CLI command for validating and listing the
+  tracked source-config catalog without running sources;
 - read-only `inspect-source-config` CLI command for validating one
   `source-config.v1` file without running it;
 - read-only `inspect-source-set` CLI command for validating one source-set file

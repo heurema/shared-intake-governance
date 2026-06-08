@@ -42,6 +42,24 @@ def inspect_source_config(path: str | Path) -> dict[str, Any]:
     }
 
 
+def list_source_configs(repo_root: str | Path = ".") -> dict[str, Any]:
+    """Validate tracked source-config.v1 files and return a deterministic inventory."""
+    root = Path(repo_root).resolve()
+    source_config_root = root / "sources" / "examples"
+    source_configs = []
+    for source_config_path in sorted(source_config_root.glob("*.json")):
+        source_config = inspect_source_config(source_config_path)
+        source_config["source_config_ref"] = source_config_path.relative_to(
+            root
+        ).as_posix()
+        source_configs.append(source_config)
+    return {
+        "repo_root": str(root),
+        "source_config_count": len(source_configs),
+        "source_configs": source_configs,
+    }
+
+
 def validate_source_config(config: dict[str, Any]) -> dict[str, Any]:
     """Validate and normalize one supported source-config.v1 payload."""
     if config.get("schema_version") != "source-config.v1":

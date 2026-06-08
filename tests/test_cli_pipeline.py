@@ -162,6 +162,107 @@ class CliPipelineTests(unittest.TestCase):
                     stdout=io.StringIO(),
                 )
 
+    def test_list_source_configs_validates_catalog_without_writes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            rss_config_path = _write_repo_source_config(
+                root,
+                "rss-github-blog.json",
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "rss",
+                    "source_id": "rss-github-blog",
+                    "feed_url": "https://github.blog/feed/",
+                },
+            )
+            github_search_config_path = _write_repo_source_config(
+                root,
+                "github-search-code-agents.json",
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_search",
+                    "source_id": "github-search-code-agents",
+                    "query": "topic:agents language:python",
+                    "max_results": 10,
+                },
+            )
+            before_paths = _all_files(root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "list-source-configs",
+                    "--repo-root",
+                    str(root),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(root), before_paths)
+            self.assertEqual(summary["repo_root"], str(root.resolve()))
+            self.assertEqual(summary["source_config_count"], 2)
+            self.assertEqual(
+                summary["source_configs"],
+                [
+                    {
+                        "source_config_path": str(
+                            github_search_config_path.resolve()
+                        ),
+                        "source_config_ref": (
+                            "sources/examples/github-search-code-agents.json"
+                        ),
+                        "schema_version": "source-config.v1",
+                        "source_id": "github-search-code-agents",
+                        "source_type": "github_search",
+                        "source": {
+                            "api_base_url": "https://api.github.com",
+                            "max_results": 10,
+                            "query": "topic:agents language:python",
+                        },
+                    },
+                    {
+                        "source_config_path": str(rss_config_path.resolve()),
+                        "source_config_ref": "sources/examples/rss-github-blog.json",
+                        "schema_version": "source-config.v1",
+                        "source_id": "rss-github-blog",
+                        "source_type": "rss",
+                        "source": {
+                            "feed_url": "https://github.blog/feed/",
+                            "source_trust": "secondary",
+                        },
+                    },
+                ],
+            )
+
+    def test_list_source_configs_rejects_malformed_catalog_entry(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            malformed_config_path = _write_repo_source_config(
+                root,
+                "github-search-code-agents.json",
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_search",
+                    "source_id": "github-search-code-agents",
+                    "query": "topic:agents language:python",
+                    "max_results": 10,
+                },
+            )
+            _add_unknown_field(malformed_config_path)
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
+                main(
+                    [
+                        "list-source-configs",
+                        "--repo-root",
+                        str(root),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
     def test_inspect_source_set_validates_refs_without_writes(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)

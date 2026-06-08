@@ -83,6 +83,7 @@ from shared_intake_governance.runtime import (
 from shared_intake_governance.sanitizer import CleanRecordEmitter, validate_clean_record
 from shared_intake_governance.source_config import (
     inspect_source_config,
+    list_source_configs,
     load_source_config,
 )
 from shared_intake_governance.source_set import inspect_source_set
@@ -143,6 +144,8 @@ def main(
             rss_collector_factory,
             news_collector_factory,
         )
+    if args.command == "list-source-configs":
+        return _list_source_configs(args, stdout)
     if args.command == "inspect-source-config":
         return _inspect_source_config(args, stdout)
     if args.command == "inspect-source-set":
@@ -1445,6 +1448,11 @@ def _inspect_provider_preset(args: argparse.Namespace, stdout: TextIO) -> int:
     return 0
 
 
+def _list_source_configs(args: argparse.Namespace, stdout: TextIO) -> int:
+    _print_json(stdout, list_source_configs(args.repo_root))
+    return 0
+
+
 def _inspect_source_config(args: argparse.Namespace, stdout: TextIO) -> int:
     _print_json(stdout, inspect_source_config(args.source_config))
     return 0
@@ -1979,6 +1987,16 @@ def _parser() -> argparse.ArgumentParser:
         "--state-id",
         default="seen-records",
         help="Profile state id to read or update when seen-state flags are set.",
+    )
+
+    list_source_configs_parser = subparsers.add_parser(
+        "list-source-configs",
+        help="List tracked source-config.v1 files without running them.",
+    )
+    list_source_configs_parser.add_argument(
+        "--repo-root",
+        default=".",
+        help="Repository root used to find sources/examples/*.json.",
     )
 
     inspect_source_config_parser = subparsers.add_parser(
