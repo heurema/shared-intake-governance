@@ -287,6 +287,8 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli list-source-configs
 PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-source-config \
   --source-config sources/examples/github-search-code-agents.json
 
+PYTHONPATH=src python3 -m shared_intake_governance.cli list-source-sets
+
 PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-source-set \
   --source-set sources/sets/code-intel-source-set.json
 ```
@@ -294,8 +296,10 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-source-set \
 These commands are read-only. They do not fetch upstream sources and do not
 write runtime files. `list-source-configs` validates and lists tracked source
 configs without running them. `inspect-source-config` validates one source
-config without running it. `inspect-source-set` validates repo-tracked
-source-config refs without running them. `inspect-profile-state` requires an
+config without running it. `list-source-sets` validates and lists repo-tracked
+source-set refs without running them. `inspect-source-set` validates one
+source-set and its repo-tracked source-config refs without running them.
+`inspect-profile-state` requires an
 existing
 `profile-state.v1` artifact under `profiles/<profile-id>/state/`;
 `project-profiles`, `run-source-config`, and `smoke-source-config` read it only

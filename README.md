@@ -103,6 +103,8 @@ What exists now:
   tracked source-config catalog without running sources;
 - read-only `inspect-source-config` CLI command for validating one
   `source-config.v1` file without running it;
+- read-only `list-source-sets` CLI command for validating and listing the
+  tracked source-set catalog without running sources;
 - read-only `inspect-source-set` CLI command for validating one source-set file
   and its referenced source-config files without running sources;
 - config-driven one-source CLI command for source definitions stored in JSON;

@@ -110,6 +110,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli smoke-source-config`
 - `python -m shared_intake_governance.cli list-source-configs`
 - `python -m shared_intake_governance.cli inspect-source-config`
+- `python -m shared_intake_governance.cli list-source-sets`
 - `python -m shared_intake_governance.cli inspect-source-set`
 - `python -m shared_intake_governance.cli project-profiles`
 - `python -m shared_intake_governance.cli list-runs`
@@ -173,6 +174,9 @@ fetching, projecting, reading profile state, or writing runtime data.
 The `inspect-source-config` command validates one `source-config.v1` file and
 returns a normalized summary without fetching, projecting, reading profile
 state, or writing runtime data.
+The `list-source-sets` command validates tracked `source-set.v1` files under
+`sources/sets/` and every referenced `source-config.v1` file without
+collecting, projecting, scheduling, batching sources, or writing runtime data.
 The `inspect-source-set` command validates one `source-set.v1` file and every
 referenced `source-config.v1` file without collecting, projecting, scheduling,
 or batching sources.

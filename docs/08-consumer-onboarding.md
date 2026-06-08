@@ -126,8 +126,9 @@ If a consumer needs to name several reusable source configs, use a
 `source-set.v1` file such as
 [../sources/sets/code-intel-source-set.json](../sources/sets/code-intel-source-set.json).
 That file is only a contract-level list of source-config refs. It is not a
-scheduler or batch runner. Use `inspect-source-set` to validate the source-set
-refs before copying the handoff into a consumer repo.
+scheduler or batch runner. Use `list-source-sets` to inspect the tracked
+source-set catalog and `inspect-source-set` to validate one source-set ref list
+before copying the handoff into a consumer repo.
 
 Before wiring a persistent daily caller, run `smoke-source-config` with the same
 profile and source config. A smoke run proves fetch, sanitize, projection, and

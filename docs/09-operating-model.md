@@ -177,6 +177,10 @@ Current CLI behavior:
 - `inspect-source-config` validates one `source-config.v1` file and returns a
   normalized summary without fetching upstream sources, writing runtime data,
   reading profile state, or projecting profiles;
+- `list-source-sets` validates tracked `source-set.v1` files under
+  `sources/sets/` and their referenced source configs without fetching upstream
+  sources, writing runtime data, scheduling, batching source runs, or projecting
+  profiles;
 - `inspect-source-set` validates one `source-set.v1` file and each referenced
   `source-config.v1` file without fetching upstream sources, writing runtime
   data, scheduling, or batching source runs;
