@@ -158,6 +158,16 @@ def load_profile(profile_path: str | Path) -> dict[str, Any]:
     _safe_segment(profile["profile_id"], "profile_id")
     _require_text(profile, "description")
     _require_string_list(profile, "accepted_sources")
+    unsupported_sources = sorted(
+        source
+        for source in profile["accepted_sources"]
+        if source not in _SOURCE_TYPES
+    )
+    if unsupported_sources:
+        raise ValueError(
+            "profile has unsupported accepted source: "
+            + ", ".join(unsupported_sources)
+        )
     _require_string_list(profile, "keywords")
     if profile["output_mode"] not in _OUTPUT_MODES:
         raise ValueError("profile has unsupported output_mode")

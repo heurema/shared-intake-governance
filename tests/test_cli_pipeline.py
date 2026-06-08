@@ -637,6 +637,34 @@ class CliPipelineTests(unittest.TestCase):
                     stdout=io.StringIO(),
                 )
 
+    def test_inspect_profile_rejects_unsupported_source_type(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            profile_path = _write_repo_profile(
+                root,
+                "code-intel-kernel.json",
+                {
+                    "profile_id": "code-intel-kernel",
+                    "description": "Code intelligence research intake.",
+                    "accepted_sources": ["github_reop"],
+                    "keywords": ["coding agent"],
+                    "output_mode": "research_digest",
+                },
+            )
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "unsupported accepted source",
+            ):
+                main(
+                    [
+                        "inspect-profile",
+                        "--profile",
+                        str(profile_path),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
     def test_list_profiles_validates_catalog_without_writes(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
@@ -729,6 +757,34 @@ class CliPipelineTests(unittest.TestCase):
             _add_unknown_field(malformed_profile_path)
 
             with self.assertRaisesRegex(ValueError, "unknown fields"):
+                main(
+                    [
+                        "list-profiles",
+                        "--repo-root",
+                        str(root),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
+    def test_list_profiles_rejects_unsupported_source_type(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            _write_repo_profile(
+                root,
+                "code-intel-kernel.json",
+                {
+                    "profile_id": "code-intel-kernel",
+                    "description": "Code intelligence research intake.",
+                    "accepted_sources": ["github_reop"],
+                    "keywords": ["coding agent"],
+                    "output_mode": "research_digest",
+                },
+            )
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "unsupported accepted source",
+            ):
                 main(
                     [
                         "list-profiles",
@@ -1022,6 +1078,63 @@ class CliPipelineTests(unittest.TestCase):
             _add_unknown_field(profile_path)
 
             with self.assertRaisesRegex(ValueError, "unknown fields"):
+                main(
+                    [
+                        "check-source-set-profiles",
+                        "--repo-root",
+                        str(root),
+                        "--source-set",
+                        str(source_set_path),
+                        "--profile",
+                        str(profile_path),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
+    def test_check_source_set_profiles_rejects_unsupported_profile_source_type(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            _write_repo_source_config(
+                root,
+                "rss-github-blog.json",
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "rss",
+                    "source_id": "rss-github-blog",
+                    "feed_url": "https://github.blog/feed/",
+                },
+            )
+            source_set_path = _write_source_set(
+                root,
+                {
+                    "schema_version": "source-set.v1",
+                    "source_set_id": "rss-source-set",
+                    "sources": [
+                        {
+                            "source_id": "rss-github-blog",
+                            "source_config_path": (
+                                "sources/examples/rss-github-blog.json"
+                            ),
+                        }
+                    ],
+                },
+            )
+            profile_path = _write_repo_profile(
+                root,
+                "code-intel-kernel.json",
+                {
+                    "profile_id": "code-intel-kernel",
+                    "description": "Code intelligence research intake.",
+                    "accepted_sources": ["github_reop"],
+                    "keywords": ["coding agent"],
+                    "output_mode": "research_digest",
+                },
+            )
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "unsupported accepted source",
+            ):
                 main(
                     [
                         "check-source-set-profiles",
