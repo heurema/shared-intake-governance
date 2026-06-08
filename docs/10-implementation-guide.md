@@ -175,6 +175,10 @@ tracked JSON schemas against `docs/INDEX.md`, `docs/02-data-contracts.md`,
 this implementation guide, and each schema `$id`. Run it after adding,
 removing, renaming, or reordering a contract schema so contract/docs drift is
 caught before review.
+The repo-local `scripts/check_repo.py` runner executes the canonical local
+verification checklist and removes generated `__pycache__` directories. Use
+`python3 scripts/check_repo.py --list` to print the checklist without running
+it.
 The `project-profiles` command reads the shared clean cache and writes one
 deterministic report per explicit profile path. With `--update-seen-state`, it
 also merges each generated report into that profile's local `seen_records`

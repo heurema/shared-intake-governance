@@ -170,6 +170,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `python3 scripts/check_repo.py` passed after adding the canonical local
+  verification runner.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 245 tests
   after adding the contract anchor consistency guard.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 244 tests
@@ -375,6 +377,12 @@ Live smoke source-config seen-state update receipt on 2026-06-08:
 ## Verification commands
 
 Use these checks after runtime or contract changes:
+
+```sh
+python3 scripts/check_repo.py
+```
+
+Equivalent expanded checklist:
 
 ```sh
 PYTHONPATH=src python3 -m unittest discover -s tests

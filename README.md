@@ -115,6 +115,8 @@ What exists now:
   provider-preset lists aligned across code, schemas, and docs;
 - repo-local contract anchor consistency guard for keeping JSON schemas aligned
   with canonical contract docs and schema `$id` values;
+- repo-local `scripts/check_repo.py` verification runner for executing the
+  canonical local test, guard, JSON, whitespace, compile, and CLI-help checks;
 - config-driven one-source CLI command for source definitions stored in JSON;
 - isolated smoke CLI command for live one-source checks with runtime data
   outside git;
