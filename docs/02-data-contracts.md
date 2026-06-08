@@ -239,10 +239,11 @@ execution policy. `list-source-sets` validates the tracked `sources/sets/*.json`
 catalog, requires each `source_set_id` to be unique and match its filename stem,
 and validates referenced `source-config.v1` files without fetching upstream
 sources or writing runtime data. `inspect-source-set` validates one source-set
-file under the same boundary. Source sets do not run sources by themselves and
-no current CLI dispatches, schedules, or batches a source set. Execute or smoke
-each referenced source config through the existing one-source commands until a
-separate runtime decision opens a batch execution surface.
+file under the same boundary and applies the filename-match rule when that file
+is a tracked `sources/sets/*.json` artifact. Source sets do not run sources by
+themselves and no current CLI dispatches, schedules, or batches a source set.
+Execute or smoke each referenced source config through the existing one-source
+commands until a separate runtime decision opens a batch execution surface.
 
 ## Profile config
 

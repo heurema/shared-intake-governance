@@ -106,7 +106,9 @@ object without projecting, reading profile state, or writing runtime data.
 `check-source-set-profiles` validates one source set, its referenced source
 configs, and one or more profile configs, then reports matched and rejected
 source types for each profile. It does not fetch sources, project profiles,
-read profile state, schedule or batch source sets, or write runtime data.
+read profile state, schedule or batch source sets, or write runtime data. For
+tracked `sources/sets/*.json` files, direct source-set inspection also requires
+the source-set id to match the filename stem.
 
 The reusable source-config daily recipes in `docs/13-source-config-recipes.md`
 are documentation-only. They describe explicit `run-source-config` and
@@ -128,8 +130,9 @@ surfaces. `list-source-sets` validates the tracked source-set catalog, and
 source-config file. Both commands reject duplicate source ids and source config
 refs inside one source set. `list-source-sets` also rejects duplicate
 source-set ids across the tracked catalog and requires each source-set id to
-match its filename stem. No current runtime command dispatches, schedules, or
-batches source sets.
+match its filename stem. `inspect-source-set` applies the same filename-match
+rule to directly inspected tracked source-set files. No current runtime command
+dispatches, schedules, or batches source sets.
 
 ## Contract hardening already in place
 
@@ -153,6 +156,8 @@ runtime paths consume them:
   values before the catalog can be listed;
 - source-set catalog entries must use filename-matched unique `source_set_id`
   values before the catalog can be listed;
+- directly inspected tracked source-set files must use `source_set_id` values
+  that match their filenames before their refs are consumed;
 - source-set refs must use unique `source_id` and `source_config_path` values
   before inspection, compatibility preflight, or any future execution surface
   consumes them;
@@ -203,6 +208,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `python3 scripts/check_repo.py` passed with 275 tests after requiring
+  direct tracked source-set inspection to match `source_set_id` to filename.
 - `python3 scripts/check_repo.py` passed with 274 tests after requiring
   tracked source-set `source_set_id` values to match their filenames.
 - `python3 scripts/check_repo.py` passed with 274 tests after requiring

@@ -117,8 +117,9 @@ What exists now:
 - read-only `list-source-sets` CLI command for validating and listing the
   tracked source-set catalog, including filename-matched unique source-set ids,
   source ids, and config refs, without running sources;
-- read-only `inspect-source-set` CLI command for validating one source-set file
-  and its unique referenced source-config files without running sources;
+- read-only `inspect-source-set` CLI command for validating one source-set file,
+  including filename-matched ids for tracked source-set files and unique
+  referenced source-config files, without running sources;
 - repo-local surface consistency guard for keeping the CLI command list in
   `docs/10-implementation-guide.md` aligned with the actual argparse surface;
 - repo-local source-type consistency guard for keeping source type lists aligned

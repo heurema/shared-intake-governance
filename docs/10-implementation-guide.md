@@ -209,8 +209,9 @@ rejects duplicate `source_id` and `source_config_path` values inside one source
 set before resolving source config refs.
 The `inspect-source-set` command validates one `source-set.v1` file and every
 referenced `source-config.v1` file without collecting, projecting, scheduling,
-or batching sources. It applies the same unique source id and source config ref
-boundary.
+or batching sources. For tracked `sources/sets/*.json` files, it also requires
+the source-set id to match the filename stem. It applies the same unique source
+id and source config ref boundary.
 The `list-profiles` command validates tracked profile configs under
 `profiles/examples/` and returns a deterministic catalog without collecting,
 projecting, reading profile state, or writing runtime data. Profile validation
