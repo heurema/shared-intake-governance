@@ -89,8 +89,8 @@ the repository.
 normalized summary. It does not fetch upstream sources, write runtime data,
 read profile state, project profiles, or update seen state.
 `list-source-configs` validates the tracked `sources/examples/*.json` catalog
-and returns a deterministic inventory under the same no-fetch/no-write
-boundary.
+rejects duplicate source ids across the catalog, and returns a deterministic
+inventory under the same no-fetch/no-write boundary.
 `list-source-sets` validates the tracked `sources/sets/*.json` catalog,
 rejects duplicate source-set ids across the catalog, rejects duplicate source
 ids and source config refs inside each source set, and validates each
@@ -142,6 +142,8 @@ runtime paths consume them:
   source types before a profile can be inspected, projected, or checked against
   a source set;
 - profile seen-state record ids must be safe path segments, sorted, and unique;
+- source-config catalog entries must use unique `source_id` values before the
+  catalog can be listed;
 - source-set catalog entries must use unique `source_set_id` values before the
   catalog can be listed;
 - source-set refs must use unique `source_id` and `source_config_path` values
@@ -194,6 +196,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `python3 scripts/check_repo.py` passed with 273 tests after rejecting
+  duplicate `source_id` values across the tracked source-config catalog.
 - `python3 scripts/check_repo.py` passed with 272 tests after rejecting
   duplicate `source_set_id` values across the tracked source-set catalog.
 - `python3 scripts/check_repo.py` passed with 271 tests after rejecting

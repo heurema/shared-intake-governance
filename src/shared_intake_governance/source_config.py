@@ -47,8 +47,15 @@ def list_source_configs(repo_root: str | Path = ".") -> dict[str, Any]:
     root = Path(repo_root).resolve()
     source_config_root = root / "sources" / "examples"
     source_configs = []
+    seen_source_ids: set[str] = set()
     for source_config_path in sorted(source_config_root.glob("*.json")):
         source_config = inspect_source_config(source_config_path)
+        if source_config["source_id"] in seen_source_ids:
+            raise ValueError(
+                "source config catalog has duplicate source_id: "
+                + source_config["source_id"]
+            )
+        seen_source_ids.add(source_config["source_id"])
         source_config["source_config_ref"] = source_config_path.relative_to(
             root
         ).as_posix()
