@@ -270,6 +270,9 @@ profile schema.
 `list-profiles` validates the tracked `profiles/examples/*.json` catalog,
 requires each `profile_id` to be unique and match its filename stem, and returns
 a deterministic inventory without projecting profiles or reading profile state.
+`inspect-profile` validates one profile config under the same no-project and
+no-state-read boundary. For tracked `profiles/examples/*.json` files, it also
+requires `profile_id` to match the filename stem.
 
 ## Profile projection
 

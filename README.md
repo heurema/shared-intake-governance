@@ -104,8 +104,9 @@ What exists now:
 - read-only `list-profiles` CLI command for validating and listing tracked
   example profile configs, including filename-matched unique profile ids,
   without projecting them;
-- read-only `inspect-profile` CLI command for validating one profile config
-  without projecting it or reading profile state;
+- read-only `inspect-profile` CLI command for validating one profile config,
+  including filename-matched ids for tracked profile configs, without
+  projecting it or reading profile state;
 - read-only `check-source-set-profiles` CLI command for validating
   source-set/profile source-type compatibility without running sources or
   projecting profiles;

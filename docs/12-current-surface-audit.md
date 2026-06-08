@@ -104,7 +104,9 @@ requires each profile id to be unique and match its profile config filename
 stem, and returns a deterministic inventory under the same no-fetch/no-write
 boundary.
 `inspect-profile` validates one profile config and returns its normalized
-object without projecting, reading profile state, or writing runtime data.
+object without projecting, reading profile state, or writing runtime data. For
+tracked `profiles/examples/*.json` files, it also requires the profile id to
+match the filename stem.
 `check-source-set-profiles` validates one source set, its referenced source
 configs, and one or more profile configs, then reports matched and rejected
 source types for each profile. It does not fetch sources, project profiles,
@@ -153,6 +155,8 @@ runtime paths consume them:
   a source set;
 - profile catalog entries must use filename-matched unique `profile_id` values
   before the catalog can be listed;
+- directly inspected tracked profile configs must use `profile_id` values that
+  match their filenames before their config is consumed;
 - profile seen-state record ids must be safe path segments, sorted, and unique;
 - source-config catalog entries must use filename-matched unique `source_id`
   values before the catalog can be listed;
@@ -212,6 +216,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `python3 scripts/check_repo.py` passed with 277 tests after requiring
+  direct tracked profile inspection to match `profile_id` to filename.
 - `python3 scripts/check_repo.py` passed with 276 tests after requiring
   direct tracked source-config inspection to match `source_id` to filename.
 - `python3 scripts/check_repo.py` passed with 275 tests after requiring
