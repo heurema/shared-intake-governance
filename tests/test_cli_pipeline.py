@@ -1,5 +1,6 @@
 import io
 import json
+import hashlib
 import shutil
 import sys
 import tempfile
@@ -719,6 +720,76 @@ class CliPipelineTests(unittest.TestCase):
             self.assertEqual(manifest["counts"]["clean_records_written"], 2)
             self.assertEqual(manifest["counts"]["quarantined_records"], 1)
 
+    def test_run_source_config_can_exclude_seen_state(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            runtime_root = root / "runtime"
+            paths = RuntimePaths(runtime_root)
+            profile_path = _write_profile(
+                root,
+                accepted_sources=["github_releases"],
+                keywords=["coding agent"],
+            )
+            source_config_path = _write_source_config(
+                root,
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_releases",
+                    "source_id": "github-releases-shared-intake",
+                    "owner": "heurema",
+                    "repo": "shared-intake-governance",
+                    "max_results": 5,
+                },
+            )
+            seen_record_id = _github_release_record_id(
+                "https://github.com/heurema/shared-intake-governance"
+                "/releases/tag/v1.0.0"
+            )
+            state_path = _write_profile_state(
+                paths,
+                profile_id="code-intel-kernel",
+                state_id="seen-records",
+                state_kind="seen_records",
+                record_ids=[seen_record_id],
+            )
+            original_state = json.loads(state_path.read_text(encoding="utf-8"))
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "run-source-config",
+                    "--runtime-root",
+                    str(runtime_root),
+                    "--profile",
+                    str(profile_path),
+                    "--source-config",
+                    str(source_config_path),
+                    "--run-id",
+                    RUN_ID,
+                    "--output-id",
+                    RUN_ID,
+                    "--exclude-seen-state",
+                ],
+                stdout=stdout,
+                github_releases_collector_factory=SuccessfulGitHubReleasesCollector,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            projection = json.loads(Path(summary["projection_path"]).read_text())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(summary["status"], "completed")
+            self.assertEqual(summary["projected_items"], 0)
+            self.assertEqual(projection["counts"]["clean_records_seen"], 2)
+            self.assertEqual(projection["counts"]["items_written"], 0)
+            self.assertEqual(projection["counts"]["excluded_by_risk"], 1)
+            self.assertEqual(projection["counts"]["excluded_seen"], 1)
+            self.assertEqual(projection["items"], [])
+            self.assertEqual(
+                json.loads(state_path.read_text(encoding="utf-8")),
+                original_state,
+            )
+
     def test_run_source_config_dispatches_arxiv_query_config(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
@@ -951,6 +1022,76 @@ class CliPipelineTests(unittest.TestCase):
             self.assertEqual(boundary_path.parent, smoke_runtime_root)
             self.assertIn("Do not commit", boundary_path.read_text(encoding="utf-8"))
             self.assertTrue(Path(summary["run_manifest_path"]).exists())
+
+    def test_smoke_source_config_passes_exclude_seen_state(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            smoke_runtime_root = root / "smoke-runtime"
+            paths = RuntimePaths(smoke_runtime_root)
+            profile_path = _write_profile(
+                root,
+                accepted_sources=["github_releases"],
+                keywords=["coding agent"],
+            )
+            source_config_path = _write_source_config(
+                root,
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_releases",
+                    "source_id": "github-releases-shared-intake",
+                    "owner": "heurema",
+                    "repo": "shared-intake-governance",
+                    "max_results": 5,
+                },
+            )
+            seen_record_id = _github_release_record_id(
+                "https://github.com/heurema/shared-intake-governance"
+                "/releases/tag/v1.0.0"
+            )
+            state_path = _write_profile_state(
+                paths,
+                profile_id="code-intel-kernel",
+                state_id="seen-records",
+                state_kind="seen_records",
+                record_ids=[seen_record_id],
+            )
+            original_state = json.loads(state_path.read_text(encoding="utf-8"))
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "smoke-source-config",
+                    "--runtime-root",
+                    str(smoke_runtime_root),
+                    "--profile",
+                    str(profile_path),
+                    "--source-config",
+                    str(source_config_path),
+                    "--run-id",
+                    RUN_ID,
+                    "--output-id",
+                    RUN_ID,
+                    "--exclude-seen-state",
+                ],
+                stdout=stdout,
+                github_releases_collector_factory=SuccessfulGitHubReleasesCollector,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            projection = json.loads(Path(summary["projection_path"]).read_text())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(summary["status"], "completed")
+            self.assertEqual(
+                summary["smoke_runtime_root"], str(smoke_runtime_root.resolve())
+            )
+            self.assertEqual(summary["projected_items"], 0)
+            self.assertEqual(projection["counts"]["excluded_seen"], 1)
+            self.assertEqual(projection["counts"]["items_written"], 0)
+            self.assertEqual(
+                json.loads(state_path.read_text(encoding="utf-8")),
+                original_state,
+            )
 
     def test_smoke_source_config_rejects_repo_local_runtime_root(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -3995,6 +4136,11 @@ def _write_profile_state(paths, *, profile_id, state_id, state_kind, record_ids)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(state, sort_keys=True) + "\n", encoding="utf-8")
     return path
+
+
+def _github_release_record_id(canonical_url):
+    digest = hashlib.sha256(f"github_releases:{canonical_url}".encode("utf-8"))
+    return f"github_releases-{digest.hexdigest()[:16]}"
 
 
 def _write_tool_intent(path, *, action_class, dry_run_supported, command=None):

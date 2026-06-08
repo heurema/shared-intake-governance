@@ -51,8 +51,9 @@ No source collector family beyond `github_repo`, `github_releases`,
 beyond those six source types,
 automatic or implicit profile-state updates beyond the explicit
 `--update-seen-state` gate, profile-state filtering beyond the explicit
-`project-profiles --exclude-seen-state` gate, automatic command discovery,
-credential mapping,
+`project-profiles --exclude-seen-state`, `run-source-config
+--exclude-seen-state`, and `smoke-source-config --exclude-seen-state` gates,
+automatic command discovery, credential mapping,
 provider/tool presets beyond the repo-owned read-only provider allowlist, or
 multi-profile report shaping exists yet.
 The retired `arxiv_rss_keywords` family is not active source surface; use

@@ -89,9 +89,10 @@ What exists now:
   project paths;
 - multi-profile CLI command that projects existing clean cache into multiple
   explicit profile reports;
-- explicit `project-profiles --exclude-seen-state` flag that reads each
-  profile's `seen_records` state artifact and omits already-seen record ids
-  from that projection report without updating state;
+- explicit `project-profiles --exclude-seen-state`, `run-source-config
+  --exclude-seen-state`, and `smoke-source-config --exclude-seen-state` flags
+  that read each profile's `seen_records` state artifact and omit already-seen
+  record ids from projection reports without updating state;
 - explicit `project-profiles --update-seen-state` flag that merges each
   generated report into that profile's `seen_records` state artifact;
 - config-driven one-source CLI command for source definitions stored in JSON;

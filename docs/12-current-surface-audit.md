@@ -13,7 +13,7 @@ It is not a roadmap and not a release note. Use it to distinguish:
 
 ## Audit date
 
-2026-06-05
+2026-06-08
 
 ## Current completion boundary
 
@@ -61,7 +61,8 @@ Current runtime code covers:
 - source-config validation and examples;
 - clean-record emission from implemented source families;
 - deterministic profile projection from the clean cache;
-- explicit profile seen-state filtering during multi-profile projection;
+- explicit profile seen-state filtering during multi-profile and one-source
+  source-config projection;
 - explicit profile seen-state updates;
 - read-only runtime inspection commands;
 - governance decision evaluation and optional audit logging;
@@ -130,6 +131,12 @@ Do not treat these as missing bugs without a new behavior decision:
 - SQLite, daemon, web UI, cloud service, dashboard, or scheduler.
 
 ## Latest verification evidence
+
+Local verification on 2026-06-08:
+
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 226 tests
+  after adding explicit seen-state filtering to `run-source-config` and
+  `smoke-source-config`.
 
 Local verification on 2026-06-05:
 
@@ -230,6 +237,41 @@ Local profile-state filtering receipt on 2026-06-05:
   `seen-records.json` containing `github_repo-seen`;
 - result: `clean_records_seen=2`, `excluded_seen=1`, `items_written=1`;
 - output item: `github_repo-new`;
+- read-only `inspect-profile-report` validated the generated
+  `profile-projection.v1` report;
+- the existing `seen-records.json` state artifact was not modified.
+
+Live source-config seen-state filtering receipt on 2026-06-08:
+
+- command: `run-source-config` with
+  `sources/examples/github-releases-repo-governance.json`, a temporary profile
+  outside the repository that accepts `github_releases`, and
+  `--exclude-seen-state`;
+- runtime policy: temporary runtime root outside the repository;
+- input: profile-local `seen-records.json` containing
+  `github_releases-3addbbf8811b5e55` for `v0.5.0`;
+- result: `status=completed`, `fetch_status=success`, `http_status=200`;
+- output: 1 raw payload, 1 raw metadata artifact, 3 clean records, 1
+  projection report, 2 projected items, 1 excluded-seen item, 1 run manifest,
+  and 1 healthy source health artifact;
+- read-only `inspect-profile-report` validated the generated
+  `profile-projection.v1` report;
+- the existing `seen-records.json` state artifact was not modified.
+
+Live smoke source-config seen-state filtering receipt on 2026-06-08:
+
+- command: `smoke-source-config` with an explicit temporary runtime root,
+  `sources/examples/github-releases-repo-governance.json`, a temporary profile
+  outside the repository that accepts `github_releases`, and
+  `--exclude-seen-state`;
+- runtime policy: temporary runtime root outside the repository with
+  `SMOKE_RUNTIME_DO_NOT_COMMIT.txt`;
+- input: profile-local `seen-records.json` containing
+  `github_releases-3addbbf8811b5e55` for `v0.5.0`;
+- result: `status=completed`, `fetch_status=success`, `http_status=200`;
+- output: 1 raw payload, 1 raw metadata artifact, 3 clean records, 1
+  projection report, 2 projected items, 1 excluded-seen item, 1 run manifest,
+  and 1 healthy source health artifact;
 - read-only `inspect-profile-report` validated the generated
   `profile-projection.v1` report;
 - the existing `seen-records.json` state artifact was not modified.

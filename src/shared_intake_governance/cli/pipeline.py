@@ -242,7 +242,7 @@ def _run_github_repo(
     clean_record = CleanRecordEmitter(paths).emit_from_raw_metadata(
         collection.metadata_path
     )
-    projection = ProfileProjector(paths).project(args.profile, output_id=output_id)
+    projection = _project_profile(paths, args, output_id)
     evidence = _write_run_evidence(
         paths,
         run_id=run_id,
@@ -265,6 +265,7 @@ def _run_github_repo(
             "clean_record_path": str(clean_record.path),
             "projection_path": str(projection.path),
             "projected_items": projection.report["counts"]["items_written"],
+            "excluded_seen": projection.report["counts"]["excluded_seen"],
             "run_manifest_path": str(evidence["run_manifest_path"]),
             "source_health_path": str(evidence["source_health_path"]),
         }
@@ -326,7 +327,7 @@ def _run_github_search(
     clean_records = CleanRecordEmitter(paths).emit_all_from_raw_metadata(
         collection.metadata_path
     )
-    projection = ProfileProjector(paths).project(args.profile, output_id=output_id)
+    projection = _project_profile(paths, args, output_id)
     evidence = _write_run_evidence(
         paths,
         run_id=run_id,
@@ -355,6 +356,7 @@ def _run_github_search(
             ],
             "projection_path": str(projection.path),
             "projected_items": projection.report["counts"]["items_written"],
+            "excluded_seen": projection.report["counts"]["excluded_seen"],
             "run_manifest_path": str(evidence["run_manifest_path"]),
             "source_health_path": str(evidence["source_health_path"]),
         }
@@ -417,7 +419,7 @@ def _run_github_releases(
     clean_records = CleanRecordEmitter(paths).emit_all_from_raw_metadata(
         collection.metadata_path
     )
-    projection = ProfileProjector(paths).project(args.profile, output_id=output_id)
+    projection = _project_profile(paths, args, output_id)
     evidence = _write_run_evidence(
         paths,
         run_id=run_id,
@@ -446,6 +448,7 @@ def _run_github_releases(
             ],
             "projection_path": str(projection.path),
             "projected_items": projection.report["counts"]["items_written"],
+            "excluded_seen": projection.report["counts"]["excluded_seen"],
             "run_manifest_path": str(evidence["run_manifest_path"]),
             "source_health_path": str(evidence["source_health_path"]),
         }
@@ -507,7 +510,7 @@ def _run_arxiv_query(
     clean_records = CleanRecordEmitter(paths).emit_all_from_raw_metadata(
         collection.metadata_path
     )
-    projection = ProfileProjector(paths).project(args.profile, output_id=output_id)
+    projection = _project_profile(paths, args, output_id)
     evidence = _write_run_evidence(
         paths,
         run_id=run_id,
@@ -536,6 +539,7 @@ def _run_arxiv_query(
             ],
             "projection_path": str(projection.path),
             "projected_items": projection.report["counts"]["items_written"],
+            "excluded_seen": projection.report["counts"]["excluded_seen"],
             "run_manifest_path": str(evidence["run_manifest_path"]),
             "source_health_path": str(evidence["source_health_path"]),
         }
@@ -596,7 +600,7 @@ def _run_rss_feed(
     clean_records = CleanRecordEmitter(paths).emit_all_from_raw_metadata(
         collection.metadata_path
     )
-    projection = ProfileProjector(paths).project(args.profile, output_id=output_id)
+    projection = _project_profile(paths, args, output_id)
     evidence = _write_run_evidence(
         paths,
         run_id=run_id,
@@ -625,6 +629,7 @@ def _run_rss_feed(
             ],
             "projection_path": str(projection.path),
             "projected_items": projection.report["counts"]["items_written"],
+            "excluded_seen": projection.report["counts"]["excluded_seen"],
             "run_manifest_path": str(evidence["run_manifest_path"]),
             "source_health_path": str(evidence["source_health_path"]),
         }
@@ -685,7 +690,7 @@ def _run_news_feed(
     clean_records = CleanRecordEmitter(paths).emit_all_from_raw_metadata(
         collection.metadata_path
     )
-    projection = ProfileProjector(paths).project(args.profile, output_id=output_id)
+    projection = _project_profile(paths, args, output_id)
     evidence = _write_run_evidence(
         paths,
         run_id=run_id,
@@ -714,6 +719,7 @@ def _run_news_feed(
             ],
             "projection_path": str(projection.path),
             "projected_items": projection.report["counts"]["items_written"],
+            "excluded_seen": projection.report["counts"]["excluded_seen"],
             "run_manifest_path": str(evidence["run_manifest_path"]),
             "source_health_path": str(evidence["source_health_path"]),
         }
@@ -746,6 +752,8 @@ def _run_source_config(
                 api_base_url=source_config["api_base_url"],
                 run_id=args.run_id,
                 output_id=args.output_id,
+                exclude_seen_state=args.exclude_seen_state,
+                state_id=args.state_id,
             ),
             stdout,
             github_collector_factory,
@@ -762,6 +770,8 @@ def _run_source_config(
                 api_base_url=source_config["api_base_url"],
                 run_id=args.run_id,
                 output_id=args.output_id,
+                exclude_seen_state=args.exclude_seen_state,
+                state_id=args.state_id,
             ),
             stdout,
             github_releases_collector_factory,
@@ -777,6 +787,8 @@ def _run_source_config(
                 api_base_url=source_config["api_base_url"],
                 run_id=args.run_id,
                 output_id=args.output_id,
+                exclude_seen_state=args.exclude_seen_state,
+                state_id=args.state_id,
             ),
             stdout,
             github_search_collector_factory,
@@ -792,6 +804,8 @@ def _run_source_config(
                 api_base_url=source_config["api_base_url"],
                 run_id=args.run_id,
                 output_id=args.output_id,
+                exclude_seen_state=args.exclude_seen_state,
+                state_id=args.state_id,
             ),
             stdout,
             arxiv_query_collector_factory,
@@ -806,6 +820,8 @@ def _run_source_config(
                 source_trust=source_config["source_trust"],
                 run_id=args.run_id,
                 output_id=args.output_id,
+                exclude_seen_state=args.exclude_seen_state,
+                state_id=args.state_id,
             ),
             stdout,
             rss_collector_factory,
@@ -820,12 +836,38 @@ def _run_source_config(
                 source_trust=source_config["source_trust"],
                 run_id=args.run_id,
                 output_id=args.output_id,
+                exclude_seen_state=args.exclude_seen_state,
+                state_id=args.state_id,
             ),
             stdout,
             news_collector_factory,
         )
 
     raise ValueError(f"unsupported source_type: {source_type}")
+
+
+def _project_profile(
+    paths: RuntimePaths,
+    args: argparse.Namespace,
+    output_id: str,
+) -> Any:
+    profile_path = Path(args.profile)
+    profile = load_profile(profile_path)
+    exclude_record_ids: set[str] = set()
+    if getattr(args, "exclude_seen_state", False):
+        state_id = getattr(args, "state_id", "seen-records")
+        seen_state = load_seen_records_state(
+            paths=paths,
+            profile_id=profile["profile_id"],
+            state_id=state_id,
+        )
+        if seen_state is not None:
+            exclude_record_ids = set(seen_state.state["record_ids"])
+    return ProfileProjector(paths).project(
+        profile_path,
+        output_id=output_id,
+        exclude_record_ids=exclude_record_ids,
+    )
 
 
 def _smoke_source_config(
@@ -847,6 +889,8 @@ def _smoke_source_config(
             source_config=args.source_config,
             run_id=args.run_id,
             output_id=args.output_id,
+            exclude_seen_state=args.exclude_seen_state,
+            state_id=args.state_id,
         ),
         captured_stdout,
         github_collector_factory,
@@ -1833,6 +1877,16 @@ def _parser() -> argparse.ArgumentParser:
     source_config.add_argument("--source-config", required=True)
     source_config.add_argument("--run-id")
     source_config.add_argument("--output-id")
+    source_config.add_argument(
+        "--exclude-seen-state",
+        action="store_true",
+        help="Exclude records already present in profile-local seen state.",
+    )
+    source_config.add_argument(
+        "--state-id",
+        default="seen-records",
+        help="Profile state id to read when --exclude-seen-state is set.",
+    )
 
     smoke = subparsers.add_parser(
         "smoke-source-config",
@@ -1846,6 +1900,16 @@ def _parser() -> argparse.ArgumentParser:
     smoke.add_argument("--source-config", required=True)
     smoke.add_argument("--run-id")
     smoke.add_argument("--output-id")
+    smoke.add_argument(
+        "--exclude-seen-state",
+        action="store_true",
+        help="Exclude records already present in profile-local seen state.",
+    )
+    smoke.add_argument(
+        "--state-id",
+        default="seen-records",
+        help="Profile state id to read when --exclude-seen-state is set.",
+    )
 
     project_profiles = subparsers.add_parser(
         "project-profiles",
