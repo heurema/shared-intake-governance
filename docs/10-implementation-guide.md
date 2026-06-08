@@ -200,7 +200,8 @@ requires each `source_id` to be unique and match the source config filename
 stem.
 The `inspect-source-config` command validates one `source-config.v1` file and
 returns a normalized summary without fetching, projecting, reading profile
-state, or writing runtime data.
+state, or writing runtime data. For tracked `sources/examples/*.json` files, it
+also requires the source id to match the filename stem.
 The `list-source-sets` command validates tracked `source-set.v1` files under
 `sources/sets/` and every referenced `source-config.v1` file without
 collecting, projecting, scheduling, batching sources, or writing runtime data.

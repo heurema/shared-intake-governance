@@ -87,7 +87,9 @@ the repository.
 
 `inspect-source-config` validates one `source-config.v1` file and returns a
 normalized summary. It does not fetch upstream sources, write runtime data,
-read profile state, project profiles, or update seen state.
+read profile state, project profiles, or update seen state. For tracked
+`sources/examples/*.json` files, it also requires the source id to match the
+filename stem.
 `list-source-configs` validates the tracked `sources/examples/*.json` catalog,
 requires each source id to be unique and match its source config filename stem,
 and returns a deterministic inventory under the same no-fetch/no-write
@@ -154,6 +156,8 @@ runtime paths consume them:
 - profile seen-state record ids must be safe path segments, sorted, and unique;
 - source-config catalog entries must use filename-matched unique `source_id`
   values before the catalog can be listed;
+- directly inspected tracked source-config files must use `source_id` values
+  that match their filenames before their config is consumed;
 - source-set catalog entries must use filename-matched unique `source_set_id`
   values before the catalog can be listed;
 - directly inspected tracked source-set files must use `source_set_id` values
@@ -208,6 +212,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `python3 scripts/check_repo.py` passed with 276 tests after requiring
+  direct tracked source-config inspection to match `source_id` to filename.
 - `python3 scripts/check_repo.py` passed with 275 tests after requiring
   direct tracked source-set inspection to match `source_set_id` to filename.
 - `python3 scripts/check_repo.py` passed with 274 tests after requiring

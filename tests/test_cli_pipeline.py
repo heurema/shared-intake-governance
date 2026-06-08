@@ -162,6 +162,34 @@ class CliPipelineTests(unittest.TestCase):
                     stdout=io.StringIO(),
                 )
 
+    def test_inspect_source_config_rejects_tracked_filename_mismatch(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            source_config_path = _write_repo_source_config(
+                root,
+                "github-search-code-agents-copy.json",
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_search",
+                    "source_id": "github-search-code-agents",
+                    "query": "topic:agents language:python",
+                    "max_results": 10,
+                },
+            )
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "source_id must match filename",
+            ):
+                main(
+                    [
+                        "inspect-source-config",
+                        "--source-config",
+                        str(source_config_path),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
     def test_list_source_configs_validates_catalog_without_writes(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)

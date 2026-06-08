@@ -35,8 +35,8 @@ narrow local CLI commands for the current `github_repo`, `github_releases`,
 `github_search`, `arxiv_query`, `rss`, `news`, and `source-config.v1` paths with
 validated source config input, read-only `list-source-configs` and
 `inspect-source-config`, source-config catalog ids with filename-matched unique
-source ids, raw-root bounded raw metadata, run manifest, and source health
-output.
+source ids, tracked source-config direct inspection with filename-matched ids,
+raw-root bounded raw metadata, run manifest, and source health output.
 It includes a contract-only `source-set.v1` schema, example source set, and
 read-only `list-source-sets` and `inspect-source-set` CLI commands for
 validating tracked source-set catalog ids with filename-matched unique
