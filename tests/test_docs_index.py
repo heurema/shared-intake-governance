@@ -33,6 +33,27 @@ class DocsIndexTests(unittest.TestCase):
         self.assertIn("--exclude-seen-state", recipe_text)
         self.assertIn("--update-seen-state", recipe_text)
 
+    def test_consumer_onboarding_points_to_source_config_recipe(self):
+        onboarding_text = (
+            ROOT / "docs" / "08-consumer-onboarding.md"
+        ).read_text(encoding="utf-8")
+
+        expected_fragments = [
+            "13-source-config-recipes.md",
+            "`SIG_PROFILE`",
+            "`SIG_SOURCE_CONFIG`",
+            "`SIG_RUNTIME_ROOT`",
+            "`seen_records`",
+            "`smoke-source-config`",
+        ]
+        missing = [
+            fragment
+            for fragment in expected_fragments
+            if fragment not in onboarding_text
+        ]
+
+        self.assertEqual(missing, [])
+
 
 def _runtime_source_paths():
     source_root = ROOT / "src" / "shared_intake_governance"
