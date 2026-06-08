@@ -103,6 +103,8 @@ What exists now:
 - read-only CLI commands for validated listing and inspection of run manifests,
   clean records, profile state, profile reports, mediation records, and source
   health;
+- reusable source-config recipes for explicit "new only, then mark seen"
+  consumer loops;
 - validated run manifest and source health artifacts from the CLI pipeline.
 - validated tool-intent and governance-decision contracts with a read-only
   default governance evaluator CLI.
@@ -158,7 +160,8 @@ Start here:
 3. if you need execution context, read [docs/06-agent-session-guide.md](docs/06-agent-session-guide.md);
 4. if you need to add or change a source, read [docs/07-source-onboarding.md](docs/07-source-onboarding.md);
 5. if you need to onboard a new consumer project, read [docs/08-consumer-onboarding.md](docs/08-consumer-onboarding.md);
-6. if you need to continue implementation, read [docs/10-implementation-guide.md](docs/10-implementation-guide.md).
+6. if you need a reusable local source-config recipe, read [docs/13-source-config-recipes.md](docs/13-source-config-recipes.md);
+7. if you need to continue implementation, read [docs/10-implementation-guide.md](docs/10-implementation-guide.md).
 
 ## Repository layout
 

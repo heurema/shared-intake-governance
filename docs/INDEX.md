@@ -40,9 +40,16 @@ Use this file as the main navigation layer.
 
 - [10-implementation-guide.md](10-implementation-guide.md)
 - [11-local-runbook.md](11-local-runbook.md)
+- [13-source-config-recipes.md](13-source-config-recipes.md)
 - [12-current-surface-audit.md](12-current-surface-audit.md)
 - [04-mvp-roadmap.md](04-mvp-roadmap.md)
 - [03-provider-adapters.md](03-provider-adapters.md)
+
+### Run reusable source-config recipes
+
+- [13-source-config-recipes.md](13-source-config-recipes.md)
+- [11-local-runbook.md](11-local-runbook.md)
+- [09-operating-model.md](09-operating-model.md)
 
 ### Review provider boundaries
 
@@ -64,6 +71,7 @@ Use this file as the main navigation layer.
 11. [10-implementation-guide.md](10-implementation-guide.md)
 12. [11-local-runbook.md](11-local-runbook.md)
 13. [12-current-surface-audit.md](12-current-surface-audit.md)
+14. [13-source-config-recipes.md](13-source-config-recipes.md)
 
 ## Schemas and examples
 

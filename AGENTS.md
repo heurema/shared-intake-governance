@@ -17,7 +17,8 @@ Read in this order before making structural or runtime decisions:
 11. `docs/05-threat-model.md`
 12. `docs/10-implementation-guide.md`
 13. `docs/11-local-runbook.md`
-14. `docs/04-mvp-roadmap.md`
+14. `docs/13-source-config-recipes.md`
+15. `docs/04-mvp-roadmap.md`
 
 ## Current repository state
 
@@ -48,6 +49,9 @@ commands validate artifacts before returning summaries or full objects.
 The `run-source-config` and `smoke-source-config` commands can also explicitly
 merge generated one-source projection item ids into profile-local `seen_records`
 state when `--update-seen-state` is provided.
+Reusable source-config daily recipes are documented in
+`docs/13-source-config-recipes.md` without adding a scheduler, wrapper script,
+daemon, or publication workflow.
 
 No source collector family beyond `github_repo`, `github_releases`,
 `github_search`, `arxiv_query`, `rss`, and `news`, sanitizer source mapping

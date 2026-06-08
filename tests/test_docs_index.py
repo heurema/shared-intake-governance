@@ -22,6 +22,17 @@ class DocsIndexTests(unittest.TestCase):
 
         self.assertEqual(missing, [])
 
+    def test_source_config_recipes_doc_is_canonical(self):
+        index_text = (ROOT / "docs" / "INDEX.md").read_text(encoding="utf-8")
+        recipe_path = ROOT / "docs" / "13-source-config-recipes.md"
+
+        self.assertTrue(recipe_path.exists())
+        self.assertIn("13-source-config-recipes.md", index_text)
+
+        recipe_text = recipe_path.read_text(encoding="utf-8")
+        self.assertIn("--exclude-seen-state", recipe_text)
+        self.assertIn("--update-seen-state", recipe_text)
+
 
 def _runtime_source_paths():
     source_root = ROOT / "src" / "shared_intake_governance"

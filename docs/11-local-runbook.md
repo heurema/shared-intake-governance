@@ -163,6 +163,8 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli run-source-config \
 
 This writes or merges only the generated report item `record_id` values into
 `profiles/<profile-id>/state/seen-records.json`.
+For the reusable consumer-oriented version of this command shape, see
+[13-source-config-recipes.md](13-source-config-recipes.md).
 
 ## Project multiple profiles
 
