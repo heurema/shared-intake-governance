@@ -196,7 +196,8 @@ project runs.
 The `list-source-configs` command validates tracked `source-config.v1` files
 under `sources/examples/` and returns a deterministic inventory without
 fetching, projecting, reading profile state, or writing runtime data. It
-rejects duplicate `source_id` values across the tracked catalog.
+requires each `source_id` to be unique and match the source config filename
+stem.
 The `inspect-source-config` command validates one `source-config.v1` file and
 returns a normalized summary without fetching, projecting, reading profile
 state, or writing runtime data.
