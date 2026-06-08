@@ -58,6 +58,7 @@ from shared_intake_governance.provider_presets import (
 )
 from shared_intake_governance.projector import (
     ProfileProjector,
+    init_seen_records_state,
     load_seen_records_state,
     load_profile,
     update_seen_records_state,
@@ -164,6 +165,8 @@ def main(
         return _list_profile_state(args, stdout)
     if args.command == "inspect-profile-state":
         return _inspect_profile_state(args, stdout)
+    if args.command == "init-profile-seen-state":
+        return _init_profile_seen_state(args, stdout)
     if args.command == "update-profile-seen-state":
         return _update_profile_seen_state(args, stdout)
     if args.command == "list-profile-reports":
@@ -1112,6 +1115,24 @@ def _inspect_profile_state(args: argparse.Namespace, stdout: TextIO) -> int:
     state = dict(state)
     state["profile_state_path"] = str(state_path)
     _print_json(stdout, state)
+    return 0
+
+
+def _init_profile_seen_state(args: argparse.Namespace, stdout: TextIO) -> int:
+    paths = RuntimePaths(Path(args.runtime_root))
+    result = init_seen_records_state(
+        paths=paths,
+        profile_id=args.profile_id,
+        state_id=args.state_id,
+        updated_at=_format_utc(datetime.now(timezone.utc)),
+    )
+    _print_json(
+        stdout,
+        {
+            "profile_state_path": str(result.path),
+            "profile_state": result.state,
+        },
+    )
     return 0
 
 
@@ -2093,6 +2114,14 @@ def _parser() -> argparse.ArgumentParser:
     inspect_profile_state.add_argument("--runtime-root", required=True)
     inspect_profile_state.add_argument("--profile-id", required=True)
     inspect_profile_state.add_argument("--state-id", required=True)
+
+    init_profile_seen_state = subparsers.add_parser(
+        "init-profile-seen-state",
+        help="Create one empty profile-local seen-records state.",
+    )
+    init_profile_seen_state.add_argument("--runtime-root", required=True)
+    init_profile_seen_state.add_argument("--profile-id", required=True)
+    init_profile_seen_state.add_argument("--state-id", default="seen-records")
 
     update_profile_state = subparsers.add_parser(
         "update-profile-seen-state",

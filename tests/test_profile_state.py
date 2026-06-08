@@ -8,6 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from shared_intake_governance.projector.profile_state import (  # noqa: E402
+    init_seen_records_state,
     update_seen_records_state,
     validate_profile_state,
 )
@@ -19,6 +20,54 @@ SAFE_SEGMENT_PATTERN = "^[A-Za-z0-9][A-Za-z0-9._-]*$"
 
 
 class ProfileStateUpdateTests(unittest.TestCase):
+    def test_init_seen_records_state_creates_empty_state(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+
+            result = init_seen_records_state(
+                paths=paths,
+                profile_id="code-intel-kernel",
+                state_id="seen-records",
+                updated_at="2026-05-29T12:30:45Z",
+            )
+
+            expected_path = paths.profile_state_path(
+                "code-intel-kernel",
+                "seen-records",
+            )
+            self.assertEqual(result.path, expected_path)
+            self.assertEqual(
+                result.state,
+                {
+                    "schema_version": "profile-state.v1",
+                    "profile_id": "code-intel-kernel",
+                    "state_id": "seen-records",
+                    "state_kind": "seen_records",
+                    "updated_at": "2026-05-29T12:30:45Z",
+                    "record_ids": [],
+                },
+            )
+            self.assertEqual(json.loads(expected_path.read_text()), result.state)
+            validate_profile_state(result.state)
+
+    def test_init_seen_records_state_refuses_existing_state(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            existing_path = paths.profile_state_path("code-intel-kernel", "seen-records")
+            existing_path.parent.mkdir(parents=True, exist_ok=True)
+            existing_path.write_text(
+                json.dumps(_profile_state(), sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "profile state already exists"):
+                init_seen_records_state(
+                    paths=paths,
+                    profile_id="code-intel-kernel",
+                    state_id="seen-records",
+                    updated_at="2026-05-29T12:30:45Z",
+                )
+
     def test_update_seen_records_state_merges_report_items_deterministically(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             paths = RuntimePaths(Path(tmp_dir) / "runtime")

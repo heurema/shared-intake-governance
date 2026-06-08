@@ -306,6 +306,19 @@ existing
 when `--exclude-seen-state` is provided and create or update it only when
 `--update-seen-state` is provided.
 
+To explicitly initialize an empty profile-local seen-records state before the
+first projection:
+
+```sh
+PYTHONPATH=src python3 -m shared_intake_governance.cli init-profile-seen-state \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --profile-id code-intel-kernel
+```
+
+Expected output is one summary containing `profile_state_path` and the written
+empty `profile-state.v1` object. The command refuses to overwrite an existing
+state.
+
 To explicitly update a profile-local seen-records state from one generated
 profile report:
 

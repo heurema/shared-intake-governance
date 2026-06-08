@@ -59,6 +59,31 @@ def load_seen_records_state(
     return ProfileStateRead(state=state, path=path)
 
 
+def init_seen_records_state(
+    *,
+    paths: RuntimePaths,
+    profile_id: str,
+    state_id: str,
+    updated_at: str,
+) -> ProfileStateWrite:
+    """Create an empty profile-local seen-records state."""
+    path = paths.profile_state_path(profile_id, state_id)
+    if path.exists():
+        raise ValueError("profile state already exists")
+
+    state = {
+        "schema_version": "profile-state.v1",
+        "profile_id": profile_id,
+        "state_id": state_id,
+        "state_kind": "seen_records",
+        "updated_at": updated_at,
+        "record_ids": [],
+    }
+    validate_profile_state(state)
+    _write_json(path, state)
+    return ProfileStateWrite(state=state, path=path)
+
+
 def update_seen_records_state(
     *,
     paths: RuntimePaths,

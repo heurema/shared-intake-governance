@@ -66,6 +66,7 @@ Current runtime code covers:
   source-set inventory, and read-only source-set inspection;
 - clean-record emission from implemented source families;
 - deterministic profile projection from the clean cache;
+- explicit profile seen-state initialization without overwriting existing state;
 - explicit profile seen-state filtering during multi-profile and one-source
   source-config projection;
 - explicit profile seen-state updates;
@@ -170,6 +171,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `python3 scripts/check_repo.py` passed after adding the explicit
+  `init-profile-seen-state` boundary.
 - `python3 scripts/check_repo.py` passed after adding the canonical local
   verification runner.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 245 tests

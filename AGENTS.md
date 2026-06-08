@@ -30,7 +30,7 @@ collectors, clean-record emitters
 for `github_repo`, `github_releases`, `github_search`, `arxiv_query`, `rss`,
 and `news`,
 one validated explicit-profile JSON projector, explicit validated profile
-seen-state filtering and updates, and
+seen-state initialization, filtering, and updates, and
 narrow local CLI commands for the current `github_repo`, `github_releases`,
 `github_search`, `arxiv_query`, `rss`, `news`, and `source-config.v1` paths with
 validated source config input, read-only `list-source-configs` and
@@ -63,6 +63,8 @@ commands validate artifacts before returning summaries or full objects.
 The `run-source-config` and `smoke-source-config` commands can also explicitly
 merge generated one-source projection item ids into profile-local `seen_records`
 state when `--update-seen-state` is provided.
+The `init-profile-seen-state` command can explicitly create one empty
+profile-local `seen_records` state and refuses to overwrite existing state.
 Reusable source-config daily recipes are documented in
 `docs/13-source-config-recipes.md` without adding a scheduler, wrapper script,
 daemon, or publication workflow.
@@ -71,8 +73,9 @@ No source collector family beyond `github_repo`, `github_releases`,
 `github_search`, `arxiv_query`, `rss`, and `news`, sanitizer source mapping
 beyond those six source types,
 automatic or implicit profile-state updates beyond the explicit
-`project-profiles --update-seen-state`, `run-source-config
---update-seen-state`, and `smoke-source-config --update-seen-state` gates,
+`init-profile-seen-state`, `project-profiles --update-seen-state`,
+`run-source-config --update-seen-state`, and `smoke-source-config
+--update-seen-state` gates,
 profile-state filtering beyond the explicit
 `project-profiles --exclude-seen-state`, `run-source-config
 --exclude-seen-state`, and `smoke-source-config --exclude-seen-state` gates,
