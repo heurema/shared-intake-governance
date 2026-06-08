@@ -433,6 +433,54 @@ class CliPipelineTests(unittest.TestCase):
                     stdout=io.StringIO(),
                 )
 
+    def test_inspect_source_set_rejects_duplicate_source_config_paths(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            _write_repo_source_config(
+                root,
+                "github-search-code-agents.json",
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_search",
+                    "source_id": "github-search-code-agents",
+                    "query": "topic:agents language:python",
+                    "max_results": 10,
+                },
+            )
+            source_set_path = _write_source_set(
+                root,
+                {
+                    "schema_version": "source-set.v1",
+                    "source_set_id": "code-intel-source-set",
+                    "sources": [
+                        {
+                            "source_id": "github-search-code-agents",
+                            "source_config_path": (
+                                "sources/examples/github-search-code-agents.json"
+                            ),
+                        },
+                        {
+                            "source_id": "github-search-code-agents-copy",
+                            "source_config_path": (
+                                "sources/examples/github-search-code-agents.json"
+                            ),
+                        },
+                    ],
+                },
+            )
+
+            with self.assertRaisesRegex(ValueError, "duplicate source_config_path"):
+                main(
+                    [
+                        "inspect-source-set",
+                        "--repo-root",
+                        str(root),
+                        "--source-set",
+                        str(source_set_path),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
     def test_list_source_sets_validates_catalog_without_writes(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
@@ -663,6 +711,52 @@ class CliPipelineTests(unittest.TestCase):
             )
 
             with self.assertRaisesRegex(ValueError, "duplicate source_id"):
+                main(
+                    [
+                        "list-source-sets",
+                        "--repo-root",
+                        str(root),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
+    def test_list_source_sets_rejects_duplicate_source_config_paths(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            _write_repo_source_config(
+                root,
+                "github-search-code-agents.json",
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_search",
+                    "source_id": "github-search-code-agents",
+                    "query": "topic:agents language:python",
+                    "max_results": 10,
+                },
+            )
+            _write_source_set(
+                root,
+                {
+                    "schema_version": "source-set.v1",
+                    "source_set_id": "code-intel-source-set",
+                    "sources": [
+                        {
+                            "source_id": "github-search-code-agents",
+                            "source_config_path": (
+                                "sources/examples/github-search-code-agents.json"
+                            ),
+                        },
+                        {
+                            "source_id": "github-search-code-agents-copy",
+                            "source_config_path": (
+                                "sources/examples/github-search-code-agents.json"
+                            ),
+                        },
+                    ],
+                },
+            )
+
+            with self.assertRaisesRegex(ValueError, "duplicate source_config_path"):
                 main(
                     [
                         "list-source-sets",

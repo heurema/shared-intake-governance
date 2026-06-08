@@ -113,8 +113,8 @@ What exists now:
 - read-only `inspect-source-config` CLI command for validating one
   `source-config.v1` file without running it;
 - read-only `list-source-sets` CLI command for validating and listing the
-  tracked source-set catalog, including unique source ids, without running
-  sources;
+  tracked source-set catalog, including unique source ids and config refs,
+  without running sources;
 - read-only `inspect-source-set` CLI command for validating one source-set file
   and its unique referenced source-config files without running sources;
 - repo-local surface consistency guard for keeping the CLI command list in
