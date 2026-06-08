@@ -204,9 +204,9 @@ state, or writing runtime data.
 The `list-source-sets` command validates tracked `source-set.v1` files under
 `sources/sets/` and every referenced `source-config.v1` file without
 collecting, projecting, scheduling, batching sources, or writing runtime data.
-It rejects duplicate `source_set_id` values across the tracked catalog and
-duplicate `source_id` and `source_config_path` values inside one source set
-before resolving source config refs.
+It requires each `source_set_id` to be unique and match its filename stem, and
+rejects duplicate `source_id` and `source_config_path` values inside one source
+set before resolving source config refs.
 The `inspect-source-set` command validates one `source-set.v1` file and every
 referenced `source-config.v1` file without collecting, projecting, scheduling,
 or batching sources. It applies the same unique source id and source config ref

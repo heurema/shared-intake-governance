@@ -688,7 +688,7 @@ class CliPipelineTests(unittest.TestCase):
                     stdout=io.StringIO(),
                 )
 
-    def test_list_source_sets_rejects_duplicate_source_set_ids(self):
+    def test_list_source_sets_rejects_source_set_id_filename_mismatch(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
             _write_repo_source_config(
@@ -726,25 +726,13 @@ class CliPipelineTests(unittest.TestCase):
                         }
                     ],
                 },
-            )
-            _write_source_set(
-                root,
-                {
-                    "schema_version": "source-set.v1",
-                    "source_set_id": "code-intel-source-set",
-                    "sources": [
-                        {
-                            "source_id": "rss-github-blog",
-                            "source_config_path": (
-                                "sources/examples/rss-github-blog.json"
-                            ),
-                        }
-                    ],
-                },
                 filename="code-intel-source-set-copy.json",
             )
 
-            with self.assertRaisesRegex(ValueError, "duplicate source_set_id"):
+            with self.assertRaisesRegex(
+                ValueError,
+                "source_set_id must match filename",
+            ):
                 main(
                     [
                         "list-source-sets",
