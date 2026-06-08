@@ -92,6 +92,117 @@ class CliPipelineTests(unittest.TestCase):
             provider_presets.resolve_provider_preset("agy_readonly_local"),
         )
 
+    def test_inspect_source_set_validates_refs_without_writes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            source_config_path = _write_repo_source_config(
+                root,
+                "github-search-code-agents.json",
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_search",
+                    "source_id": "github-search-code-agents",
+                    "query": "topic:agents language:python",
+                    "max_results": 10,
+                },
+            )
+            source_set_path = _write_source_set(
+                root,
+                {
+                    "schema_version": "source-set.v1",
+                    "source_set_id": "code-intel-source-set",
+                    "sources": [
+                        {
+                            "source_id": "github-search-code-agents",
+                            "source_config_path": (
+                                "sources/examples/github-search-code-agents.json"
+                            ),
+                        }
+                    ],
+                },
+            )
+            before_paths = _all_files(root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "inspect-source-set",
+                    "--repo-root",
+                    str(root),
+                    "--source-set",
+                    str(source_set_path),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(root), before_paths)
+            self.assertEqual(
+                summary["source_set_path"],
+                str(source_set_path.resolve()),
+            )
+            self.assertEqual(summary["repo_root"], str(root.resolve()))
+            self.assertEqual(summary["schema_version"], "source-set.v1")
+            self.assertEqual(summary["source_set_id"], "code-intel-source-set")
+            self.assertEqual(summary["source_count"], 1)
+            self.assertEqual(
+                summary["sources"],
+                [
+                    {
+                        "source_id": "github-search-code-agents",
+                        "source_type": "github_search",
+                        "source_config_path": str(source_config_path.resolve()),
+                        "source_config_ref": (
+                            "sources/examples/github-search-code-agents.json"
+                        ),
+                    }
+                ],
+            )
+
+    def test_inspect_source_set_rejects_source_id_mismatch(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            _write_repo_source_config(
+                root,
+                "github-search-code-agents.json",
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_search",
+                    "source_id": "github-search-code-agents",
+                    "query": "topic:agents language:python",
+                    "max_results": 10,
+                },
+            )
+            source_set_path = _write_source_set(
+                root,
+                {
+                    "schema_version": "source-set.v1",
+                    "source_set_id": "code-intel-source-set",
+                    "sources": [
+                        {
+                            "source_id": "other-source-id",
+                            "source_config_path": (
+                                "sources/examples/github-search-code-agents.json"
+                            ),
+                        }
+                    ],
+                },
+            )
+
+            with self.assertRaisesRegex(ValueError, "source_id mismatch"):
+                main(
+                    [
+                        "inspect-source-set",
+                        "--repo-root",
+                        str(root),
+                        "--source-set",
+                        str(source_set_path),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
     def test_run_github_repo_pipeline_collects_sanitizes_and_projects(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
@@ -4137,6 +4248,20 @@ def _write_source_config(root, payload):
     source_config_path = root / "source-config.json"
     source_config_path.write_text(json.dumps(payload), encoding="utf-8")
     return source_config_path
+
+
+def _write_repo_source_config(root, filename, payload):
+    source_config_path = root / "sources" / "examples" / filename
+    source_config_path.parent.mkdir(parents=True, exist_ok=True)
+    source_config_path.write_text(json.dumps(payload), encoding="utf-8")
+    return source_config_path
+
+
+def _write_source_set(root, payload):
+    source_set_path = root / "sources" / "sets" / "code-intel-source-set.json"
+    source_set_path.parent.mkdir(parents=True, exist_ok=True)
+    source_set_path.write_text(json.dumps(payload), encoding="utf-8")
+    return source_set_path
 
 
 def _add_unknown_field(path, *, field="unexpected_field"):

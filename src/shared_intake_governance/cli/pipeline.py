@@ -82,6 +82,7 @@ from shared_intake_governance.runtime import (
 )
 from shared_intake_governance.sanitizer import CleanRecordEmitter, validate_clean_record
 from shared_intake_governance.source_config import load_source_config
+from shared_intake_governance.source_set import inspect_source_set
 
 
 _SMOKE_BOUNDARY_FILENAME = "SMOKE_RUNTIME_DO_NOT_COMMIT.txt"
@@ -139,6 +140,8 @@ def main(
             rss_collector_factory,
             news_collector_factory,
         )
+    if args.command == "inspect-source-set":
+        return _inspect_source_set(args, stdout)
     if args.command == "project-profiles":
         return _project_profiles(args, stdout)
     if args.command == "list-runs":
@@ -1437,6 +1440,17 @@ def _inspect_provider_preset(args: argparse.Namespace, stdout: TextIO) -> int:
     return 0
 
 
+def _inspect_source_set(args: argparse.Namespace, stdout: TextIO) -> int:
+    _print_json(
+        stdout,
+        inspect_source_set(
+            args.source_set,
+            repo_root=args.repo_root,
+        ),
+    )
+    return 0
+
+
 def _record_provider_result(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     provider_request_path = Path(args.provider_request)
@@ -1955,6 +1969,17 @@ def _parser() -> argparse.ArgumentParser:
         "--state-id",
         default="seen-records",
         help="Profile state id to read or update when seen-state flags are set.",
+    )
+
+    inspect_source_set_parser = subparsers.add_parser(
+        "inspect-source-set",
+        help="Validate one source-set.v1 file and its source-config refs.",
+    )
+    inspect_source_set_parser.add_argument("--source-set", required=True)
+    inspect_source_set_parser.add_argument(
+        "--repo-root",
+        default=".",
+        help="Repository root used to resolve source_config_path refs.",
     )
 
     project_profiles = subparsers.add_parser(

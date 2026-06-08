@@ -35,8 +35,9 @@ narrow local CLI commands for the current `github_repo`, `github_releases`,
 `github_search`, `arxiv_query`, `rss`, `news`, and `source-config.v1` paths with
 validated source config input, raw-root bounded raw metadata, run manifest, and
 source health output.
-It includes a contract-only `source-set.v1` schema and example source set for
-grouping tracked source-config refs without executing them.
+It includes a contract-only `source-set.v1` schema, example source set, and
+read-only `inspect-source-set` CLI command for validating tracked
+source-config refs without executing them.
 It also includes validated and raw-root bounded sanitizer input, governance
 decision, validated audit, validated approval,
 validated dry-run, validated mediation evidence input, validated execution

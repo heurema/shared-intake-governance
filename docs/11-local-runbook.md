@@ -281,10 +281,15 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli show-source-health \
   --runtime-root "$SIG_RUNTIME_ROOT" \
   --run-id "$SIG_RUN_ID" \
   --source-id github-signum
+
+PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-source-set \
+  --source-set sources/sets/code-intel-source-set.json
 ```
 
 These commands are read-only. They do not fetch upstream sources and do not
-write runtime files. `inspect-profile-state` requires an existing
+write runtime files. `inspect-source-set` validates repo-tracked
+source-config refs without running them. `inspect-profile-state` requires an
+existing
 `profile-state.v1` artifact under `profiles/<profile-id>/state/`;
 `project-profiles`, `run-source-config`, and `smoke-source-config` read it only
 when `--exclude-seen-state` is provided and create or update it only when

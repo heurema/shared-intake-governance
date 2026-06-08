@@ -61,7 +61,8 @@ Current runtime code covers:
 - runtime path helpers for local file-based artifacts;
 - validated raw payload metadata, run manifests, and source health;
 - source-config validation and examples;
-- contract-only source-set schema and example source-config refs;
+- contract-only source-set schema, example source-config refs, and read-only
+  source-set inspection;
 - clean-record emission from implemented source families;
 - deterministic profile projection from the clean cache;
 - explicit profile seen-state filtering during multi-profile and one-source
@@ -94,8 +95,9 @@ publication behavior in this shared core.
 
 The `source-set.v1` contract and
 `sources/sets/code-intel-source-set.json` example are contract-only grouping
-surfaces. They list repo-tracked source-config refs, but no current runtime
-command reads, dispatches, schedules, or batches source sets.
+surfaces. `inspect-source-set` reads one source-set file and validates each
+referenced source-config file. No current runtime command dispatches,
+schedules, or batches source sets.
 
 ## Contract hardening already in place
 
@@ -157,6 +159,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 235 tests
+  after adding read-only `inspect-source-set` validation.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 233 tests
   after adding the contract-only `source-set.v1` schema and example.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 230 tests

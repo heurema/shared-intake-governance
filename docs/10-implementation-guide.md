@@ -108,6 +108,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli run-news-feed`
 - `python -m shared_intake_governance.cli run-source-config`
 - `python -m shared_intake_governance.cli smoke-source-config`
+- `python -m shared_intake_governance.cli inspect-source-set`
 - `python -m shared_intake_governance.cli project-profiles`
 - `python -m shared_intake_governance.cli list-runs`
 - `python -m shared_intake_governance.cli list-clean-records`
@@ -152,7 +153,8 @@ These commands also write:
 - `source-health/<run-id>/<source-id>.json`
 
 The inspection commands are read-only and should not create runtime files. They
-validate runtime artifacts before returning summaries or full objects.
+validate runtime artifacts or repo-tracked source-set/source-config refs before
+returning summaries or full objects.
 The `project-profiles` command reads the shared clean cache and writes one
 deterministic report per explicit profile path. With `--update-seen-state`, it
 also merges each generated report into that profile's local `seen_records`
@@ -163,6 +165,9 @@ updating state.
 The `run-source-config` and `smoke-source-config` commands support the same
 explicit read-only seen-state filter for one-source collect, sanitize, and
 project runs.
+The `inspect-source-set` command validates one `source-set.v1` file and every
+referenced `source-config.v1` file without collecting, projecting, scheduling,
+or batching sources.
 With `--update-seen-state`, those commands also explicitly merge generated
 report items into the profile's local `seen_records` state artifact.
 The profile-state inspection commands read existing `profile-state.v1`
