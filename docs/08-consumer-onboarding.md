@@ -69,6 +69,11 @@ Before adding a consumer, answer:
 5. What report or output mode fits this consumer?
 6. Does the consumer require model summarization, or is deterministic projection enough at first?
 7. What existing local loop should eventually be replaced or reduced?
+8. Which `source-config.v1` file should feed the first reusable one-source run?
+9. Where will the local runtime root and profile-local `seen_records` state
+   live?
+10. What smoke preflight proves the source/profile wiring before persistent
+    state is updated?
 
 ## Recommended onboarding flow
 
@@ -102,7 +107,27 @@ The current profile contract includes:
 
 See [../schemas/profile.schema.json](../schemas/profile.schema.json).
 
-### Step 3: decide where outputs live
+### Step 3: define the source-config handoff
+
+For a one-source local loop, use the reusable command shape in
+[13-source-config-recipes.md](13-source-config-recipes.md). The consumer
+handoff should identify only these shared-runtime inputs:
+
+- `SIG_PROFILE`: the profile JSON path selected for this consumer;
+- `SIG_SOURCE_CONFIG`: one validated `source-config.v1` file;
+- `SIG_RUNTIME_ROOT`: a local runtime data root outside git;
+- `SIG_RUN_ID`: the caller's run id.
+
+The profile-local `seen_records` artifact remains runtime state under
+`profiles/<profile-id>/state/seen-records.json` inside `SIG_RUNTIME_ROOT`. Do
+not move that state into this repository or into a source config.
+
+Before wiring a persistent daily caller, run `smoke-source-config` with the same
+profile and source config. A smoke run proves fetch, sanitize, projection, and
+state-update wiring inside its smoke runtime root only; it does not prove that
+the consumer's persistent `seen_records` state has been updated.
+
+### Step 4: decide where outputs live
 
 Keep outputs with the consumer or its runtime area, not in the shared core repo.
 
@@ -121,7 +146,7 @@ Typical ownership split:
   - audit
   - local state
 
-### Step 4: run in shadow mode
+### Step 5: run in shadow mode
 
 Before cutting over a consumer from its old loop:
 
@@ -132,7 +157,7 @@ Before cutting over a consumer from its old loop:
 
 Shadow mode is the safe default because it proves reuse before deletion.
 
-### Step 5: cut over one consumer at a time
+### Step 6: cut over one consumer at a time
 
 Do not migrate every project simultaneously.
 
@@ -189,4 +214,6 @@ A consumer onboarding is complete when:
 3. relevant sources are clear;
 4. risk tolerance is explicit;
 5. output ownership is clear;
-6. shadow mode or migration path is defined.
+6. source-config handoff inputs are explicit;
+7. profile-local `seen_records` ownership is clear;
+8. smoke preflight and shadow mode are defined.
