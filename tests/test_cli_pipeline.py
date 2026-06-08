@@ -1095,20 +1095,9 @@ class CliPipelineTests(unittest.TestCase):
                     stdout=io.StringIO(),
                 )
 
-    def test_list_profiles_rejects_duplicate_profile_ids(self):
+    def test_list_profiles_rejects_profile_id_filename_mismatch(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
-            _write_repo_profile(
-                root,
-                "code-intel-kernel.json",
-                {
-                    "profile_id": "code-intel-kernel",
-                    "description": "Code intelligence research intake.",
-                    "accepted_sources": ["github_repo"],
-                    "keywords": ["coding agent"],
-                    "output_mode": "research_digest",
-                },
-            )
             _write_repo_profile(
                 root,
                 "code-intel-kernel-copy.json",
@@ -1121,7 +1110,7 @@ class CliPipelineTests(unittest.TestCase):
                 },
             )
 
-            with self.assertRaisesRegex(ValueError, "duplicate profile_id"):
+            with self.assertRaisesRegex(ValueError, "profile_id must match filename"):
                 main(
                     [
                         "list-profiles",
