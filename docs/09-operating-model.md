@@ -163,10 +163,13 @@ Current CLI behavior:
 - `run-source-config` reads one `source-config.v1` JSON file and writes one
   run manifest under `runs/`; when `--exclude-seen-state` is provided, it
   reads the profile's local `seen_records` state artifact and omits matching
-  record ids from the projection report;
+  record ids from the projection report; when `--update-seen-state` is
+  provided, it merges the generated report items into that profile's local
+  `seen_records` state artifact;
 - `smoke-source-config` runs one `source-config.v1` JSON file with a smoke
   runtime root outside the repository and writes a do-not-commit marker; it
-  supports the same explicit seen-state filter as `run-source-config`;
+  supports the same explicit seen-state filter and update gates as
+  `run-source-config`;
 - `project-profiles` reads existing clean records and writes one deterministic
   report per explicit profile path; when `--exclude-seen-state` is provided,
   it reads that profile's local `seen_records` state artifact and omits

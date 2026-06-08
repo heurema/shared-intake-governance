@@ -266,6 +266,7 @@ def _run_github_repo(
             "projection_path": str(projection.path),
             "projected_items": projection.report["counts"]["items_written"],
             "excluded_seen": projection.report["counts"]["excluded_seen"],
+            **_maybe_update_seen_state_summary(paths, args, projection),
             "run_manifest_path": str(evidence["run_manifest_path"]),
             "source_health_path": str(evidence["source_health_path"]),
         }
@@ -357,6 +358,7 @@ def _run_github_search(
             "projection_path": str(projection.path),
             "projected_items": projection.report["counts"]["items_written"],
             "excluded_seen": projection.report["counts"]["excluded_seen"],
+            **_maybe_update_seen_state_summary(paths, args, projection),
             "run_manifest_path": str(evidence["run_manifest_path"]),
             "source_health_path": str(evidence["source_health_path"]),
         }
@@ -449,6 +451,7 @@ def _run_github_releases(
             "projection_path": str(projection.path),
             "projected_items": projection.report["counts"]["items_written"],
             "excluded_seen": projection.report["counts"]["excluded_seen"],
+            **_maybe_update_seen_state_summary(paths, args, projection),
             "run_manifest_path": str(evidence["run_manifest_path"]),
             "source_health_path": str(evidence["source_health_path"]),
         }
@@ -540,6 +543,7 @@ def _run_arxiv_query(
             "projection_path": str(projection.path),
             "projected_items": projection.report["counts"]["items_written"],
             "excluded_seen": projection.report["counts"]["excluded_seen"],
+            **_maybe_update_seen_state_summary(paths, args, projection),
             "run_manifest_path": str(evidence["run_manifest_path"]),
             "source_health_path": str(evidence["source_health_path"]),
         }
@@ -630,6 +634,7 @@ def _run_rss_feed(
             "projection_path": str(projection.path),
             "projected_items": projection.report["counts"]["items_written"],
             "excluded_seen": projection.report["counts"]["excluded_seen"],
+            **_maybe_update_seen_state_summary(paths, args, projection),
             "run_manifest_path": str(evidence["run_manifest_path"]),
             "source_health_path": str(evidence["source_health_path"]),
         }
@@ -720,6 +725,7 @@ def _run_news_feed(
             "projection_path": str(projection.path),
             "projected_items": projection.report["counts"]["items_written"],
             "excluded_seen": projection.report["counts"]["excluded_seen"],
+            **_maybe_update_seen_state_summary(paths, args, projection),
             "run_manifest_path": str(evidence["run_manifest_path"]),
             "source_health_path": str(evidence["source_health_path"]),
         }
@@ -753,6 +759,7 @@ def _run_source_config(
                 run_id=args.run_id,
                 output_id=args.output_id,
                 exclude_seen_state=args.exclude_seen_state,
+                update_seen_state=args.update_seen_state,
                 state_id=args.state_id,
             ),
             stdout,
@@ -771,6 +778,7 @@ def _run_source_config(
                 run_id=args.run_id,
                 output_id=args.output_id,
                 exclude_seen_state=args.exclude_seen_state,
+                update_seen_state=args.update_seen_state,
                 state_id=args.state_id,
             ),
             stdout,
@@ -788,6 +796,7 @@ def _run_source_config(
                 run_id=args.run_id,
                 output_id=args.output_id,
                 exclude_seen_state=args.exclude_seen_state,
+                update_seen_state=args.update_seen_state,
                 state_id=args.state_id,
             ),
             stdout,
@@ -805,6 +814,7 @@ def _run_source_config(
                 run_id=args.run_id,
                 output_id=args.output_id,
                 exclude_seen_state=args.exclude_seen_state,
+                update_seen_state=args.update_seen_state,
                 state_id=args.state_id,
             ),
             stdout,
@@ -821,6 +831,7 @@ def _run_source_config(
                 run_id=args.run_id,
                 output_id=args.output_id,
                 exclude_seen_state=args.exclude_seen_state,
+                update_seen_state=args.update_seen_state,
                 state_id=args.state_id,
             ),
             stdout,
@@ -837,6 +848,7 @@ def _run_source_config(
                 run_id=args.run_id,
                 output_id=args.output_id,
                 exclude_seen_state=args.exclude_seen_state,
+                update_seen_state=args.update_seen_state,
                 state_id=args.state_id,
             ),
             stdout,
@@ -870,6 +882,29 @@ def _project_profile(
     )
 
 
+def _maybe_update_seen_state_summary(
+    paths: RuntimePaths,
+    args: argparse.Namespace,
+    projection: Any,
+) -> dict[str, Any]:
+    if not getattr(args, "update_seen_state", False):
+        return {}
+
+    state_id = getattr(args, "state_id", "seen-records")
+    profile_state = update_seen_records_state(
+        paths=paths,
+        profile_id=projection.report["profile_id"],
+        profile_report=projection.report,
+        state_id=state_id,
+        updated_at=projection.report["generated_at"],
+    )
+    return {
+        "profile_state_id": state_id,
+        "profile_state_path": str(profile_state.path),
+        "profile_state_record_count": len(profile_state.state["record_ids"]),
+    }
+
+
 def _smoke_source_config(
     args: argparse.Namespace,
     stdout: TextIO,
@@ -890,6 +925,7 @@ def _smoke_source_config(
             run_id=args.run_id,
             output_id=args.output_id,
             exclude_seen_state=args.exclude_seen_state,
+            update_seen_state=args.update_seen_state,
             state_id=args.state_id,
         ),
         captured_stdout,
@@ -1883,9 +1919,14 @@ def _parser() -> argparse.ArgumentParser:
         help="Exclude records already present in profile-local seen state.",
     )
     source_config.add_argument(
+        "--update-seen-state",
+        action="store_true",
+        help="Explicitly merge projected item IDs into profile-local seen state.",
+    )
+    source_config.add_argument(
         "--state-id",
         default="seen-records",
-        help="Profile state id to read when --exclude-seen-state is set.",
+        help="Profile state id to read or update when seen-state flags are set.",
     )
 
     smoke = subparsers.add_parser(
@@ -1906,9 +1947,14 @@ def _parser() -> argparse.ArgumentParser:
         help="Exclude records already present in profile-local seen state.",
     )
     smoke.add_argument(
+        "--update-seen-state",
+        action="store_true",
+        help="Explicitly merge projected item IDs into profile-local seen state.",
+    )
+    smoke.add_argument(
         "--state-id",
         default="seen-records",
-        help="Profile state id to read when --exclude-seen-state is set.",
+        help="Profile state id to read or update when seen-state flags are set.",
     )
 
     project_profiles = subparsers.add_parser(

@@ -147,6 +147,23 @@ This reads `profiles/<profile-id>/state/seen-records.json` when it exists and
 counts filtered records as `excluded_seen` in the projection report. It does
 not create or update profile state by itself.
 
+For a one-source daily "new only, then mark new as seen" pass, combine the
+read filter with the explicit update flag:
+
+```sh
+PYTHONPATH=src python3 -m shared_intake_governance.cli run-source-config \
+  --runtime-root "$SIG_RUNTIME_ROOT" \
+  --profile profiles/examples/code-intel-kernel.json \
+  --source-config sources/examples/github-search-code-agents.json \
+  --run-id "$SIG_RUN_ID" \
+  --output-id "$SIG_RUN_ID" \
+  --exclude-seen-state \
+  --update-seen-state
+```
+
+This writes or merges only the generated report item `record_id` values into
+`profiles/<profile-id>/state/seen-records.json`.
+
 ## Project multiple profiles
 
 Use this after one or more runs have written clean records:
@@ -218,6 +235,8 @@ Expected output is one JSON summary printed to stdout. The summary includes
 `smoke_runtime_root`, `smoke_runtime_policy`, and `runtime_boundary_path`.
 If you pass an explicit smoke runtime root that already contains profile-local
 seen state, you may also add `--exclude-seen-state`.
+You may also add `--update-seen-state` to explicitly merge smoke report item
+ids into that smoke runtime root's profile-local seen state.
 
 ## Inspect output
 
@@ -265,8 +284,9 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli show-source-health \
 These commands are read-only. They do not fetch upstream sources and do not
 write runtime files. `inspect-profile-state` requires an existing
 `profile-state.v1` artifact under `profiles/<profile-id>/state/`;
-`project-profiles` reads it only when `--exclude-seen-state` is provided and
-creates or updates it only when `--update-seen-state` is provided.
+`project-profiles`, `run-source-config`, and `smoke-source-config` read it only
+when `--exclude-seen-state` is provided and create or update it only when
+`--update-seen-state` is provided.
 
 To explicitly update a profile-local seen-records state from one generated
 profile report:
