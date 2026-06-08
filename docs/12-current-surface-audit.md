@@ -134,6 +134,8 @@ runtime paths consume them:
 - projection counts must match emitted and excluded records;
 - projection counts include explicit `excluded_seen` records when a profile
   seen-state filter is applied;
+- profile `accepted_sources` values must be supported source types before a
+  profile can be inspected, projected, or checked against a source set;
 - profile seen-state record ids must be safe path segments, sorted, and unique;
 - GitHub `source-config.v1` `owner` and `repo` values are rejected unless they
   are safe GitHub path segments before collectors derive request URLs;
@@ -182,6 +184,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `python3 scripts/check_repo.py` passed with 261 tests after aligning runtime
+  profile `accepted_sources` validation with the profile schema allowlist.
 - `python3 scripts/check_repo.py` passed with 257 tests after adding read-only
   source-set/profile compatibility preflight.
 - `PYTHONPATH=src python3 -m shared_intake_governance.cli check-source-set-profiles --source-set sources/sets/code-intel-source-set.json --profile profiles/examples/code-intel-kernel.json --profile profiles/examples/pulse.json`
