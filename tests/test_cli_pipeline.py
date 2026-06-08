@@ -738,6 +738,303 @@ class CliPipelineTests(unittest.TestCase):
                     stdout=io.StringIO(),
                 )
 
+    def test_check_source_set_profiles_reports_matches_without_writes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            github_search_config_path = _write_repo_source_config(
+                root,
+                "github-search-code-agents.json",
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_search",
+                    "source_id": "github-search-code-agents",
+                    "query": "topic:agents language:python",
+                    "max_results": 10,
+                },
+            )
+            rss_config_path = _write_repo_source_config(
+                root,
+                "rss-github-blog.json",
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "rss",
+                    "source_id": "rss-github-blog",
+                    "feed_url": "https://github.blog/feed/",
+                },
+            )
+            source_set_path = _write_source_set(
+                root,
+                {
+                    "schema_version": "source-set.v1",
+                    "source_set_id": "code-intel-source-set",
+                    "sources": [
+                        {
+                            "source_id": "github-search-code-agents",
+                            "source_config_path": (
+                                "sources/examples/github-search-code-agents.json"
+                            ),
+                        },
+                        {
+                            "source_id": "rss-github-blog",
+                            "source_config_path": (
+                                "sources/examples/rss-github-blog.json"
+                            ),
+                        },
+                    ],
+                },
+            )
+            code_profile_path = _write_repo_profile(
+                root,
+                "code-intel-kernel.json",
+                {
+                    "profile_id": "code-intel-kernel",
+                    "description": "Code intelligence research intake.",
+                    "accepted_sources": ["github_search"],
+                    "keywords": ["coding agent"],
+                    "output_mode": "research_digest",
+                },
+            )
+            pulse_profile_path = _write_repo_profile(
+                root,
+                "pulse.json",
+                {
+                    "profile_id": "pulse",
+                    "description": "AI market pulse.",
+                    "accepted_sources": ["rss", "news"],
+                    "keywords": ["agents"],
+                    "output_mode": "news_brief",
+                },
+            )
+            before_paths = _all_files(root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "check-source-set-profiles",
+                    "--repo-root",
+                    str(root),
+                    "--source-set",
+                    str(source_set_path),
+                    "--profile",
+                    str(code_profile_path),
+                    "--profile",
+                    str(pulse_profile_path),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(root), before_paths)
+            self.assertEqual(summary["repo_root"], str(root.resolve()))
+            self.assertEqual(summary["source_set_path"], str(source_set_path.resolve()))
+            self.assertEqual(summary["source_set_id"], "code-intel-source-set")
+            self.assertTrue(summary["compatible"])
+            self.assertEqual(summary["source_count"], 2)
+            self.assertEqual(summary["profile_count"], 2)
+            self.assertEqual(summary["profiles_without_matches"], [])
+            self.assertEqual(summary["total_matches"], 2)
+            self.assertEqual(summary["total_rejections"], 2)
+            self.assertEqual(
+                summary["profiles"],
+                [
+                    {
+                        "profile_path": str(code_profile_path.resolve()),
+                        "profile_ref": "profiles/examples/code-intel-kernel.json",
+                        "profile_id": "code-intel-kernel",
+                        "accepted_sources": ["github_search"],
+                        "compatible": True,
+                        "matched_source_count": 1,
+                        "rejected_source_count": 1,
+                        "matched_sources": [
+                            {
+                                "source_id": "github-search-code-agents",
+                                "source_type": "github_search",
+                                "source_config_path": str(
+                                    github_search_config_path.resolve()
+                                ),
+                                "source_config_ref": (
+                                    "sources/examples/"
+                                    "github-search-code-agents.json"
+                                ),
+                            }
+                        ],
+                        "rejected_sources": [
+                            {
+                                "source_id": "rss-github-blog",
+                                "source_type": "rss",
+                                "source_config_path": str(
+                                    rss_config_path.resolve()
+                                ),
+                                "source_config_ref": (
+                                    "sources/examples/rss-github-blog.json"
+                                ),
+                                "reason": (
+                                    "source_type rss is not accepted by "
+                                    "code-intel-kernel"
+                                ),
+                            }
+                        ],
+                    },
+                    {
+                        "profile_path": str(pulse_profile_path.resolve()),
+                        "profile_ref": "profiles/examples/pulse.json",
+                        "profile_id": "pulse",
+                        "accepted_sources": ["rss", "news"],
+                        "compatible": True,
+                        "matched_source_count": 1,
+                        "rejected_source_count": 1,
+                        "matched_sources": [
+                            {
+                                "source_id": "rss-github-blog",
+                                "source_type": "rss",
+                                "source_config_path": str(
+                                    rss_config_path.resolve()
+                                ),
+                                "source_config_ref": (
+                                    "sources/examples/rss-github-blog.json"
+                                ),
+                            }
+                        ],
+                        "rejected_sources": [
+                            {
+                                "source_id": "github-search-code-agents",
+                                "source_type": "github_search",
+                                "source_config_path": str(
+                                    github_search_config_path.resolve()
+                                ),
+                                "source_config_ref": (
+                                    "sources/examples/"
+                                    "github-search-code-agents.json"
+                                ),
+                                "reason": (
+                                    "source_type github_search is not accepted "
+                                    "by pulse"
+                                ),
+                            }
+                        ],
+                    },
+                ],
+            )
+
+    def test_check_source_set_profiles_reports_profiles_without_matches(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            _write_repo_source_config(
+                root,
+                "rss-github-blog.json",
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "rss",
+                    "source_id": "rss-github-blog",
+                    "feed_url": "https://github.blog/feed/",
+                },
+            )
+            source_set_path = _write_source_set(
+                root,
+                {
+                    "schema_version": "source-set.v1",
+                    "source_set_id": "rss-source-set",
+                    "sources": [
+                        {
+                            "source_id": "rss-github-blog",
+                            "source_config_path": (
+                                "sources/examples/rss-github-blog.json"
+                            ),
+                        }
+                    ],
+                },
+            )
+            profile_path = _write_repo_profile(
+                root,
+                "code-intel-kernel.json",
+                {
+                    "profile_id": "code-intel-kernel",
+                    "description": "Code intelligence research intake.",
+                    "accepted_sources": ["github_search"],
+                    "keywords": ["coding agent"],
+                    "output_mode": "research_digest",
+                },
+            )
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "check-source-set-profiles",
+                    "--repo-root",
+                    str(root),
+                    "--source-set",
+                    str(source_set_path),
+                    "--profile",
+                    str(profile_path),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertFalse(summary["compatible"])
+            self.assertEqual(summary["profiles_without_matches"], ["code-intel-kernel"])
+            self.assertFalse(summary["profiles"][0]["compatible"])
+            self.assertEqual(summary["profiles"][0]["matched_sources"], [])
+
+    def test_check_source_set_profiles_rejects_malformed_profile(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            _write_repo_source_config(
+                root,
+                "rss-github-blog.json",
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "rss",
+                    "source_id": "rss-github-blog",
+                    "feed_url": "https://github.blog/feed/",
+                },
+            )
+            source_set_path = _write_source_set(
+                root,
+                {
+                    "schema_version": "source-set.v1",
+                    "source_set_id": "rss-source-set",
+                    "sources": [
+                        {
+                            "source_id": "rss-github-blog",
+                            "source_config_path": (
+                                "sources/examples/rss-github-blog.json"
+                            ),
+                        }
+                    ],
+                },
+            )
+            profile_path = _write_repo_profile(
+                root,
+                "code-intel-kernel.json",
+                {
+                    "profile_id": "code-intel-kernel",
+                    "description": "Code intelligence research intake.",
+                    "accepted_sources": ["rss"],
+                    "keywords": ["coding agent"],
+                    "output_mode": "research_digest",
+                },
+            )
+            _add_unknown_field(profile_path)
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
+                main(
+                    [
+                        "check-source-set-profiles",
+                        "--repo-root",
+                        str(root),
+                        "--source-set",
+                        str(source_set_path),
+                        "--profile",
+                        str(profile_path),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
     def test_run_github_repo_pipeline_collects_sanitizes_and_projects(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)

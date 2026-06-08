@@ -42,6 +42,9 @@ validating tracked source-set refs without executing them.
 It includes read-only `list-profiles` and `inspect-profile` CLI commands for
 validating tracked example profile configs without projecting them or reading
 profile state.
+It includes a read-only `check-source-set-profiles` CLI command for validating
+source-set/profile source-type compatibility without running sources,
+projecting profiles, or reading profile state.
 It includes a repo-local surface consistency guard that checks the actual CLI
 command surface against `docs/10-implementation-guide.md`.
 It includes a repo-local source-type consistency guard that checks supported

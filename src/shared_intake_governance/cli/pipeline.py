@@ -89,7 +89,11 @@ from shared_intake_governance.source_config import (
     list_source_configs,
     load_source_config,
 )
-from shared_intake_governance.source_set import inspect_source_set, list_source_sets
+from shared_intake_governance.source_set import (
+    check_source_set_profiles,
+    inspect_source_set,
+    list_source_sets,
+)
 
 
 _SMOKE_BOUNDARY_FILENAME = "SMOKE_RUNTIME_DO_NOT_COMMIT.txt"
@@ -159,6 +163,8 @@ def main(
         return _list_profiles(args, stdout)
     if args.command == "inspect-profile":
         return _inspect_profile(args, stdout)
+    if args.command == "check-source-set-profiles":
+        return _check_source_set_profiles(args, stdout)
     if args.command == "project-profiles":
         return _project_profiles(args, stdout)
     if args.command == "list-runs":
@@ -1513,6 +1519,18 @@ def _inspect_profile(args: argparse.Namespace, stdout: TextIO) -> int:
     return 0
 
 
+def _check_source_set_profiles(args: argparse.Namespace, stdout: TextIO) -> int:
+    _print_json(
+        stdout,
+        check_source_set_profiles(
+            args.source_set,
+            args.profiles,
+            repo_root=args.repo_root,
+        ),
+    )
+    return 0
+
+
 def _record_provider_result(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     provider_request_path = Path(args.provider_request)
@@ -2085,6 +2103,20 @@ def _parser() -> argparse.ArgumentParser:
         help="Validate one profile config without projecting it.",
     )
     inspect_profile_parser.add_argument("--profile", required=True)
+
+    check_source_set_profiles_parser = subparsers.add_parser(
+        "check-source-set-profiles",
+        help="Check source-set/profile compatibility without running sources.",
+    )
+    check_source_set_profiles_parser.add_argument("--source-set", required=True)
+    check_source_set_profiles_parser.add_argument(
+        "--profile", dest="profiles", action="append", required=True
+    )
+    check_source_set_profiles_parser.add_argument(
+        "--repo-root",
+        default=".",
+        help="Repository root used to resolve source_config_path and profile refs.",
+    )
 
     project_profiles = subparsers.add_parser(
         "project-profiles",
