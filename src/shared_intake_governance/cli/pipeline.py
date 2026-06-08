@@ -86,7 +86,7 @@ from shared_intake_governance.source_config import (
     list_source_configs,
     load_source_config,
 )
-from shared_intake_governance.source_set import inspect_source_set
+from shared_intake_governance.source_set import inspect_source_set, list_source_sets
 
 
 _SMOKE_BOUNDARY_FILENAME = "SMOKE_RUNTIME_DO_NOT_COMMIT.txt"
@@ -148,6 +148,8 @@ def main(
         return _list_source_configs(args, stdout)
     if args.command == "inspect-source-config":
         return _inspect_source_config(args, stdout)
+    if args.command == "list-source-sets":
+        return _list_source_sets(args, stdout)
     if args.command == "inspect-source-set":
         return _inspect_source_set(args, stdout)
     if args.command == "project-profiles":
@@ -1458,6 +1460,11 @@ def _inspect_source_config(args: argparse.Namespace, stdout: TextIO) -> int:
     return 0
 
 
+def _list_source_sets(args: argparse.Namespace, stdout: TextIO) -> int:
+    _print_json(stdout, list_source_sets(args.repo_root))
+    return 0
+
+
 def _inspect_source_set(args: argparse.Namespace, stdout: TextIO) -> int:
     _print_json(
         stdout,
@@ -2004,6 +2011,16 @@ def _parser() -> argparse.ArgumentParser:
         help="Validate one source-config.v1 file without running it.",
     )
     inspect_source_config_parser.add_argument("--source-config", required=True)
+
+    list_source_sets_parser = subparsers.add_parser(
+        "list-source-sets",
+        help="List tracked source-set.v1 files without running them.",
+    )
+    list_source_sets_parser.add_argument(
+        "--repo-root",
+        default=".",
+        help="Repository root used to find sources/sets/*.json.",
+    )
 
     inspect_source_set_parser = subparsers.add_parser(
         "inspect-source-set",

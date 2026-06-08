@@ -62,8 +62,8 @@ Current runtime code covers:
 - validated raw payload metadata, run manifests, and source health;
 - source-config validation, examples, read-only source-config inventory, and
   read-only source-config inspection;
-- contract-only source-set schema, example source-config refs, and read-only
-  source-set inspection;
+- contract-only source-set schema, example source-config refs, read-only
+  source-set inventory, and read-only source-set inspection;
 - clean-record emission from implemented source families;
 - deterministic profile projection from the clean cache;
 - explicit profile seen-state filtering during multi-profile and one-source
@@ -87,6 +87,8 @@ read profile state, project profiles, or update seen state.
 `list-source-configs` validates the tracked `sources/examples/*.json` catalog
 and returns a deterministic inventory under the same no-fetch/no-write
 boundary.
+`list-source-sets` validates the tracked `sources/sets/*.json` catalog and
+each referenced source-config file under the same no-fetch/no-write boundary.
 
 The reusable source-config daily recipes in `docs/13-source-config-recipes.md`
 are documentation-only. They describe explicit `run-source-config` and
@@ -103,9 +105,10 @@ publication behavior in this shared core.
 
 The `source-set.v1` contract and
 `sources/sets/code-intel-source-set.json` example are contract-only grouping
-surfaces. `inspect-source-set` reads one source-set file and validates each
-referenced source-config file. No current runtime command dispatches,
-schedules, or batches source sets.
+surfaces. `list-source-sets` validates the tracked source-set catalog, and
+`inspect-source-set` reads one source-set file and validates each referenced
+source-config file. No current runtime command dispatches, schedules, or
+batches source sets.
 
 ## Contract hardening already in place
 
@@ -167,6 +170,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 241 tests
+  after adding read-only `list-source-sets` inventory.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 239 tests
   after adding read-only `list-source-configs` inventory.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 237 tests

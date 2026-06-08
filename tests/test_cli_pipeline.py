@@ -374,6 +374,188 @@ class CliPipelineTests(unittest.TestCase):
                     stdout=io.StringIO(),
                 )
 
+    def test_list_source_sets_validates_catalog_without_writes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            github_search_config_path = _write_repo_source_config(
+                root,
+                "github-search-code-agents.json",
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_search",
+                    "source_id": "github-search-code-agents",
+                    "query": "topic:agents language:python",
+                    "max_results": 10,
+                },
+            )
+            rss_config_path = _write_repo_source_config(
+                root,
+                "rss-github-blog.json",
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "rss",
+                    "source_id": "rss-github-blog",
+                    "feed_url": "https://github.blog/feed/",
+                },
+            )
+            code_intel_set_path = _write_source_set(
+                root,
+                {
+                    "schema_version": "source-set.v1",
+                    "source_set_id": "code-intel-source-set",
+                    "sources": [
+                        {
+                            "source_id": "github-search-code-agents",
+                            "source_config_path": (
+                                "sources/examples/github-search-code-agents.json"
+                            ),
+                        },
+                        {
+                            "source_id": "rss-github-blog",
+                            "source_config_path": (
+                                "sources/examples/rss-github-blog.json"
+                            ),
+                        },
+                    ],
+                },
+            )
+            github_only_set_path = _write_source_set(
+                root,
+                {
+                    "schema_version": "source-set.v1",
+                    "source_set_id": "github-only-source-set",
+                    "sources": [
+                        {
+                            "source_id": "github-search-code-agents",
+                            "source_config_path": (
+                                "sources/examples/github-search-code-agents.json"
+                            ),
+                        }
+                    ],
+                },
+                filename="github-only-source-set.json",
+            )
+            before_paths = _all_files(root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "list-source-sets",
+                    "--repo-root",
+                    str(root),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(root), before_paths)
+            self.assertEqual(summary["repo_root"], str(root.resolve()))
+            self.assertEqual(summary["source_set_count"], 2)
+            self.assertEqual(
+                summary["source_sets"],
+                [
+                    {
+                        "source_set_path": str(code_intel_set_path.resolve()),
+                        "source_set_ref": (
+                            "sources/sets/code-intel-source-set.json"
+                        ),
+                        "repo_root": str(root.resolve()),
+                        "schema_version": "source-set.v1",
+                        "source_set_id": "code-intel-source-set",
+                        "source_count": 2,
+                        "sources": [
+                            {
+                                "source_id": "github-search-code-agents",
+                                "source_type": "github_search",
+                                "source_config_path": str(
+                                    github_search_config_path.resolve()
+                                ),
+                                "source_config_ref": (
+                                    "sources/examples/"
+                                    "github-search-code-agents.json"
+                                ),
+                            },
+                            {
+                                "source_id": "rss-github-blog",
+                                "source_type": "rss",
+                                "source_config_path": str(
+                                    rss_config_path.resolve()
+                                ),
+                                "source_config_ref": (
+                                    "sources/examples/rss-github-blog.json"
+                                ),
+                            },
+                        ],
+                    },
+                    {
+                        "source_set_path": str(github_only_set_path.resolve()),
+                        "source_set_ref": (
+                            "sources/sets/github-only-source-set.json"
+                        ),
+                        "repo_root": str(root.resolve()),
+                        "schema_version": "source-set.v1",
+                        "source_set_id": "github-only-source-set",
+                        "source_count": 1,
+                        "sources": [
+                            {
+                                "source_id": "github-search-code-agents",
+                                "source_type": "github_search",
+                                "source_config_path": str(
+                                    github_search_config_path.resolve()
+                                ),
+                                "source_config_ref": (
+                                    "sources/examples/"
+                                    "github-search-code-agents.json"
+                                ),
+                            }
+                        ],
+                    },
+                ],
+            )
+
+    def test_list_source_sets_rejects_malformed_catalog_entry(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            _write_repo_source_config(
+                root,
+                "github-search-code-agents.json",
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_search",
+                    "source_id": "github-search-code-agents",
+                    "query": "topic:agents language:python",
+                    "max_results": 10,
+                },
+            )
+            malformed_source_set_path = _write_source_set(
+                root,
+                {
+                    "schema_version": "source-set.v1",
+                    "source_set_id": "code-intel-source-set",
+                    "sources": [
+                        {
+                            "source_id": "github-search-code-agents",
+                            "source_config_path": (
+                                "sources/examples/github-search-code-agents.json"
+                            ),
+                        }
+                    ],
+                },
+            )
+            _add_unknown_field(malformed_source_set_path)
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
+                main(
+                    [
+                        "list-source-sets",
+                        "--repo-root",
+                        str(root),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
     def test_run_github_repo_pipeline_collects_sanitizes_and_projects(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
@@ -4428,8 +4610,8 @@ def _write_repo_source_config(root, filename, payload):
     return source_config_path
 
 
-def _write_source_set(root, payload):
-    source_set_path = root / "sources" / "sets" / "code-intel-source-set.json"
+def _write_source_set(root, payload, *, filename="code-intel-source-set.json"):
+    source_set_path = root / "sources" / "sets" / filename
     source_set_path.parent.mkdir(parents=True, exist_ok=True)
     source_set_path.write_text(json.dumps(payload), encoding="utf-8")
     return source_set_path

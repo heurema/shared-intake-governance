@@ -114,6 +114,22 @@ def inspect_source_set(
     }
 
 
+def list_source_sets(repo_root: str | Path = ".") -> dict[str, Any]:
+    """Validate tracked source-set.v1 files and return a deterministic inventory."""
+    root = Path(repo_root).resolve()
+    source_set_root = root / "sources" / "sets"
+    source_sets = []
+    for source_set_path in sorted(source_set_root.glob("*.json")):
+        source_set = inspect_source_set(source_set_path, repo_root=root)
+        source_set["source_set_ref"] = source_set_path.relative_to(root).as_posix()
+        source_sets.append(source_set)
+    return {
+        "repo_root": str(root),
+        "source_set_count": len(source_sets),
+        "source_sets": source_sets,
+    }
+
+
 def _reject_unknown(payload: dict[str, Any], allowed: set[str]) -> None:
     unknown = sorted(set(payload) - allowed)
     if unknown:
