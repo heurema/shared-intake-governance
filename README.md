@@ -82,6 +82,8 @@ What exists now:
 - runtime validation for profile projection reports before write and seen-state
   consumption;
 - profile-state contract and validator for profile-local runtime state artifacts;
+- explicit `init-profile-seen-state` CLI that creates one empty profile-local
+  `seen_records` state artifact without overwriting an existing state;
 - explicit `update-profile-seen-state` CLI that merges one profile report into
   a profile-local `seen_records` state artifact;
 - narrow local CLI commands for `github_repo`, `github_releases`,
@@ -164,7 +166,7 @@ What does not exist yet:
 - multi-profile report shaping beyond deterministic per-profile JSON;
 - consumer-specific dedupe behavior beyond explicit seen-record filtering;
   implicit profile-state updates remain out of current scope unless a new
-  behavior decision replaces the explicit `--update-seen-state` gate;
+  behavior decision replaces the explicit init or `--update-seen-state` gates;
 - source-set runtime execution or batch runner;
 - automatic command discovery, credential mapping, or provider/tool presets
   beyond the repo-owned read-only provider allowlist;

@@ -3038,6 +3038,66 @@ class CliPipelineTests(unittest.TestCase):
                     stdout=io.StringIO(),
                 )
 
+    def test_init_profile_seen_state_writes_empty_state(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            before_paths = _all_files(paths.root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "init-profile-seen-state",
+                    "--runtime-root",
+                    str(paths.root),
+                    "--profile-id",
+                    "code-intel-kernel",
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            state_path = paths.profile_state_path("code-intel-kernel", "seen-records")
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(
+                _all_files(paths.root),
+                before_paths + [str(state_path.relative_to(paths.root))],
+            )
+            self.assertEqual(summary["profile_state_path"], str(state_path))
+            self.assertEqual(summary["profile_state"], state)
+            self.assertEqual(state["schema_version"], "profile-state.v1")
+            self.assertEqual(state["profile_id"], "code-intel-kernel")
+            self.assertEqual(state["state_id"], "seen-records")
+            self.assertEqual(state["state_kind"], "seen_records")
+            self.assertEqual(state["record_ids"], [])
+
+    def test_init_profile_seen_state_refuses_existing_state(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            paths = RuntimePaths(Path(tmp_dir) / "runtime")
+            state_path = _write_profile_state(
+                paths,
+                profile_id="code-intel-kernel",
+                state_id="seen-records",
+                state_kind="seen_records",
+                record_ids=["github_repo-good"],
+            )
+            before = state_path.read_text(encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "profile state already exists"):
+                main(
+                    [
+                        "init-profile-seen-state",
+                        "--runtime-root",
+                        str(paths.root),
+                        "--profile-id",
+                        "code-intel-kernel",
+                    ],
+                    stdout=io.StringIO(),
+                )
+
+            self.assertEqual(state_path.read_text(encoding="utf-8"), before)
+
     def test_update_profile_seen_state_merges_report_items(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             paths = RuntimePaths(Path(tmp_dir) / "runtime")

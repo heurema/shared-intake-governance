@@ -118,6 +118,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli inspect-record`
 - `python -m shared_intake_governance.cli list-profile-state`
 - `python -m shared_intake_governance.cli inspect-profile-state`
+- `python -m shared_intake_governance.cli init-profile-seen-state`
 - `python -m shared_intake_governance.cli update-profile-seen-state`
 - `python -m shared_intake_governance.cli list-profile-reports`
 - `python -m shared_intake_governance.cli inspect-profile-report`
@@ -204,10 +205,12 @@ or batching sources.
 With `--update-seen-state`, those commands also explicitly merge generated
 report items into the profile's local `seen_records` state artifact.
 The profile-state inspection commands read existing `profile-state.v1`
-artifacts only. The profile seen-state update command explicitly merges record
-ids from one `profile-projection.v1` report into one `seen_records` state
-artifact, validating existing and updated profile state. `project-profiles`
-still does not update seen state implicitly.
+artifacts only. The profile seen-state init command explicitly creates one
+empty `seen_records` state artifact and refuses to overwrite an existing state.
+The profile seen-state update command explicitly merges record ids from one
+`profile-projection.v1` report into one `seen_records` state artifact,
+validating existing and updated profile state. `project-profiles` still does
+not update seen state implicitly.
 The governance evaluator reads one `tool-intent.v1` file and prints one
 `governance-decision.v1` decision; when `--runtime-root` and `--run-id` are
 provided together, it validates and appends one `governance-audit-event.v1`
@@ -514,7 +517,7 @@ Still missing:
 
 - consumer-specific dedupe behavior; implicit profile-state updates remain out
   of current scope unless a new behavior decision replaces the explicit
-  `--update-seen-state` gate;
+  init or `--update-seen-state` gates;
 - source collector families beyond `github_repo`, `github_releases`,
   `github_search`, `arxiv_query`, `rss`, and `news`;
 - sanitizer source mappings beyond `github_repo`, `github_releases`,
