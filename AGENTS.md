@@ -45,12 +45,17 @@ overrides, read-only provider preset inspection, validated tool-intent and
 governance-decision boundary checks, and validated provider adapter input
 boundaries. Read-only runtime inspection
 commands validate artifacts before returning summaries or full objects.
+The `run-source-config` and `smoke-source-config` commands can also explicitly
+merge generated one-source projection item ids into profile-local `seen_records`
+state when `--update-seen-state` is provided.
 
 No source collector family beyond `github_repo`, `github_releases`,
 `github_search`, `arxiv_query`, `rss`, and `news`, sanitizer source mapping
 beyond those six source types,
 automatic or implicit profile-state updates beyond the explicit
-`--update-seen-state` gate, profile-state filtering beyond the explicit
+`project-profiles --update-seen-state`, `run-source-config
+--update-seen-state`, and `smoke-source-config --update-seen-state` gates,
+profile-state filtering beyond the explicit
 `project-profiles --exclude-seen-state`, `run-source-config
 --exclude-seen-state`, and `smoke-source-config --exclude-seen-state` gates,
 automatic command discovery, credential mapping,

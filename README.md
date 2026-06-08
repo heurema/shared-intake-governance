@@ -93,8 +93,10 @@ What exists now:
   --exclude-seen-state`, and `smoke-source-config --exclude-seen-state` flags
   that read each profile's `seen_records` state artifact and omit already-seen
   record ids from projection reports without updating state;
-- explicit `project-profiles --update-seen-state` flag that merges each
-  generated report into that profile's `seen_records` state artifact;
+- explicit `project-profiles --update-seen-state`, `run-source-config
+  --update-seen-state`, and `smoke-source-config --update-seen-state` flags
+  that merge generated report items into that profile's `seen_records` state
+  artifact;
 - config-driven one-source CLI command for source definitions stored in JSON;
 - isolated smoke CLI command for live one-source checks with runtime data
   outside git;

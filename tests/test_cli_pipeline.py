@@ -790,6 +790,79 @@ class CliPipelineTests(unittest.TestCase):
                 original_state,
             )
 
+    def test_run_source_config_can_update_seen_state_explicitly(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            runtime_root = root / "runtime"
+            paths = RuntimePaths(runtime_root)
+            profile_path = _write_profile(
+                root,
+                accepted_sources=["github_releases"],
+                keywords=["coding agent"],
+            )
+            source_config_path = _write_source_config(
+                root,
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_releases",
+                    "source_id": "github-releases-shared-intake",
+                    "owner": "heurema",
+                    "repo": "shared-intake-governance",
+                    "max_results": 5,
+                },
+            )
+            existing_record_id = "github_releases-old"
+            projected_record_id = _github_release_record_id(
+                "https://github.com/heurema/shared-intake-governance"
+                "/releases/tag/v1.0.0"
+            )
+            state_path = _write_profile_state(
+                paths,
+                profile_id="code-intel-kernel",
+                state_id="seen-records",
+                state_kind="seen_records",
+                record_ids=[existing_record_id],
+            )
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "run-source-config",
+                    "--runtime-root",
+                    str(runtime_root),
+                    "--profile",
+                    str(profile_path),
+                    "--source-config",
+                    str(source_config_path),
+                    "--run-id",
+                    RUN_ID,
+                    "--output-id",
+                    RUN_ID,
+                    "--exclude-seen-state",
+                    "--update-seen-state",
+                ],
+                stdout=stdout,
+                github_releases_collector_factory=SuccessfulGitHubReleasesCollector,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            projection = json.loads(Path(summary["projection_path"]).read_text())
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(summary["status"], "completed")
+            self.assertEqual(summary["projected_items"], 1)
+            self.assertEqual(summary["excluded_seen"], 0)
+            self.assertEqual(summary["profile_state_id"], "seen-records")
+            self.assertEqual(summary["profile_state_path"], str(state_path))
+            self.assertEqual(summary["profile_state_record_count"], 2)
+            self.assertEqual(projection["counts"]["items_written"], 1)
+            self.assertEqual(projection["counts"]["excluded_seen"], 0)
+            self.assertEqual(
+                state["record_ids"],
+                sorted([existing_record_id, projected_record_id]),
+            )
+
     def test_run_source_config_dispatches_arxiv_query_config(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
@@ -1092,6 +1165,67 @@ class CliPipelineTests(unittest.TestCase):
                 json.loads(state_path.read_text(encoding="utf-8")),
                 original_state,
             )
+
+    def test_smoke_source_config_passes_update_seen_state(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            smoke_runtime_root = root / "smoke-runtime"
+            paths = RuntimePaths(smoke_runtime_root)
+            profile_path = _write_profile(
+                root,
+                accepted_sources=["github_releases"],
+                keywords=["coding agent"],
+            )
+            source_config_path = _write_source_config(
+                root,
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_releases",
+                    "source_id": "github-releases-shared-intake",
+                    "owner": "heurema",
+                    "repo": "shared-intake-governance",
+                    "max_results": 5,
+                },
+            )
+            projected_record_id = _github_release_record_id(
+                "https://github.com/heurema/shared-intake-governance"
+                "/releases/tag/v1.0.0"
+            )
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "smoke-source-config",
+                    "--runtime-root",
+                    str(smoke_runtime_root),
+                    "--profile",
+                    str(profile_path),
+                    "--source-config",
+                    str(source_config_path),
+                    "--run-id",
+                    RUN_ID,
+                    "--output-id",
+                    RUN_ID,
+                    "--update-seen-state",
+                ],
+                stdout=stdout,
+                github_releases_collector_factory=SuccessfulGitHubReleasesCollector,
+            )
+
+            summary = json.loads(stdout.getvalue())
+            state_path = paths.profile_state_path("code-intel-kernel", "seen-records")
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(summary["status"], "completed")
+            self.assertEqual(
+                summary["smoke_runtime_root"], str(smoke_runtime_root.resolve())
+            )
+            self.assertEqual(summary["projected_items"], 1)
+            self.assertEqual(summary["profile_state_id"], "seen-records")
+            self.assertEqual(summary["profile_state_path"], str(state_path.resolve()))
+            self.assertEqual(summary["profile_state_record_count"], 1)
+            self.assertEqual(state["record_ids"], [projected_record_id])
 
     def test_smoke_source_config_rejects_repo_local_runtime_root(self):
         with tempfile.TemporaryDirectory() as tmp_dir:

@@ -163,6 +163,8 @@ updating state.
 The `run-source-config` and `smoke-source-config` commands support the same
 explicit read-only seen-state filter for one-source collect, sanitize, and
 project runs.
+With `--update-seen-state`, those commands also explicitly merge generated
+report items into the profile's local `seen_records` state artifact.
 The profile-state inspection commands read existing `profile-state.v1`
 artifacts only. The profile seen-state update command explicitly merges record
 ids from one `profile-projection.v1` report into one `seen_records` state
@@ -373,6 +375,9 @@ Current implementation:
 - `run-source-config --exclude-seen-state` and `smoke-source-config
   --exclude-seen-state` apply the same explicit read-only filter during
   one-source projection.
+- `run-source-config --update-seen-state` and `smoke-source-config
+  --update-seen-state` explicitly merge the generated one-source report items
+  into that profile's local `seen_records` state file.
 - `project-profiles --update-seen-state` can explicitly merge each generated
   projection report into that profile's local `seen_records` state file.
 - `update-profile-seen-state` CLI can explicitly merge one projection report
