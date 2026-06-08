@@ -50,6 +50,11 @@ def list_source_configs(repo_root: str | Path = ".") -> dict[str, Any]:
     seen_source_ids: set[str] = set()
     for source_config_path in sorted(source_config_root.glob("*.json")):
         source_config = inspect_source_config(source_config_path)
+        if source_config_path.stem != source_config["source_id"]:
+            raise ValueError(
+                "source_id must match filename for "
+                + source_config_path.relative_to(root).as_posix()
+            )
         if source_config["source_id"] in seen_source_ids:
             raise ValueError(
                 "source config catalog has duplicate source_id: "

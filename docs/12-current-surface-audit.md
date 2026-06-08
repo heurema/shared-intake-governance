@@ -88,9 +88,10 @@ the repository.
 `inspect-source-config` validates one `source-config.v1` file and returns a
 normalized summary. It does not fetch upstream sources, write runtime data,
 read profile state, project profiles, or update seen state.
-`list-source-configs` validates the tracked `sources/examples/*.json` catalog
-rejects duplicate source ids across the catalog, and returns a deterministic
-inventory under the same no-fetch/no-write boundary.
+`list-source-configs` validates the tracked `sources/examples/*.json` catalog,
+requires each source id to be unique and match its source config filename stem,
+and returns a deterministic inventory under the same no-fetch/no-write
+boundary.
 `list-source-sets` validates the tracked `sources/sets/*.json` catalog,
 rejects duplicate source-set ids across the catalog, rejects duplicate source
 ids and source config refs inside each source set, and validates each
@@ -145,8 +146,8 @@ runtime paths consume them:
 - profile catalog entries must use unique `profile_id` values before the
   catalog can be listed;
 - profile seen-state record ids must be safe path segments, sorted, and unique;
-- source-config catalog entries must use unique `source_id` values before the
-  catalog can be listed;
+- source-config catalog entries must use filename-matched unique `source_id`
+  values before the catalog can be listed;
 - source-set catalog entries must use unique `source_set_id` values before the
   catalog can be listed;
 - source-set refs must use unique `source_id` and `source_config_path` values
@@ -199,6 +200,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `python3 scripts/check_repo.py` passed with 274 tests after requiring
+  tracked source-config `source_id` values to match their filenames.
 - `python3 scripts/check_repo.py` passed with 274 tests after rejecting
   duplicate `profile_id` values across the tracked profile catalog.
 - `python3 scripts/check_repo.py` passed with 273 tests after rejecting

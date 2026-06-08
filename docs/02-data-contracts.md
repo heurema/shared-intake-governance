@@ -203,8 +203,9 @@ Runtime code validates source configs before dispatching a source run.
 summary without fetching upstream sources, projecting profiles, reading profile
 state, or writing runtime data.
 `list-source-configs` applies the same validation to the tracked
-`sources/examples/*.json` catalog, rejects duplicate `source_id` values across
-that catalog, and returns a deterministic inventory without running sources.
+`sources/examples/*.json` catalog, requires each `source_id` to be unique and
+match its filename stem, and returns a deterministic inventory without running
+sources.
 
 ## Source set
 
