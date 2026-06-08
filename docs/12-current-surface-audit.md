@@ -66,6 +66,7 @@ Current runtime code covers:
   source-set inventory, and read-only source-set inspection;
 - profile config validation, examples, read-only profile inventory, and
   read-only profile inspection;
+- read-only source-set/profile source-type compatibility preflight;
 - clean-record emission from implemented source families;
 - deterministic profile projection from the clean cache;
 - explicit profile seen-state initialization without overwriting existing state;
@@ -96,6 +97,10 @@ each referenced source-config file under the same no-fetch/no-write boundary.
 returns a deterministic inventory under the same no-fetch/no-write boundary.
 `inspect-profile` validates one profile config and returns its normalized
 object without projecting, reading profile state, or writing runtime data.
+`check-source-set-profiles` validates one source set, its referenced source
+configs, and one or more profile configs, then reports matched and rejected
+source types for each profile. It does not fetch sources, project profiles,
+read profile state, schedule or batch source sets, or write runtime data.
 
 The reusable source-config daily recipes in `docs/13-source-config-recipes.md`
 are documentation-only. They describe explicit `run-source-config` and
@@ -177,6 +182,11 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `python3 scripts/check_repo.py` passed with 257 tests after adding read-only
+  source-set/profile compatibility preflight.
+- `PYTHONPATH=src python3 -m shared_intake_governance.cli check-source-set-profiles --source-set sources/sets/code-intel-source-set.json --profile profiles/examples/code-intel-kernel.json --profile profiles/examples/pulse.json`
+  returned `compatible: true` with 5 matched and 5 rejected source/profile
+  pairs.
 - `python3 scripts/check_repo.py` passed with 254 tests after adding read-only
   profile catalog inspection.
 - `python3 scripts/check_repo.py` passed after adding the explicit

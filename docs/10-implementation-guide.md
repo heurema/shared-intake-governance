@@ -114,6 +114,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli inspect-source-set`
 - `python -m shared_intake_governance.cli list-profiles`
 - `python -m shared_intake_governance.cli inspect-profile`
+- `python -m shared_intake_governance.cli check-source-set-profiles`
 - `python -m shared_intake_governance.cli project-profiles`
 - `python -m shared_intake_governance.cli list-runs`
 - `python -m shared_intake_governance.cli list-clean-records`
@@ -210,6 +211,11 @@ projecting, reading profile state, or writing runtime data.
 The `inspect-profile` command validates one profile config and returns its
 normalized object without collecting, projecting, reading profile state, or
 writing runtime data.
+The `check-source-set-profiles` command validates one source set, its
+referenced source configs, and one or more profile configs, then reports which
+sources match or are rejected by each profile's accepted source types. It does
+not collect, project, schedule, batch, read profile state, or write runtime
+data.
 With `--update-seen-state`, `project-profiles`, `run-source-config`, and
 `smoke-source-config` also explicitly merge generated report items into the
 profile's local `seen_records` state artifact.

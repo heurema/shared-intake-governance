@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from shared_intake_governance.projector.profile import load_profile
 from shared_intake_governance.source_config import load_source_config
 
 
@@ -130,6 +131,77 @@ def list_source_sets(repo_root: str | Path = ".") -> dict[str, Any]:
     }
 
 
+def check_source_set_profiles(
+    source_set_path: str | Path,
+    profile_paths: list[str] | list[Path],
+    *,
+    repo_root: str | Path = ".",
+) -> dict[str, Any]:
+    """Validate source-set/profile compatibility without running sources."""
+    if not profile_paths:
+        raise ValueError("at least one profile path is required")
+
+    root = Path(repo_root).resolve()
+    source_set = inspect_source_set(source_set_path, repo_root=root)
+    profiles = []
+    profiles_without_matches = []
+    total_matches = 0
+    total_rejections = 0
+
+    for profile_path in profile_paths:
+        path = Path(profile_path).resolve()
+        profile = load_profile(path)
+        accepted_sources = set(profile["accepted_sources"])
+        matched_sources = []
+        rejected_sources = []
+
+        for source in source_set["sources"]:
+            source_entry = dict(source)
+            if source["source_type"] in accepted_sources:
+                matched_sources.append(source_entry)
+                continue
+
+            source_entry["reason"] = (
+                "source_type "
+                + source["source_type"]
+                + " is not accepted by "
+                + profile["profile_id"]
+            )
+            rejected_sources.append(source_entry)
+
+        compatible = bool(matched_sources)
+        if not compatible:
+            profiles_without_matches.append(profile["profile_id"])
+        total_matches += len(matched_sources)
+        total_rejections += len(rejected_sources)
+        profiles.append(
+            {
+                "profile_path": str(path),
+                "profile_ref": _path_ref(path, root),
+                "profile_id": profile["profile_id"],
+                "accepted_sources": profile["accepted_sources"],
+                "compatible": compatible,
+                "matched_source_count": len(matched_sources),
+                "rejected_source_count": len(rejected_sources),
+                "matched_sources": matched_sources,
+                "rejected_sources": rejected_sources,
+            }
+        )
+
+    return {
+        "repo_root": str(root),
+        "source_set_path": source_set["source_set_path"],
+        "source_set_id": source_set["source_set_id"],
+        "source_count": source_set["source_count"],
+        "profile_count": len(profiles),
+        "compatible": not profiles_without_matches,
+        "profiles_without_matches": profiles_without_matches,
+        "total_matches": total_matches,
+        "total_rejections": total_rejections,
+        "profiles": profiles,
+    }
+
+
 def _reject_unknown(payload: dict[str, Any], allowed: set[str]) -> None:
     unknown = sorted(set(payload) - allowed)
     if unknown:
@@ -151,6 +223,13 @@ def _source_config_ref(value: str, label: str) -> str:
     if not _SOURCE_CONFIG_REF.fullmatch(value):
         raise ValueError(f"{label} must reference sources/examples/*.json")
     return value
+
+
+def _path_ref(path: Path, root: Path) -> str:
+    try:
+        return path.relative_to(root).as_posix()
+    except ValueError:
+        return str(path)
 
 
 def _read_json(path: Path) -> dict[str, Any]:

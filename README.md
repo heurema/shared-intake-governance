@@ -105,6 +105,9 @@ What exists now:
   example profile configs without projecting them;
 - read-only `inspect-profile` CLI command for validating one profile config
   without projecting it or reading profile state;
+- read-only `check-source-set-profiles` CLI command for validating
+  source-set/profile source-type compatibility without running sources or
+  projecting profiles;
 - read-only `list-source-configs` CLI command for validating and listing the
   tracked source-config catalog without running sources;
 - read-only `inspect-source-config` CLI command for validating one

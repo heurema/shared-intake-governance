@@ -296,6 +296,11 @@ PYTHONPATH=src python3 -m shared_intake_governance.cli list-profiles
 
 PYTHONPATH=src python3 -m shared_intake_governance.cli inspect-profile \
   --profile profiles/examples/code-intel-kernel.json
+
+PYTHONPATH=src python3 -m shared_intake_governance.cli check-source-set-profiles \
+  --source-set sources/sets/code-intel-source-set.json \
+  --profile profiles/examples/code-intel-kernel.json \
+  --profile profiles/examples/pulse.json
 ```
 
 These commands are read-only. They do not fetch upstream sources and do not
@@ -306,7 +311,10 @@ source-set refs without running them. `inspect-source-set` validates one
 source-set and its repo-tracked source-config refs without running them.
 `list-profiles` validates and lists tracked example profile configs without
 projecting them. `inspect-profile` validates one profile config without
-projecting it or reading profile state. `inspect-profile-state` requires an
+projecting it or reading profile state. `check-source-set-profiles` validates
+one source-set/profile combination and reports matched and rejected source
+types without running sources or projecting profiles. `inspect-profile-state`
+requires an
 existing
 `profile-state.v1` artifact under `profiles/<profile-id>/state/`;
 `project-profiles`, `run-source-config`, and `smoke-source-config` read it only
