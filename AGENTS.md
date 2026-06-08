@@ -45,6 +45,8 @@ It includes a repo-local source-type consistency guard that checks supported
 source type lists across code, schemas, and `docs/12-current-surface-audit.md`.
 It includes a repo-local provider surface consistency guard that checks provider
 and provider-preset lists across code, schemas, and docs.
+It includes a repo-local contract anchor consistency guard that checks schema
+anchors across canonical contract docs and schema `$id` values.
 It also includes validated and raw-root bounded sanitizer input, governance
 decision, validated audit, validated approval,
 validated dry-run, validated mediation evidence input, validated execution

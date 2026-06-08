@@ -170,6 +170,11 @@ The repo-local `scripts/check_provider_surface_consistency.py` guard compares
 provider and provider-preset lists across the repo-owned allowlist, schemas,
 runtime validators, and docs. Run it after adding, removing, or retiring a
 provider preset so contract/runtime/docs drift is caught before review.
+The repo-local `scripts/check_contract_anchor_consistency.py` guard compares
+tracked JSON schemas against `docs/INDEX.md`, `docs/02-data-contracts.md`,
+this implementation guide, and each schema `$id`. Run it after adding,
+removing, renaming, or reordering a contract schema so contract/docs drift is
+caught before review.
 The `project-profiles` command reads the shared clean cache and writes one
 deterministic report per explicit profile path. With `--update-seen-state`, it
 also merges each generated report into that profile's local `seen_records`
@@ -266,14 +271,15 @@ If a runtime concept has no contract, document it first.
 Current Phase 1 contract anchors:
 
 - raw metadata shape: `schemas/raw-metadata.schema.json`
-- runtime directory layout: `docs/09-operating-model.md`
 - clean record fields: `schemas/clean-record.schema.json`
-- profile loading rules: `docs/02-data-contracts.md`
+- run manifest shape: `schemas/run-manifest.schema.json`
+- source health output shape: `schemas/source-health.schema.json`
+- source config shape: `schemas/source-config.schema.json`
+- source set shape: `schemas/source-set.schema.json`
+- profile config shape: `schemas/profile.schema.json`
 - profile projection report shape: `schemas/profile-projection.schema.json`
 - profile state shape: `schemas/profile-state.schema.json`
-- source health output shape: `schemas/source-health.schema.json`
-- source set shape: `schemas/source-set.schema.json`
-- run manifest shape: `schemas/run-manifest.schema.json`
+- tool intent shape: `schemas/tool-intent.schema.json`
 - governance decision shape: `schemas/governance-decision.schema.json`
 - governance audit event shape: `schemas/governance-audit-event.schema.json`
 - approval record shape: `schemas/approval-record.schema.json`
@@ -282,6 +288,8 @@ Current Phase 1 contract anchors:
 - tool execution result shape: `schemas/tool-execution-result.schema.json`
 - provider request shape: `schemas/provider-request.schema.json`
 - provider result shape: `schemas/provider-result.schema.json`
+- runtime directory layout: `docs/09-operating-model.md`
+- profile loading rules: `docs/02-data-contracts.md`
 
 If these anchors drift, update the docs or schemas before adding runtime code.
 
