@@ -221,7 +221,8 @@ accepted source lists, and rejects source types that are not in the profile
 schema allowlist.
 The `inspect-profile` command validates one profile config and returns its
 normalized object without collecting, projecting, reading profile state, or
-writing runtime data.
+writing runtime data. For tracked `profiles/examples/*.json` files, it also
+requires the profile id to match the filename stem.
 The `check-source-set-profiles` command validates one source set, its
 referenced source configs, and one or more profile configs, then reports which
 sources match or are rejected by each profile's accepted source types. It does

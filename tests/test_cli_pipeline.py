@@ -1000,6 +1000,34 @@ class CliPipelineTests(unittest.TestCase):
                     stdout=io.StringIO(),
                 )
 
+    def test_inspect_profile_rejects_tracked_filename_mismatch(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            profile_path = _write_repo_profile(
+                root,
+                "code-intel-kernel-copy.json",
+                {
+                    "profile_id": "code-intel-kernel",
+                    "description": "Code intelligence research intake.",
+                    "accepted_sources": ["github_repo"],
+                    "keywords": ["coding agent"],
+                    "output_mode": "research_digest",
+                },
+            )
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "profile_id must match filename",
+            ):
+                main(
+                    [
+                        "inspect-profile",
+                        "--profile",
+                        str(profile_path),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
     def test_inspect_profile_rejects_unsupported_source_type(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)

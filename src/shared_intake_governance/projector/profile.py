@@ -188,6 +188,9 @@ def inspect_profile(profile_path: str | Path) -> dict[str, Any]:
     """Validate one profile config and return its normalized read-only summary."""
     path = Path(profile_path).resolve()
     profile = load_profile(path)
+    profile_ref = _tracked_profile_ref(path)
+    if profile_ref is not None and path.stem != profile["profile_id"]:
+        raise ValueError("profile_id must match filename for " + profile_ref)
     result = _profile_summary(profile, path)
     result["keywords"] = profile["keywords"]
     return result
@@ -221,6 +224,12 @@ def list_profiles(repo_root: str | Path = ".") -> dict[str, Any]:
         "profile_count": len(profiles),
         "profiles": profiles,
     }
+
+
+def _tracked_profile_ref(path: Path) -> str | None:
+    if path.parent.name != "examples" or path.parent.parent.name != "profiles":
+        return None
+    return "profiles/examples/" + path.name
 
 
 def validate_profile_projection(report: dict[str, Any]) -> None:
