@@ -113,6 +113,8 @@ What exists now:
   across code, schemas, and the current surface audit;
 - repo-local provider surface consistency guard for keeping provider and
   provider-preset lists aligned across code, schemas, and docs;
+- repo-local contract anchor consistency guard for keeping JSON schemas aligned
+  with canonical contract docs and schema `$id` values;
 - config-driven one-source CLI command for source definitions stored in JSON;
 - isolated smoke CLI command for live one-source checks with runtime data
   outside git;

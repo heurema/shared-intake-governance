@@ -170,6 +170,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 245 tests
+  after adding the contract anchor consistency guard.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 244 tests
   after adding the provider surface consistency guard.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 243 tests
@@ -379,6 +381,7 @@ PYTHONPATH=src python3 -m unittest discover -s tests
 python3 scripts/check_surface_consistency.py
 python3 scripts/check_source_type_consistency.py
 python3 scripts/check_provider_surface_consistency.py
+python3 scripts/check_contract_anchor_consistency.py
 jq empty schemas/*.json profiles/examples/*.json sources/examples/*.json sources/sets/*.json
 git diff --check
 PYTHONPATH=src python3 -m compileall -q src tests scripts
