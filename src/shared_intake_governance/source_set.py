@@ -129,9 +129,17 @@ def list_source_sets(repo_root: str | Path = ".") -> dict[str, Any]:
     root = Path(repo_root).resolve()
     source_set_root = root / "sources" / "sets"
     source_sets = []
+    seen_source_set_ids: set[str] = set()
     for source_set_path in sorted(source_set_root.glob("*.json")):
+        source_set_ref = source_set_path.relative_to(root).as_posix()
         source_set = inspect_source_set(source_set_path, repo_root=root)
-        source_set["source_set_ref"] = source_set_path.relative_to(root).as_posix()
+        if source_set["source_set_id"] in seen_source_set_ids:
+            raise ValueError(
+                "source set catalog has duplicate source_set_id: "
+                + source_set["source_set_id"]
+            )
+        seen_source_set_ids.add(source_set["source_set_id"])
+        source_set["source_set_ref"] = source_set_ref
         source_sets.append(source_set)
     return {
         "repo_root": str(root),

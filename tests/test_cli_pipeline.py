@@ -663,6 +663,72 @@ class CliPipelineTests(unittest.TestCase):
                     stdout=io.StringIO(),
                 )
 
+    def test_list_source_sets_rejects_duplicate_source_set_ids(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            _write_repo_source_config(
+                root,
+                "github-search-code-agents.json",
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_search",
+                    "source_id": "github-search-code-agents",
+                    "query": "topic:agents language:python",
+                    "max_results": 10,
+                },
+            )
+            _write_repo_source_config(
+                root,
+                "rss-github-blog.json",
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "rss",
+                    "source_id": "rss-github-blog",
+                    "feed_url": "https://github.blog/feed/",
+                },
+            )
+            _write_source_set(
+                root,
+                {
+                    "schema_version": "source-set.v1",
+                    "source_set_id": "code-intel-source-set",
+                    "sources": [
+                        {
+                            "source_id": "github-search-code-agents",
+                            "source_config_path": (
+                                "sources/examples/github-search-code-agents.json"
+                            ),
+                        }
+                    ],
+                },
+            )
+            _write_source_set(
+                root,
+                {
+                    "schema_version": "source-set.v1",
+                    "source_set_id": "code-intel-source-set",
+                    "sources": [
+                        {
+                            "source_id": "rss-github-blog",
+                            "source_config_path": (
+                                "sources/examples/rss-github-blog.json"
+                            ),
+                        }
+                    ],
+                },
+                filename="code-intel-source-set-copy.json",
+            )
+
+            with self.assertRaisesRegex(ValueError, "duplicate source_set_id"):
+                main(
+                    [
+                        "list-source-sets",
+                        "--repo-root",
+                        str(root),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
     def test_list_source_sets_rejects_duplicate_source_ids(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
