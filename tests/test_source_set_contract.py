@@ -7,6 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from shared_intake_governance.source_config import load_source_config  # noqa: E402
+from shared_intake_governance.source_set import validate_source_set  # noqa: E402
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -115,6 +116,29 @@ class SourceSetContractTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden_field, schema["properties"])
             self.assertNotIn(forbidden_field, source_ref_schema["properties"])
+
+    def test_runtime_rejects_duplicate_source_ids(self):
+        source_set = {
+            "schema_version": "source-set.v1",
+            "source_set_id": "code-intel-source-set",
+            "sources": [
+                {
+                    "source_id": "github-search-code-agents",
+                    "source_config_path": (
+                        "sources/examples/github-search-code-agents.json"
+                    ),
+                },
+                {
+                    "source_id": "github-search-code-agents",
+                    "source_config_path": (
+                        "sources/examples/github-search-python-agents.json"
+                    ),
+                },
+            ],
+        }
+
+        with self.assertRaisesRegex(ValueError, "duplicate source_id"):
+            validate_source_set(source_set)
 
     def test_docs_index_lists_source_set_contract(self):
         index_text = (ROOT / "docs" / "INDEX.md").read_text(encoding="utf-8")

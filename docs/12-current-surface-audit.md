@@ -91,8 +91,9 @@ read profile state, project profiles, or update seen state.
 `list-source-configs` validates the tracked `sources/examples/*.json` catalog
 and returns a deterministic inventory under the same no-fetch/no-write
 boundary.
-`list-source-sets` validates the tracked `sources/sets/*.json` catalog and
-each referenced source-config file under the same no-fetch/no-write boundary.
+`list-source-sets` validates the tracked `sources/sets/*.json` catalog,
+rejects duplicate source ids inside each source set, and validates each
+referenced source-config file under the same no-fetch/no-write boundary.
 `list-profiles` validates the tracked `profiles/examples/*.json` catalog and
 returns a deterministic inventory under the same no-fetch/no-write boundary.
 `inspect-profile` validates one profile config and returns its normalized
@@ -119,8 +120,8 @@ The `source-set.v1` contract and
 `sources/sets/code-intel-source-set.json` example are contract-only grouping
 surfaces. `list-source-sets` validates the tracked source-set catalog, and
 `inspect-source-set` reads one source-set file and validates each referenced
-source-config file. No current runtime command dispatches, schedules, or
-batches source sets.
+source-config file. Both commands reject duplicate source ids inside one source
+set. No current runtime command dispatches, schedules, or batches source sets.
 
 ## Contract hardening already in place
 
@@ -138,6 +139,8 @@ runtime paths consume them:
   source types before a profile can be inspected, projected, or checked against
   a source set;
 - profile seen-state record ids must be safe path segments, sorted, and unique;
+- source-set refs must use unique `source_id` values before inspection,
+  compatibility preflight, or any future execution surface consumes them;
 - GitHub `source-config.v1` `owner` and `repo` values are rejected unless they
   are safe GitHub path segments before collectors derive request URLs;
 - governance, tool-execution, and provider adapter artifacts reject unsafe
@@ -185,6 +188,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `python3 scripts/check_repo.py` passed with 268 tests after rejecting
+  duplicate `source_id` values inside one `source-set.v1`.
 - `python3 scripts/check_repo.py` passed with 265 tests after requiring
   non-empty profile `accepted_sources` in schema and runtime validation.
 - `python3 scripts/check_repo.py` passed with 261 tests after aligning runtime
