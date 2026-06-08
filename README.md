@@ -111,6 +111,8 @@ What exists now:
   `docs/10-implementation-guide.md` aligned with the actual argparse surface;
 - repo-local source-type consistency guard for keeping source type lists aligned
   across code, schemas, and the current surface audit;
+- repo-local provider surface consistency guard for keeping provider and
+  provider-preset lists aligned across code, schemas, and docs;
 - config-driven one-source CLI command for source definitions stored in JSON;
 - isolated smoke CLI command for live one-source checks with runtime data
   outside git;

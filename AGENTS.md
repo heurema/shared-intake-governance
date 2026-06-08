@@ -43,6 +43,8 @@ It includes a repo-local surface consistency guard that checks the actual CLI
 command surface against `docs/10-implementation-guide.md`.
 It includes a repo-local source-type consistency guard that checks supported
 source type lists across code, schemas, and `docs/12-current-surface-audit.md`.
+It includes a repo-local provider surface consistency guard that checks provider
+and provider-preset lists across code, schemas, and docs.
 It also includes validated and raw-root bounded sanitizer input, governance
 decision, validated audit, validated approval,
 validated dry-run, validated mediation evidence input, validated execution
