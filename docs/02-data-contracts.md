@@ -9,18 +9,19 @@ The first stable contracts should cover:
 3. run manifests;
 4. source health;
 5. source configs for one-source local runs;
-6. project profiles;
-7. profile projection reports;
-8. profile-local runtime state;
-9. tool intents passed into governance;
-10. governance decisions returned by policy evaluation;
-11. governance audit events;
-12. approval records;
-13. dry-run results;
-14. execution mediation records;
-15. tool execution result records;
-16. provider request records;
-17. provider result records.
+6. source sets for reusable groups of source configs;
+7. project profiles;
+8. profile projection reports;
+9. profile-local runtime state;
+10. tool intents passed into governance;
+11. governance decisions returned by policy evaluation;
+12. governance audit events;
+13. approval records;
+14. dry-run results;
+15. execution mediation records;
+16. tool execution result records;
+17. provider request records;
+18. provider result records.
 
 Runtime writers validate artifacts before writing them. Read-only CLI
 inspection surfaces also validate runtime artifacts before summarizing or
@@ -198,6 +199,35 @@ GitHub `owner` and `repo` fields must be safe GitHub path segments before a
 collector can derive request URLs from them.
 URL fields such as `api_base_url` and `feed_url` must use HTTPS.
 Runtime code validates source configs before dispatching a source run.
+
+## Source set
+
+See [../schemas/source-set.schema.json](../schemas/source-set.schema.json).
+
+A source set defines a reusable list of `source-config.v1` references. It is a
+contract-only grouping layer for consumers that need more than one source
+definition.
+
+Minimum fields:
+
+```text
+schema_version
+source_set_id
+sources[].source_id
+sources[].source_config_path
+```
+
+The current tracked example is
+[../sources/sets/code-intel-source-set.json](../sources/sets/code-intel-source-set.json).
+Each `sources[]` entry names the expected `source_id` and the repo-relative
+`source_config_path` for one tracked source config.
+
+Source sets must not contain credentials, runtime roots, profile state,
+profiles, schedules, scoring rules, report templates, publication targets, or
+execution policy. They do not run sources by themselves and no current CLI
+dispatches a source set. Execute or smoke each referenced source config through
+the existing one-source commands until a separate runtime decision opens a
+batch execution surface.
 
 ## Profile config
 

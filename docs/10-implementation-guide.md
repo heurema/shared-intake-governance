@@ -243,6 +243,7 @@ Current Phase 1 contract anchors:
 - profile projection report shape: `schemas/profile-projection.schema.json`
 - profile state shape: `schemas/profile-state.schema.json`
 - source health output shape: `schemas/source-health.schema.json`
+- source set shape: `schemas/source-set.schema.json`
 - run manifest shape: `schemas/run-manifest.schema.json`
 - governance decision shape: `schemas/governance-decision.schema.json`
 - governance audit event shape: `schemas/governance-audit-event.schema.json`

@@ -59,6 +59,12 @@ Consumer repos should usually replace only these values:
 Do not put credentials, scoring logic, publication targets, or consumer-owned
 seen state into a `source-config.v1` file.
 
+When a consumer needs a reusable list of several source configs, use a
+`source-set.v1` file such as
+[../sources/sets/code-intel-source-set.json](../sources/sets/code-intel-source-set.json).
+The source set is only a contract-level list of refs; this recipe still runs
+one source config at a time.
+
 ## Smoke preflight
 
 Use a smoke run before wiring a persistent daily caller. A smoke runtime root is
