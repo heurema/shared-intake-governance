@@ -59,6 +59,9 @@ Consumer repos should usually replace only these values:
 Do not put credentials, scoring logic, publication targets, or consumer-owned
 seen state into a `source-config.v1` file.
 
+Run `inspect-source-config` before wiring a source config into a consumer loop
+when you only need to validate the file and inspect normalized defaults.
+
 When a consumer needs a reusable list of several source configs, use a
 `source-set.v1` file such as
 [../sources/sets/code-intel-source-set.json](../sources/sets/code-intel-source-set.json).

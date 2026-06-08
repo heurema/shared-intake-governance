@@ -92,6 +92,76 @@ class CliPipelineTests(unittest.TestCase):
             provider_presets.resolve_provider_preset("agy_readonly_local"),
         )
 
+    def test_inspect_source_config_validates_one_config_without_writes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            source_config_path = _write_source_config(
+                root,
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_search",
+                    "source_id": "github-search-code-agents",
+                    "query": "topic:agents language:python",
+                    "max_results": 10,
+                },
+            )
+            before_paths = _all_files(root)
+            stdout = io.StringIO()
+
+            exit_code = main(
+                [
+                    "inspect-source-config",
+                    "--source-config",
+                    str(source_config_path),
+                ],
+                stdout=stdout,
+            )
+
+            summary = json.loads(stdout.getvalue())
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(_all_files(root), before_paths)
+            self.assertEqual(
+                summary["source_config_path"],
+                str(source_config_path.resolve()),
+            )
+            self.assertEqual(summary["schema_version"], "source-config.v1")
+            self.assertEqual(summary["source_id"], "github-search-code-agents")
+            self.assertEqual(summary["source_type"], "github_search")
+            self.assertEqual(
+                summary["source"],
+                {
+                    "api_base_url": "https://api.github.com",
+                    "max_results": 10,
+                    "query": "topic:agents language:python",
+                },
+            )
+
+    def test_inspect_source_config_rejects_malformed_config(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            source_config_path = _write_source_config(
+                root,
+                {
+                    "schema_version": "source-config.v1",
+                    "source_type": "github_search",
+                    "source_id": "github-search-code-agents",
+                    "query": "topic:agents language:python",
+                    "max_results": 10,
+                },
+            )
+            _add_unknown_field(source_config_path)
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
+                main(
+                    [
+                        "inspect-source-config",
+                        "--source-config",
+                        str(source_config_path),
+                    ],
+                    stdout=io.StringIO(),
+                )
+
     def test_inspect_source_set_validates_refs_without_writes(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)

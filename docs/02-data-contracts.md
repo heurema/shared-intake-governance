@@ -199,6 +199,9 @@ GitHub `owner` and `repo` fields must be safe GitHub path segments before a
 collector can derive request URLs from them.
 URL fields such as `api_base_url` and `feed_url` must use HTTPS.
 Runtime code validates source configs before dispatching a source run.
+`inspect-source-config` validates one source config and returns its normalized
+summary without fetching upstream sources, projecting profiles, reading profile
+state, or writing runtime data.
 
 ## Source set
 

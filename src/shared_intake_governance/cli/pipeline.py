@@ -81,7 +81,10 @@ from shared_intake_governance.runtime import (
     validate_source_health,
 )
 from shared_intake_governance.sanitizer import CleanRecordEmitter, validate_clean_record
-from shared_intake_governance.source_config import load_source_config
+from shared_intake_governance.source_config import (
+    inspect_source_config,
+    load_source_config,
+)
 from shared_intake_governance.source_set import inspect_source_set
 
 
@@ -140,6 +143,8 @@ def main(
             rss_collector_factory,
             news_collector_factory,
         )
+    if args.command == "inspect-source-config":
+        return _inspect_source_config(args, stdout)
     if args.command == "inspect-source-set":
         return _inspect_source_set(args, stdout)
     if args.command == "project-profiles":
@@ -1440,6 +1445,11 @@ def _inspect_provider_preset(args: argparse.Namespace, stdout: TextIO) -> int:
     return 0
 
 
+def _inspect_source_config(args: argparse.Namespace, stdout: TextIO) -> int:
+    _print_json(stdout, inspect_source_config(args.source_config))
+    return 0
+
+
 def _inspect_source_set(args: argparse.Namespace, stdout: TextIO) -> int:
     _print_json(
         stdout,
@@ -1970,6 +1980,12 @@ def _parser() -> argparse.ArgumentParser:
         default="seen-records",
         help="Profile state id to read or update when seen-state flags are set.",
     )
+
+    inspect_source_config_parser = subparsers.add_parser(
+        "inspect-source-config",
+        help="Validate one source-config.v1 file without running it.",
+    )
+    inspect_source_config_parser.add_argument("--source-config", required=True)
 
     inspect_source_set_parser = subparsers.add_parser(
         "inspect-source-set",

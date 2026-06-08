@@ -29,6 +29,19 @@ def load_source_config(path: str | Path) -> dict[str, Any]:
     return validate_source_config(config)
 
 
+def inspect_source_config(path: str | Path) -> dict[str, Any]:
+    """Validate one source-config.v1 file and return a read-only summary."""
+    source_config_path = Path(path).resolve()
+    config = load_source_config(source_config_path)
+    return {
+        "source_config_path": str(source_config_path),
+        "schema_version": config["schema_version"],
+        "source_id": config["source_id"],
+        "source_type": config["source_type"],
+        "source": _source_summary(config),
+    }
+
+
 def validate_source_config(config: dict[str, Any]) -> dict[str, Any]:
     """Validate and normalize one supported source-config.v1 payload."""
     if config.get("schema_version") != "source-config.v1":
@@ -197,3 +210,26 @@ def _read_json(path: Path) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise ValueError("source config must be a JSON object")
     return payload
+
+
+def _source_summary(config: dict[str, Any]) -> dict[str, Any]:
+    source_type = config["source_type"]
+    if source_type in {"github_repo", "github_releases"}:
+        summary = {
+            "owner": config["owner"],
+            "repo": config["repo"],
+            "api_base_url": config["api_base_url"],
+        }
+        if source_type == "github_releases":
+            summary["max_results"] = config["max_results"]
+        return summary
+    if source_type in {"github_search", "arxiv_query"}:
+        return {
+            "query": config["query"],
+            "max_results": config["max_results"],
+            "api_base_url": config["api_base_url"],
+        }
+    return {
+        "feed_url": config["feed_url"],
+        "source_trust": config["source_trust"],
+    }
