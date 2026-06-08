@@ -266,8 +266,8 @@ Profiles must not define:
 non-empty and must come from the supported shared source families in the
 profile schema.
 `list-profiles` validates the tracked `profiles/examples/*.json` catalog,
-rejects duplicate `profile_id` values across that catalog, and returns a
-deterministic inventory without projecting profiles or reading profile state.
+requires each `profile_id` to be unique and match its filename stem, and returns
+a deterministic inventory without projecting profiles or reading profile state.
 
 ## Profile projection
 

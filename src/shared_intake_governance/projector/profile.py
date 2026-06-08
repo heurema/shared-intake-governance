@@ -201,6 +201,11 @@ def list_profiles(repo_root: str | Path = ".") -> dict[str, Any]:
     seen_profile_ids: set[str] = set()
     for profile_path in sorted(profile_root.glob("*.json")):
         profile = load_profile(profile_path)
+        if profile_path.stem != profile["profile_id"]:
+            raise ValueError(
+                "profile_id must match filename for "
+                + profile_path.relative_to(root).as_posix()
+            )
         if profile["profile_id"] in seen_profile_ids:
             raise ValueError(
                 "profile catalog has duplicate profile_id: "
