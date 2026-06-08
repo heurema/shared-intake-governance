@@ -235,10 +235,11 @@ logical source ids.
 Source sets must not contain credentials, runtime roots, profile state,
 profiles, schedules, scoring rules, report templates, publication targets, or
 execution policy. `list-source-sets` validates the tracked `sources/sets/*.json`
-catalog and referenced `source-config.v1` files without fetching upstream
-sources or writing runtime data. `inspect-source-set` validates one source-set
-file under the same boundary. Source sets do not run sources by themselves and
-no current CLI dispatches, schedules, or batches a source set. Execute or smoke
+catalog, rejects duplicate `source_set_id` values across that catalog, and
+validates referenced `source-config.v1` files without fetching upstream sources
+or writing runtime data. `inspect-source-set` validates one source-set file
+under the same boundary. Source sets do not run sources by themselves and no
+current CLI dispatches, schedules, or batches a source set. Execute or smoke
 each referenced source config through the existing one-source commands until a
 separate runtime decision opens a batch execution surface.
 

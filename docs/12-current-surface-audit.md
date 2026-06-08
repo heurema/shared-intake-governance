@@ -92,9 +92,9 @@ read profile state, project profiles, or update seen state.
 and returns a deterministic inventory under the same no-fetch/no-write
 boundary.
 `list-source-sets` validates the tracked `sources/sets/*.json` catalog,
-rejects duplicate source ids and source config refs inside each source set, and
-validates each referenced source-config file under the same no-fetch/no-write
-boundary.
+rejects duplicate source-set ids across the catalog, rejects duplicate source
+ids and source config refs inside each source set, and validates each
+referenced source-config file under the same no-fetch/no-write boundary.
 `list-profiles` validates the tracked `profiles/examples/*.json` catalog and
 returns a deterministic inventory under the same no-fetch/no-write boundary.
 `inspect-profile` validates one profile config and returns its normalized
@@ -122,8 +122,9 @@ The `source-set.v1` contract and
 surfaces. `list-source-sets` validates the tracked source-set catalog, and
 `inspect-source-set` reads one source-set file and validates each referenced
 source-config file. Both commands reject duplicate source ids and source config
-refs inside one source set. No current runtime command dispatches, schedules,
-or batches source sets.
+refs inside one source set. `list-source-sets` also rejects duplicate
+source-set ids across the tracked catalog. No current runtime command
+dispatches, schedules, or batches source sets.
 
 ## Contract hardening already in place
 
@@ -141,6 +142,8 @@ runtime paths consume them:
   source types before a profile can be inspected, projected, or checked against
   a source set;
 - profile seen-state record ids must be safe path segments, sorted, and unique;
+- source-set catalog entries must use unique `source_set_id` values before the
+  catalog can be listed;
 - source-set refs must use unique `source_id` and `source_config_path` values
   before inspection, compatibility preflight, or any future execution surface
   consumes them;
@@ -191,6 +194,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `python3 scripts/check_repo.py` passed with 272 tests after rejecting
+  duplicate `source_set_id` values across the tracked source-set catalog.
 - `python3 scripts/check_repo.py` passed with 271 tests after rejecting
   duplicate `source_config_path` values inside one `source-set.v1`.
 - `python3 scripts/check_repo.py` passed with 268 tests after rejecting
