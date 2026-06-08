@@ -30,6 +30,7 @@ deferred scope and require a new behavior decision before implementation.
 - `docs/INDEX.md`
 - `docs/10-implementation-guide.md`
 - `docs/11-local-runbook.md`
+- `docs/13-source-config-recipes.md`
 - `AGENTS.md`
 
 ## Implemented source families
@@ -75,6 +76,12 @@ Current runtime code covers:
 
 The runtime remains local-first and file-based. Runtime data belongs outside
 the repository.
+
+The reusable source-config daily recipes in `docs/13-source-config-recipes.md`
+are documentation-only. They describe explicit `run-source-config` and
+`smoke-source-config` command shapes for consumers, but do not add a scheduler,
+wrapper script, daemon, runtime command, publication workflow, or consumer
+ranking policy.
 
 ## Contract hardening already in place
 
@@ -135,6 +142,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 229 tests
+  after adding the canonical source-config recipe doc and navigation guard.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 228 tests
   after adding explicit seen-state updates to `run-source-config` and
   `smoke-source-config`.
