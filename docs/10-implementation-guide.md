@@ -162,6 +162,10 @@ The repo-local `scripts/check_surface_consistency.py` guard compares the actual
 argparse command surface to the `Current CLI implementation` list above. Run it
 after adding, removing, renaming, or reordering CLI commands so docs drift is
 caught before review.
+The repo-local `scripts/check_source_type_consistency.py` guard compares
+source type lists across code, schemas, and
+`docs/12-current-surface-audit.md`. Run it after adding, removing, or retiring a
+source type so contract/runtime/docs drift is caught before review.
 The `project-profiles` command reads the shared clean cache and writes one
 deterministic report per explicit profile path. With `--update-seen-state`, it
 also merges each generated report into that profile's local `seen_records`

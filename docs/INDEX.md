@@ -133,6 +133,7 @@ Use this file as the main navigation layer.
 - [../src/shared_intake_governance/adapters/provider_result.py](../src/shared_intake_governance/adapters/provider_result.py)
 - [../src/shared_intake_governance/cli/pipeline.py](../src/shared_intake_governance/cli/pipeline.py)
 - [../scripts/check_surface_consistency.py](../scripts/check_surface_consistency.py)
+- [../scripts/check_source_type_consistency.py](../scripts/check_source_type_consistency.py)
 - [../tests/test_docs_index.py](../tests/test_docs_index.py)
 - [../tests/test_runtime_paths_and_writers.py](../tests/test_runtime_paths_and_writers.py)
 - [../tests/test_source_config_examples.py](../tests/test_source_config_examples.py)
@@ -156,3 +157,4 @@ Use this file as the main navigation layer.
 - [../tests/test_clean_records_and_projection.py](../tests/test_clean_records_and_projection.py)
 - [../tests/test_cli_pipeline.py](../tests/test_cli_pipeline.py)
 - [../tests/test_surface_consistency.py](../tests/test_surface_consistency.py)
+- [../tests/test_source_type_consistency.py](../tests/test_source_type_consistency.py)
