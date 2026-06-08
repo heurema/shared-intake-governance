@@ -140,6 +140,29 @@ class SourceSetContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "duplicate source_id"):
             validate_source_set(source_set)
 
+    def test_runtime_rejects_duplicate_source_config_paths(self):
+        source_set = {
+            "schema_version": "source-set.v1",
+            "source_set_id": "code-intel-source-set",
+            "sources": [
+                {
+                    "source_id": "github-search-code-agents",
+                    "source_config_path": (
+                        "sources/examples/github-search-code-agents.json"
+                    ),
+                },
+                {
+                    "source_id": "github-search-code-agents-copy",
+                    "source_config_path": (
+                        "sources/examples/github-search-code-agents.json"
+                    ),
+                },
+            ],
+        }
+
+        with self.assertRaisesRegex(ValueError, "duplicate source_config_path"):
+            validate_source_set(source_set)
+
     def test_docs_index_lists_source_set_contract(self):
         index_text = (ROOT / "docs" / "INDEX.md").read_text(encoding="utf-8")
 
