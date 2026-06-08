@@ -224,10 +224,12 @@ Each `sources[]` entry names the expected `source_id` and the repo-relative
 
 Source sets must not contain credentials, runtime roots, profile state,
 profiles, schedules, scoring rules, report templates, publication targets, or
-execution policy. They do not run sources by themselves and no current CLI
-dispatches a source set. Execute or smoke each referenced source config through
-the existing one-source commands until a separate runtime decision opens a
-batch execution surface.
+execution policy. `inspect-source-set` validates one source-set file and its
+referenced `source-config.v1` files without fetching upstream sources or
+writing runtime data. Source sets do not run sources by themselves and no
+current CLI dispatches, schedules, or batches a source set. Execute or smoke
+each referenced source config through the existing one-source commands until a
+separate runtime decision opens a batch execution surface.
 
 ## Profile config
 

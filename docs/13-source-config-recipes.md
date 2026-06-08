@@ -63,7 +63,8 @@ When a consumer needs a reusable list of several source configs, use a
 `source-set.v1` file such as
 [../sources/sets/code-intel-source-set.json](../sources/sets/code-intel-source-set.json).
 The source set is only a contract-level list of refs; this recipe still runs
-one source config at a time.
+one source config at a time. Run `inspect-source-set` first when you need to
+verify that the source-set refs still match the tracked source-config files.
 
 ## Smoke preflight
 

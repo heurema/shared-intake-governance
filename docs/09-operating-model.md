@@ -170,6 +170,9 @@ Current CLI behavior:
   runtime root outside the repository and writes a do-not-commit marker; it
   supports the same explicit seen-state filter and update gates as
   `run-source-config`;
+- `inspect-source-set` validates one `source-set.v1` file and each referenced
+  `source-config.v1` file without fetching upstream sources, writing runtime
+  data, scheduling, or batching source runs;
 - `project-profiles` reads existing clean records and writes one deterministic
   report per explicit profile path; when `--exclude-seen-state` is provided,
   it reads that profile's local `seen_records` state artifact and omits

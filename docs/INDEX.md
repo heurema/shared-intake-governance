@@ -127,6 +127,7 @@ Use this file as the main navigation layer.
 - [../src/shared_intake_governance/governance/mediation.py](../src/shared_intake_governance/governance/mediation.py)
 - [../src/shared_intake_governance/executor/tool_execution.py](../src/shared_intake_governance/executor/tool_execution.py)
 - [../src/shared_intake_governance/provider_presets.py](../src/shared_intake_governance/provider_presets.py)
+- [../src/shared_intake_governance/source_set.py](../src/shared_intake_governance/source_set.py)
 - [../src/shared_intake_governance/adapters/provider_invocation.py](../src/shared_intake_governance/adapters/provider_invocation.py)
 - [../src/shared_intake_governance/adapters/provider_request.py](../src/shared_intake_governance/adapters/provider_request.py)
 - [../src/shared_intake_governance/adapters/provider_result.py](../src/shared_intake_governance/adapters/provider_result.py)
