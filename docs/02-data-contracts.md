@@ -201,7 +201,8 @@ URL fields such as `api_base_url` and `feed_url` must use HTTPS.
 Runtime code validates source configs before dispatching a source run.
 `inspect-source-config` validates one source config and returns its normalized
 summary without fetching upstream sources, projecting profiles, reading profile
-state, or writing runtime data.
+state, or writing runtime data. For tracked `sources/examples/*.json` files, it
+also requires `source_id` to match the filename stem.
 `list-source-configs` applies the same validation to the tracked
 `sources/examples/*.json` catalog, requires each `source_id` to be unique and
 match its filename stem, and returns a deterministic inventory without running

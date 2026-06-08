@@ -33,6 +33,12 @@ def inspect_source_config(path: str | Path) -> dict[str, Any]:
     """Validate one source-config.v1 file and return a read-only summary."""
     source_config_path = Path(path).resolve()
     config = load_source_config(source_config_path)
+    source_config_ref = _tracked_source_config_ref(source_config_path)
+    if (
+        source_config_ref is not None
+        and source_config_path.stem != config["source_id"]
+    ):
+        raise ValueError("source_id must match filename for " + source_config_ref)
     return {
         "source_config_path": str(source_config_path),
         "schema_version": config["schema_version"],
@@ -70,6 +76,15 @@ def list_source_configs(repo_root: str | Path = ".") -> dict[str, Any]:
         "source_config_count": len(source_configs),
         "source_configs": source_configs,
     }
+
+
+def _tracked_source_config_ref(source_config_path: Path) -> str | None:
+    if (
+        source_config_path.parent.name != "examples"
+        or source_config_path.parent.parent.name != "sources"
+    ):
+        return None
+    return "sources/examples/" + source_config_path.name
 
 
 def validate_source_config(config: dict[str, Any]) -> dict[str, Any]:
