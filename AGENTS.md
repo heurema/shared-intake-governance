@@ -39,8 +39,9 @@ source ids, raw-root bounded raw metadata, run manifest, and source health
 output.
 It includes a contract-only `source-set.v1` schema, example source set, and
 read-only `list-source-sets` and `inspect-source-set` CLI commands for
-validating tracked source-set catalog ids and refs with unique source ids and
-unique source config refs without executing them.
+validating tracked source-set catalog ids with filename-matched unique
+source-set ids and refs with unique source ids and unique source config refs
+without executing them.
 It includes read-only `list-profiles` and `inspect-profile` CLI commands for
 validating tracked example profile configs with filename-matched unique profile
 ids without projecting them or reading profile state. Profile validation

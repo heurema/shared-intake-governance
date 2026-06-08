@@ -93,9 +93,10 @@ requires each source id to be unique and match its source config filename stem,
 and returns a deterministic inventory under the same no-fetch/no-write
 boundary.
 `list-source-sets` validates the tracked `sources/sets/*.json` catalog,
-rejects duplicate source-set ids across the catalog, rejects duplicate source
-ids and source config refs inside each source set, and validates each
-referenced source-config file under the same no-fetch/no-write boundary.
+requires each source-set id to be unique and match its source-set filename
+stem, rejects duplicate source ids and source config refs inside each source
+set, and validates each referenced source-config file under the same
+no-fetch/no-write boundary.
 `list-profiles` validates the tracked `profiles/examples/*.json` catalog,
 requires each profile id to be unique and match its profile config filename
 stem, and returns a deterministic inventory under the same no-fetch/no-write
@@ -126,8 +127,9 @@ surfaces. `list-source-sets` validates the tracked source-set catalog, and
 `inspect-source-set` reads one source-set file and validates each referenced
 source-config file. Both commands reject duplicate source ids and source config
 refs inside one source set. `list-source-sets` also rejects duplicate
-source-set ids across the tracked catalog. No current runtime command
-dispatches, schedules, or batches source sets.
+source-set ids across the tracked catalog and requires each source-set id to
+match its filename stem. No current runtime command dispatches, schedules, or
+batches source sets.
 
 ## Contract hardening already in place
 
@@ -149,8 +151,8 @@ runtime paths consume them:
 - profile seen-state record ids must be safe path segments, sorted, and unique;
 - source-config catalog entries must use filename-matched unique `source_id`
   values before the catalog can be listed;
-- source-set catalog entries must use unique `source_set_id` values before the
-  catalog can be listed;
+- source-set catalog entries must use filename-matched unique `source_set_id`
+  values before the catalog can be listed;
 - source-set refs must use unique `source_id` and `source_config_path` values
   before inspection, compatibility preflight, or any future execution surface
   consumes them;
@@ -201,6 +203,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `python3 scripts/check_repo.py` passed with 274 tests after requiring
+  tracked source-set `source_set_id` values to match their filenames.
 - `python3 scripts/check_repo.py` passed with 274 tests after requiring
   tracked profile `profile_id` values to match their filenames.
 - `python3 scripts/check_repo.py` passed with 274 tests after requiring
