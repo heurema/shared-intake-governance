@@ -60,7 +60,8 @@ Current runtime code covers:
 
 - runtime path helpers for local file-based artifacts;
 - validated raw payload metadata, run manifests, and source health;
-- source-config validation, examples, and read-only source-config inspection;
+- source-config validation, examples, read-only source-config inventory, and
+  read-only source-config inspection;
 - contract-only source-set schema, example source-config refs, and read-only
   source-set inspection;
 - clean-record emission from implemented source families;
@@ -83,6 +84,9 @@ the repository.
 `inspect-source-config` validates one `source-config.v1` file and returns a
 normalized summary. It does not fetch upstream sources, write runtime data,
 read profile state, project profiles, or update seen state.
+`list-source-configs` validates the tracked `sources/examples/*.json` catalog
+and returns a deterministic inventory under the same no-fetch/no-write
+boundary.
 
 The reusable source-config daily recipes in `docs/13-source-config-recipes.md`
 are documentation-only. They describe explicit `run-source-config` and
@@ -163,6 +167,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 239 tests
+  after adding read-only `list-source-configs` inventory.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 237 tests
   after adding read-only `inspect-source-config` validation.
 - `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 235 tests

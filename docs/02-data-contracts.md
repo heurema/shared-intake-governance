@@ -202,6 +202,9 @@ Runtime code validates source configs before dispatching a source run.
 `inspect-source-config` validates one source config and returns its normalized
 summary without fetching upstream sources, projecting profiles, reading profile
 state, or writing runtime data.
+`list-source-configs` applies the same validation to the tracked
+`sources/examples/*.json` catalog and returns a deterministic inventory without
+running sources.
 
 ## Source set
 

@@ -108,6 +108,7 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli run-news-feed`
 - `python -m shared_intake_governance.cli run-source-config`
 - `python -m shared_intake_governance.cli smoke-source-config`
+- `python -m shared_intake_governance.cli list-source-configs`
 - `python -m shared_intake_governance.cli inspect-source-config`
 - `python -m shared_intake_governance.cli inspect-source-set`
 - `python -m shared_intake_governance.cli project-profiles`
@@ -166,6 +167,9 @@ updating state.
 The `run-source-config` and `smoke-source-config` commands support the same
 explicit read-only seen-state filter for one-source collect, sanitize, and
 project runs.
+The `list-source-configs` command validates tracked `source-config.v1` files
+under `sources/examples/` and returns a deterministic inventory without
+fetching, projecting, reading profile state, or writing runtime data.
 The `inspect-source-config` command validates one `source-config.v1` file and
 returns a normalized summary without fetching, projecting, reading profile
 state, or writing runtime data.
