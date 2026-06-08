@@ -109,7 +109,8 @@ What exists now:
   source-set/profile source-type compatibility without running sources or
   projecting profiles;
 - read-only `list-source-configs` CLI command for validating and listing the
-  tracked source-config catalog without running sources;
+  tracked source-config catalog, including unique source ids, without running
+  sources;
 - read-only `inspect-source-config` CLI command for validating one
   `source-config.v1` file without running it;
 - read-only `list-source-sets` CLI command for validating and listing the
