@@ -59,6 +59,8 @@ from shared_intake_governance.provider_presets import (
 from shared_intake_governance.projector import (
     ProfileProjector,
     init_seen_records_state,
+    inspect_profile,
+    list_profiles,
     load_seen_records_state,
     load_profile,
     update_seen_records_state,
@@ -153,6 +155,10 @@ def main(
         return _list_source_sets(args, stdout)
     if args.command == "inspect-source-set":
         return _inspect_source_set(args, stdout)
+    if args.command == "list-profiles":
+        return _list_profiles(args, stdout)
+    if args.command == "inspect-profile":
+        return _inspect_profile(args, stdout)
     if args.command == "project-profiles":
         return _project_profiles(args, stdout)
     if args.command == "list-runs":
@@ -1497,6 +1503,16 @@ def _inspect_source_set(args: argparse.Namespace, stdout: TextIO) -> int:
     return 0
 
 
+def _list_profiles(args: argparse.Namespace, stdout: TextIO) -> int:
+    _print_json(stdout, list_profiles(args.repo_root))
+    return 0
+
+
+def _inspect_profile(args: argparse.Namespace, stdout: TextIO) -> int:
+    _print_json(stdout, inspect_profile(args.profile))
+    return 0
+
+
 def _record_provider_result(args: argparse.Namespace, stdout: TextIO) -> int:
     paths = RuntimePaths(Path(args.runtime_root))
     provider_request_path = Path(args.provider_request)
@@ -2053,6 +2069,22 @@ def _parser() -> argparse.ArgumentParser:
         default=".",
         help="Repository root used to resolve source_config_path refs.",
     )
+
+    list_profiles_parser = subparsers.add_parser(
+        "list-profiles",
+        help="List tracked profile configs without projecting them.",
+    )
+    list_profiles_parser.add_argument(
+        "--repo-root",
+        default=".",
+        help="Repository root used to find profiles/examples/*.json.",
+    )
+
+    inspect_profile_parser = subparsers.add_parser(
+        "inspect-profile",
+        help="Validate one profile config without projecting it.",
+    )
+    inspect_profile_parser.add_argument("--profile", required=True)
 
     project_profiles = subparsers.add_parser(
         "project-profiles",

@@ -39,6 +39,9 @@ source health output.
 It includes a contract-only `source-set.v1` schema, example source set, and
 read-only `list-source-sets` and `inspect-source-set` CLI commands for
 validating tracked source-set refs without executing them.
+It includes read-only `list-profiles` and `inspect-profile` CLI commands for
+validating tracked example profile configs without projecting them or reading
+profile state.
 It includes a repo-local surface consistency guard that checks the actual CLI
 command surface against `docs/10-implementation-guide.md`.
 It includes a repo-local source-type consistency guard that checks supported

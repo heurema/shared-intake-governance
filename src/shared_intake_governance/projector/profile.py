@@ -172,6 +172,33 @@ def load_profile(profile_path: str | Path) -> dict[str, Any]:
     return profile
 
 
+def inspect_profile(profile_path: str | Path) -> dict[str, Any]:
+    """Validate one profile config and return its normalized read-only summary."""
+    path = Path(profile_path).resolve()
+    profile = load_profile(path)
+    result = _profile_summary(profile, path)
+    result["keywords"] = profile["keywords"]
+    return result
+
+
+def list_profiles(repo_root: str | Path = ".") -> dict[str, Any]:
+    """Validate tracked profile configs and return a deterministic inventory."""
+    root = Path(repo_root).resolve()
+    profile_root = root / "profiles" / "examples"
+    profiles = []
+    for profile_path in sorted(profile_root.glob("*.json")):
+        profile = load_profile(profile_path)
+        profiles.append(_profile_summary(profile, profile_path.resolve()))
+    profiles.sort(
+        key=lambda profile: (profile["profile_id"], profile["profile_ref"])
+    )
+    return {
+        "repo_root": str(root),
+        "profile_count": len(profiles),
+        "profiles": profiles,
+    }
+
+
 def validate_profile_projection(report: dict[str, Any]) -> None:
     missing = sorted(_PROJECTION_REQUIRED - set(report))
     if missing:
@@ -296,6 +323,26 @@ def _project_item(record: dict[str, Any]) -> dict[str, Any]:
         "risk_flags": record["risk_flags"],
         "raw_hash": record["raw_hash"],
     }
+
+
+def _profile_summary(profile: dict[str, Any], path: Path) -> dict[str, Any]:
+    return {
+        "profile_path": str(path),
+        "profile_ref": _profile_ref(path),
+        "profile_id": profile["profile_id"],
+        "description": profile["description"],
+        "accepted_sources": profile["accepted_sources"],
+        "keyword_count": len(profile["keywords"]),
+        "required_risk_flags_absent": profile["required_risk_flags_absent"],
+        "output_mode": profile["output_mode"],
+        "provider_preferences": profile.get("provider_preferences", []),
+    }
+
+
+def _profile_ref(path: Path) -> str:
+    if path.parent.name == "examples" and path.parent.parent.name == "profiles":
+        return f"profiles/examples/{path.name}"
+    return str(path)
 
 
 def _format_utc(value: datetime) -> str:

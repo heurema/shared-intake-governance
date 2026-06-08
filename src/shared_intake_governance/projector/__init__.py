@@ -3,6 +3,8 @@
 from .profile import (
     ProfileProjectionWrite,
     ProfileProjector,
+    inspect_profile,
+    list_profiles,
     load_profile,
     validate_profile_projection,
 )
@@ -21,6 +23,8 @@ __all__ = [
     "ProfileStateRead",
     "ProfileStateWrite",
     "init_seen_records_state",
+    "inspect_profile",
+    "list_profiles",
     "load_seen_records_state",
     "load_profile",
     "update_seen_records_state",

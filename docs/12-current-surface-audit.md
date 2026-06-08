@@ -64,6 +64,8 @@ Current runtime code covers:
   read-only source-config inspection;
 - contract-only source-set schema, example source-config refs, read-only
   source-set inventory, and read-only source-set inspection;
+- profile config validation, examples, read-only profile inventory, and
+  read-only profile inspection;
 - clean-record emission from implemented source families;
 - deterministic profile projection from the clean cache;
 - explicit profile seen-state initialization without overwriting existing state;
@@ -90,6 +92,10 @@ and returns a deterministic inventory under the same no-fetch/no-write
 boundary.
 `list-source-sets` validates the tracked `sources/sets/*.json` catalog and
 each referenced source-config file under the same no-fetch/no-write boundary.
+`list-profiles` validates the tracked `profiles/examples/*.json` catalog and
+returns a deterministic inventory under the same no-fetch/no-write boundary.
+`inspect-profile` validates one profile config and returns its normalized
+object without projecting, reading profile state, or writing runtime data.
 
 The reusable source-config daily recipes in `docs/13-source-config-recipes.md`
 are documentation-only. They describe explicit `run-source-config` and
@@ -171,6 +177,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `python3 scripts/check_repo.py` passed with 254 tests after adding read-only
+  profile catalog inspection.
 - `python3 scripts/check_repo.py` passed after adding the explicit
   `init-profile-seen-state` boundary.
 - `python3 scripts/check_repo.py` passed after adding the canonical local
