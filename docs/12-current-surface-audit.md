@@ -95,8 +95,9 @@ inventory under the same no-fetch/no-write boundary.
 rejects duplicate source-set ids across the catalog, rejects duplicate source
 ids and source config refs inside each source set, and validates each
 referenced source-config file under the same no-fetch/no-write boundary.
-`list-profiles` validates the tracked `profiles/examples/*.json` catalog and
-returns a deterministic inventory under the same no-fetch/no-write boundary.
+`list-profiles` validates the tracked `profiles/examples/*.json` catalog,
+rejects duplicate profile ids across the catalog, and returns a deterministic
+inventory under the same no-fetch/no-write boundary.
 `inspect-profile` validates one profile config and returns its normalized
 object without projecting, reading profile state, or writing runtime data.
 `check-source-set-profiles` validates one source set, its referenced source
@@ -141,6 +142,8 @@ runtime paths consume them:
 - profile `accepted_sources` must be non-empty and must contain only supported
   source types before a profile can be inspected, projected, or checked against
   a source set;
+- profile catalog entries must use unique `profile_id` values before the
+  catalog can be listed;
 - profile seen-state record ids must be safe path segments, sorted, and unique;
 - source-config catalog entries must use unique `source_id` values before the
   catalog can be listed;
@@ -196,6 +199,8 @@ Do not treat these as missing bugs without a new behavior decision:
 
 Local verification on 2026-06-08:
 
+- `python3 scripts/check_repo.py` passed with 274 tests after rejecting
+  duplicate `profile_id` values across the tracked profile catalog.
 - `python3 scripts/check_repo.py` passed with 273 tests after rejecting
   duplicate `source_id` values across the tracked source-config catalog.
 - `python3 scripts/check_repo.py` passed with 272 tests after rejecting

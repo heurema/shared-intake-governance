@@ -41,9 +41,9 @@ read-only `list-source-sets` and `inspect-source-set` CLI commands for
 validating tracked source-set catalog ids and refs with unique source ids and
 unique source config refs without executing them.
 It includes read-only `list-profiles` and `inspect-profile` CLI commands for
-validating tracked example profile configs without projecting them or reading
-profile state. Profile validation rejects empty or unsupported accepted source
-types.
+validating tracked example profile configs with unique profile ids without
+projecting them or reading profile state. Profile validation rejects empty or
+unsupported accepted source types.
 It includes a read-only `check-source-set-profiles` CLI command for validating
 source-set/profile source-type compatibility without running sources,
 projecting profiles, or reading profile state.
