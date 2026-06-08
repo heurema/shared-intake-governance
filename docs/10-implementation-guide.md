@@ -128,9 +128,9 @@ Current CLI implementation:
 - `python -m shared_intake_governance.cli list-mediation-records`
 - `python -m shared_intake_governance.cli inspect-mediation-record`
 - `python -m shared_intake_governance.cli execute-tool-intent`
+- `python -m shared_intake_governance.cli prepare-provider-request`
 - `python -m shared_intake_governance.cli list-provider-presets`
 - `python -m shared_intake_governance.cli inspect-provider-preset`
-- `python -m shared_intake_governance.cli prepare-provider-request`
 - `python -m shared_intake_governance.cli record-provider-result`
 - `python -m shared_intake_governance.cli invoke-provider-request`
 - `python -m shared_intake_governance.cli inspect-run`
@@ -158,6 +158,10 @@ These commands also write:
 The inspection commands are read-only and should not create runtime files. They
 validate runtime artifacts or repo-tracked source-set/source-config refs before
 returning summaries or full objects.
+The repo-local `scripts/check_surface_consistency.py` guard compares the actual
+argparse command surface to the `Current CLI implementation` list above. Run it
+after adding, removing, renaming, or reordering CLI commands so docs drift is
+caught before review.
 The `project-profiles` command reads the shared clean cache and writes one
 deterministic report per explicit profile path. With `--update-seen-state`, it
 also merges each generated report into that profile's local `seen_records`

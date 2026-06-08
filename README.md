@@ -107,6 +107,8 @@ What exists now:
   tracked source-set catalog without running sources;
 - read-only `inspect-source-set` CLI command for validating one source-set file
   and its referenced source-config files without running sources;
+- repo-local surface consistency guard for keeping the CLI command list in
+  `docs/10-implementation-guide.md` aligned with the actual argparse surface;
 - config-driven one-source CLI command for source definitions stored in JSON;
 - isolated smoke CLI command for live one-source checks with runtime data
   outside git;
